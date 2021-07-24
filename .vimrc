@@ -1,15 +1,34 @@
+set encoding=utf-8
 set showmode
 set autoindent
 set tabstop=4
+set shiftwidth=4
 set expandtab
 set nu
 set nolist
 set rnu
+set smartindent
+set smartcase
+set noswapfile
+set incsearch
+set background=dark
+set hidden
+set nowrap
+set swapfile
+set nobackup
+set undodir=~/.vim/undodir
+set undofile
+set scrolloff=8
+set signcolumn=yes
+filetype plugin on
+filetype indent on
+set omnifunc=syntaxcomplete#Complete
+set mouse=a
+set clipboard=unnamedplus
+
 syntax on
 
 call plug#begin('~/.vim/plugged')
-
-" Make sure you use single quotes
 
 " Shorthand notation; fetches https://github.com/junegunn/vim-easy-align
 Plug 'junegunn/vim-easy-align'
@@ -45,3 +64,7 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'vim-airline/vim-airline'
 
 call plug#end()
+
+"Mapear para NERDTree
+map <F2> :NERDTreeToggle<CR>
+
