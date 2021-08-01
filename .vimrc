@@ -24,7 +24,12 @@ filetype plugin on
 filetype indent on
 set omnifunc=syntaxcomplete#Complete
 set mouse=a
-set clipboard=unnamedplus
+set wildmenu
+set nocompatible
+set path+=**
+set wildmode=longest:full,full
+set wildignorecase
+set wildignore=\*.git/\*
 
 syntax on
 
@@ -62,6 +67,11 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 "Vim airline
 Plug 'vim-airline/vim-airline'
+
+"vim-lsp
+Plug 'prabirshrestha/vim-lsp'
+Plug 'prabirshrestha/vim-lsp'
+Plug 'mattn/vim-lsp-settings'
 
 call plug#end()
 
