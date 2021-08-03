@@ -30,6 +30,9 @@ set path+=**
 set wildmode=longest:full,full
 set wildignorecase
 set wildignore=\*.git/\*
+set clipboard^=unnamed,unnamedplus
+set smarttab
+colorscheme gruvbox
 
 syntax on
 
@@ -55,7 +58,8 @@ Plug 'fatih/vim-go', { 'tag': '*' }
 Plug 'nsf/gocode', { 'tag': 'v.20150303', 'rtp': 'vim' }
 
 " Plugin outside ~/.vim/plugged with post-update hook
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
 
 " Unmanaged plugin (manually installed and updated)
 Plug '~/my-prototype-plugin'
@@ -73,8 +77,23 @@ Plug 'prabirshrestha/vim-lsp'
 Plug 'prabirshrestha/vim-lsp'
 Plug 'mattn/vim-lsp-settings'
 
+"Vimagit
+Plug 'jreybert/vimagit'
+
+"Rust
+Plug 'rust-lang/rust.vim'
+
+"ALE (ASYNCHRONOUS LINT ENGINE) 
+Plug 'w0rp/ale'
+
+"Esquema de colores gruvbox
+Plug 'morhetz/gruvbox'
+
 call plug#end()
 
 "Mapear para NERDTree
 map <F2> :NERDTreeToggle<CR>
 
+"Configuracion para Rust
+let g:rust_clip_command = 'xclip -selection clipboard'
+let g:rustfmt_autosave = 1
