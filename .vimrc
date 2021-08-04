@@ -32,7 +32,6 @@ set wildignorecase
 set wildignore=\*.git/\*
 set clipboard^=unnamed,unnamedplus
 set smarttab
-colorscheme gruvbox
 
 syntax on
 
@@ -89,11 +88,37 @@ Plug 'w0rp/ale'
 "Esquema de colores gruvbox
 Plug 'morhetz/gruvbox'
 
+"Dockerfile.vim
+Plug 'ekalinin/Dockerfile.vim'
+
+"Vim undotree
+Plug 'mbbill/undotree'
+
 call plug#end()
 
 "Mapear para NERDTree
 map <F2> :NERDTreeToggle<CR>
 
+"Mapear Undotree
+nnoremap <F5> :UndotreeToggle<CR>
+
+"Configuración para Undotree
+if has("persistent_undo")
+   let target_path = expand('~/.undodir')
+
+    " create the directory and any parent directories
+    " if the location does not exist.
+    if !isdirectory(target_path)
+        call mkdir(target_path, "p", 0700)
+    endif
+
+    let &undodir=target_path
+    set undofile
+endif
+
 "Configuracion para Rust
 let g:rust_clip_command = 'xclip -selection clipboard'
 let g:rustfmt_autosave = 1
+
+"Configuracion para gruvbox
+autocmd vimenter * ++nested colorscheme gruvbox
