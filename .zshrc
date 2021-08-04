@@ -77,7 +77,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(aws command-not-found composer compleat debian dirhistory django fzf gem git git-extras git-flow github gh history node npm pip python sudo systemd z zsh-autosuggestions zsh-syntax-highlighting)
+plugins=(adb command-not-found cargo composer compleat cp debian dirhistory docker docker-compose django fzf gem git git-extras git-flow github gh history node ng nmap npm pip postgres python rust rustup sudo systemd tig tmux z zsh-interactive-cd zsh_reload zsh-autosuggestions zsh-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -109,7 +109,7 @@ source $ZSH/oh-my-zsh.sh
 
 source /usr/share/doc/fzf/examples/key-bindings.zsh
 
-alias zs="source ~/.zshrc"
+#alias zs="source ~/.zshrc"
 alias sp="speedtest"
 alias actualizar="sudo apt update ; sudo apt upgrade -y ; sudo apt install -f ; sudo apt autoremove -y ; sudo apt autoclean ; sudo apt clean ; pip3 install -U --user --compile glances noteshrink youtube-dl classifier wordcloud meson"
 
