@@ -66,7 +66,7 @@ Plug '~/my-prototype-plugin'
 " Initialize plugin system
 
 " Use release branch (recommend)
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'neoclide/coc.nvim', {'branch': 'master', 'do': 'yarn install --frozen-lockfile'}
 
 "Vim airline
 Plug 'vim-airline/vim-airline'
@@ -93,6 +93,12 @@ Plug 'ekalinin/Dockerfile.vim'
 
 "Vim undotree
 Plug 'mbbill/undotree'
+
+"RAINBOW PARENTHESES IMPROVED
+Plug 'luochen1990/rainbow'
+
+"Autopairs
+Plug 'jiangmiao/auto-pairs'
 
 call plug#end()
 
@@ -122,3 +128,11 @@ let g:rustfmt_autosave = 1
 
 "Configuracion para gruvbox
 autocmd vimenter * ++nested colorscheme gruvbox
+
+"Configuración RAINBOW IMPROVED
+let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
+
+"Configuración Autopairs
+let g:AutoPairsFlyMode = 1
+let g:AutoPairsShortcutBackInsert = '<M-b>'
+
