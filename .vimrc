@@ -3,11 +3,11 @@ set showmode
 set autoindent
 set tabstop=4
 set shiftwidth=4
-set expandtab
+set expandtab smarttab
 set nu
 set nolist
 set rnu
-set smartindent
+set smartindent                             ""Makes indenting smart
 set smartcase
 set noswapfile
 set incsearch
@@ -15,7 +15,9 @@ set background=dark
 set hidden
 set nowrap
 set swapfile
+set cursorline                              ""Enable highlighting of the current line
 set nobackup
+set nowritebackup
 set undodir=~/.vim/undodir
 set undofile
 set scrolloff=8
@@ -23,17 +25,31 @@ set signcolumn=yes
 filetype plugin on
 filetype indent on
 set omnifunc=syntaxcomplete#Complete
-set mouse=a
+set completeopt=menuone,longest
+set mouse=a                                 ""Enables mouse
 set wildmenu
+set wildmode=longest,list,full
 set nocompatible
 set path+=**
 set wildmode=longest:full,full
 set wildignorecase
 set wildignore=\*.git/\*
-set clipboard^=unnamed,unnamedplus
-set smarttab
+set clipboard=unnamedplus                   ""Enables clipboard to copy and paste
+set shortmess+=c
 
-syntax on
+"Archivos a ignorar
+set wildignore+=**/.git/*
+set wildignore+=*.pyc
+set wildignore+=*_build/*
+set wildignore+=**/coverage/*
+set wildignore+=**/node_modules/*
+set wildignore+=**/android/*
+set wildignore+=**/ios/*
+set updatetime=300                          ""Faster completion
+set notimeout
+set ruler
+
+syntax on                                   ""Enalbes sintax highlighting
 
 call plug#begin('~/.vim/plugged')
 
@@ -100,6 +116,30 @@ Plug 'luochen1990/rainbow'
 "Autopairs
 Plug 'jiangmiao/auto-pairs'
 
+"Snippets
+Plug 'honza/vim-snippets'
+
+
+"vim-pandoc
+Plug 'vim-pandoc/vim-pandoc'
+Plug 'vim-pandoc/vim-pandoc-syntax'
+
+"Emmet
+Plug 'emmetio/emmet'
+
+"Tabnine
+Plug 'codota/tabnine-vim'
+
+"Which Key
+Plug 'liuchengxu/vim-which-key'
+
+" On-demand lazy load
+Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
+
+" To register the descriptions when using the on-demand load feature,
+" use the autocmd hook to call which_key#register(), e.g., register for the Space key:
+" autocmd! User vim-which-key call which_key#register('<Space>', 'g:which_key_map')
+
 call plug#end()
 
 "Mapear para NERDTree
@@ -122,6 +162,10 @@ if has("persistent_undo")
     set undofile
 endif
 
+"Configuración vim-snippets"
+
+let g:snipMate = {}
+
 "Configuracion para Rust
 let g:rust_clip_command = 'xclip -selection clipboard'
 let g:rustfmt_autosave = 1
@@ -135,4 +179,14 @@ let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowTo
 "Configuración Autopairs
 let g:AutoPairsFlyMode = 1
 let g:AutoPairsShortcutBackInsert = '<M-b>'
+
+"Configuración para vim-pandoc-syntax
+augroup pandoc_syntax
+    au! BufNewFile,BufFilePre,BufRead *.md set filetype=markdown.pandoc
+augroup END
+
+"Configuración para vim-pandoc-syntax para vim-wiki
+augroup pandoc_syntax
+  autocmd! FileType vimwiki set syntax=markdown.pandoc
+augroup END
 
