@@ -14,6 +14,35 @@
 ;; The default is 800 kilobytes.  Measured in bytes.
 (setq gc-cons-threshold (* 50 1000 1000))
 
+;;Deja el buffer scratch vacio
+(setq initial-scratch-message "")
+
+;; Elimina *scratch* del buffer despues de que el modo se ha elegido
+(defun remove-scratch-buffer ()
+  (if (get-buffer "*scratch*")
+      (kill-buffer "*scratch*")))
+(add-hook 'after-change-major-mode-hook 'remove-scratch-buffer)
+
+;; Elimina los mensajes del buffer
+(setq-default message-log-max nil)
+(kill-buffer "*Messages*")
+
+;;Elimina *Completions* del buffer despues de que se abre el archivo
+(add-hook 'minibuffer-exit-hook
+	  '(lambda ()
+             (let ((buffer "*Completions*"))
+               (and (get-buffer buffer)
+                    (kill-buffer buffer)))))
+
+;; Don't show *Buffer list* when opening multiple files at the same time.
+(setq inhibit-startup-buffer-menu t)
+
+;;Muestra solamente y or n en los mensaje de confirmacion
+(fset 'yes-or-no-p 'y-or-n-p)
+
+;; Show only one active window when opening multiple files at the same time.
+(add-hook 'window-setup-hook 'delete-other-windows)
+
 ;;Use-package
 
 (unless (package-installed-p 'use-package)
