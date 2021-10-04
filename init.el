@@ -3,6 +3,10 @@
 (add-to-list 'package-archives '("elpa" . "https://elpa.gnu.org/packages/") t)
 (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
 
+;;Use-package
+
+(use-package use-package :ensure t)
+
 ;;No mostrar el mensaje de bienvenida en el editor
 (setq inhibit-startup-message t)
 
@@ -29,16 +33,20 @@
 ;;Asincronismo en Emacs
 (async-bytecomp-package-mode 1)
 
-;;Use-package
-
-(use-package use-package :ensure t)
+;; Habilita el clipboard en Emacs
+(setq x-select-enable-clipboard t)
 
 ;;Evil mode
 
 (use-package evil 
   :ensure t
   :config
-  (evil-mode))
+  (evil-mode)
+  
+  ;;Evil undo-tree
+  (global-undo-tree-mode)
+  (evil-set-undo-system 'undo-tree)
+  )
 
 ;;Evil undo-tree
 (global-undo-tree-mode)
@@ -154,58 +162,53 @@
   (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
   )
 
- (use-package web-mode
-    :ensure t
-    :config
-	   (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
-	   (add-to-list 'auto-mode-alist '("\\.vue?\\'" . web-mode))
-	   (setq web-mode-engines-alist
-		 '(("django"    . "\\.html\\'")))
-	   (setq web-mode-ac-sources-alist
-	   '(("css" . (ac-source-css-property))
-	   ("vue" . (ac-source-words-in-buffer ac-source-abbrev))
-         ("html" . (ac-source-words-in-buffer ac-source-abbrev))))
-(setq web-mode-enable-auto-closing t))
+(use-package web-mode
+  :ensure t
+  :config
+  (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.vue?\\'" . web-mode))
+  (setq web-mode-engines-alist
+	'(("django"    . "\\.html\\'")))
+  (setq web-mode-ac-sources-alist
+	'(("css" . (ac-source-css-property))
+	  ("vue" . (ac-source-words-in-buffer ac-source-abbrev))
+          ("html" . (ac-source-words-in-buffer ac-source-abbrev))))
+  (setq web-mode-enable-auto-closing t))
 (setq web-mode-enable-auto-quoting t) 
 
 ;;Javascript
 
 (use-package js2-mode
-:ensure t
-:ensure ac-js2
-:init
-(progn
-(add-hook 'js-mode-hook 'js2-minor-mode)
-(add-hook 'js2-mode-hook 'ac-js2-mode)
-))
+  :ensure t
+  :ensure ac-js2
+  :init
+  (progn
+    (add-hook 'js-mode-hook 'js2-minor-mode)
+    (add-hook 'js2-mode-hook 'ac-js2-mode)
+    ))
 
 ;;Refactorizar para javascript
 (use-package js2-refactor
-:ensure t
-:config 
-(progn
-(js2r-add-keybindings-with-prefix "C-c C-m")
-;; eg. extract function with `C-c C-m ef`.
-(add-hook 'js2-mode-hook #'js2-refactor-mode)))
+  :ensure t
+  :config 
+  (progn
+    (js2r-add-keybindings-with-prefix "C-c C-m")
+    ;; eg. extract function with `C-c C-m ef`.
+    (add-hook 'js2-mode-hook #'js2-refactor-mode)))
 
 (use-package tern
-:ensure tern
-:ensure tern-auto-complete
-:config
-(progn
-(add-hook 'js-mode-hook (lambda () (tern-mode t)))
-(add-hook 'js2-mode-hook (lambda () (tern-mode t)))
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-;;(tern-ac-setup)
-))
-
-;;(use-package jade
-;;:ensure t
-;;)
+  :ensure tern
+  :ensure tern-auto-complete
+  :config
+  (progn
+    (add-hook 'js-mode-hook (lambda () (tern-mode t)))
+    (add-hook 'js2-mode-hook (lambda () (tern-mode t)))
+    (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+    ;;(tern-ac-setup)
+    ))
 
 ;; use web-mode for .jsx files
 (add-to-list 'auto-mode-alist '("\\.jsx$" . web-mode))
-
 
 ;; turn on flychecking globally
 (add-hook 'after-init-hook #'global-flycheck-mode)
@@ -238,31 +241,31 @@
 ;;Sirve para saltar entre distintos proyectos
 
 (use-package projectile
-      :ensure t
-      :bind ("C-c p" . projectile-command-map)
-      :config
-      (projectile-global-mode)
-    (setq projectile-completion-system 'ivy))
+  :ensure t
+  :bind ("C-c p" . projectile-command-map)
+  :config
+  (projectile-global-mode)
+  (setq projectile-completion-system 'ivy))
 
 ;;Sirve para poder mostrar un explorador de archivos al estilo de VsCode
 
-  (use-package treemacs
-    :ensure t
-    :defer t
-    :config
-        )
-  (use-package treemacs-projectile
-    :defer t
-    :ensure t
-    :config
-    (setq treemacs-header-function #'treemacs-projectile-create-header)
-)
-  
+(use-package treemacs
+  :ensure t
+  :defer t
+  :config
+  )
+(use-package treemacs-projectile
+  :defer t
+  :ensure t
+  :config
+  (setq treemacs-header-function #'treemacs-projectile-create-header)
+  )
+
 (use-package smartparens
-:ensure t
+  :ensure t
   :hook (prog-mode . smartparens-mode)
   :custom
-  (sp-escape-quotes-after-insert nil)
+  (sp-escape-quotes-after-insert t)
   :config
   (require 'smartparens-config))
 
@@ -270,53 +273,52 @@
 
 ;;Git
 
-  (use-package magit
-    :ensure t
-    :init
-    (progn
+(use-package magit
+  :ensure t
+  :init
+  (progn
     (bind-key "C-x g" 'magit-status)
     ))
 
 (setq magit-status-margin
-  '(t "%Y-%m-%d %H:%M " magit-log-margin-width t 18))
-    (use-package git-gutter
-    :ensure t
-    :init
-    (global-git-gutter-mode +1))
+      '(t "%Y-%m-%d %H:%M " magit-log-margin-width t 18))
 
-    (global-set-key (kbd "M-g M-g") 'hydra-git-gutter/body)
+(use-package git-gutter
+  :ensure t
+  :init
+  (global-git-gutter-mode +1))
+(global-set-key (kbd "M-g M-g") 'hydra-git-gutter/body)
 
 
-    (use-package git-timemachine
-    :ensure t
-    )
-  (defhydra hydra-git-gutter (:body-pre (git-gutter-mode 1)
-                              :hint nil)
-    "
-  Git gutter:
-    _j_: next hunk        _s_tage hunk     _q_uit
-    _k_: previous hunk    _r_evert hunk    _Q_uit and deactivate git-gutter
-    ^ ^                   _p_opup hunk
-    _h_: first hunk
-    _l_: last hunk        set start _R_evision
+(use-package git-timemachine :ensure t)
+
+(defhydra hydra-git-gutter (:body-pre (git-gutter-mode 1)
+				      :hint nil)
   "
-    ("j" git-gutter:next-hunk)
-    ("k" git-gutter:previous-hunk)
-    ("h" (progn (goto-char (point-min))
-                (git-gutter:next-hunk 1)))
-    ("l" (progn (goto-char (point-min))
-                (git-gutter:previous-hunk 1)))
-    ("s" git-gutter:stage-hunk)
-    ("r" git-gutter:revert-hunk)
-    ("p" git-gutter:popup-hunk)
-    ("R" git-gutter:set-start-revision)
-    ("q" nil :color blue)
-    ("Q" (progn (git-gutter-mode -1)
-                ;; git-gutter-fringe doesn't seem to
-                ;; clear the markup right away
-                (sit-for 0.1)
-                (git-gutter:clear))
-         :color blue))
+Git gutter:
+_j_: next hunk        _s_tage hunk     _q_uit
+_k_: previous hunk    _r_evert hunk    _Q_uit and deactivate git-gutter
+^ ^                   _p_opup hunk
+_h_: first hunk
+_l_: last hunk        set start _R_evision
+"
+  ("j" git-gutter:next-hunk)
+  ("k" git-gutter:previous-hunk)
+  ("h" (progn (goto-char (point-min))
+              (git-gutter:next-hunk 1)))
+  ("l" (progn (goto-char (point-min))
+              (git-gutter:previous-hunk 1)))
+  ("s" git-gutter:stage-hunk)
+  ("r" git-gutter:revert-hunk)
+  ("p" git-gutter:popup-hunk)
+  ("R" git-gutter:set-start-revision)
+  ("q" nil :color blue)
+  ("Q" (progn (git-gutter-mode -1)
+              ;; git-gutter-fringe doesn't seem to
+              ;; clear the markup right away
+              (sit-for 0.1)
+              (git-gutter:clear))
+   :color blue))
 
 ;;Port de nerd-tree-commenter para emacs del mismo plugin de vim que permite comentar lineas o bloques de codigo mas facil
 (use-package evil-nerd-commenter
@@ -328,10 +330,10 @@
 
 ;; Permite indentar el codigo mientras se escribe 
 (use-package aggressive-indent
-:ensure t
-:config
-(global-aggressive-indent-mode 1)
-)
+  :ensure t
+  :config
+  (global-aggressive-indent-mode 1)
+  )
 
 (use-package fzf :ensure t)
 
