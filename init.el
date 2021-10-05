@@ -42,6 +42,15 @@
 
 (setq visible-bell t)
 
+;;Habilitar / Deshabilitar menu de opciones
+(menu-bar-mode -1)
+
+;;Portapapeles global
+(setq x-select-enable-clipboard t)
+
+;;Tema para emacs
+(load-theme 'wombat)
+
 ;; Comment/uncomment this line to enable MELPA Stable if desired.  See `package-archive-priorities`
 ;; and `package-pinned-packages`. Most users will not need or want to do this.
 ;; (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
@@ -80,9 +89,11 @@
   (evil-set-undo-system 'undo-tree)
   )
 
-;;Evil undo-tree
-;; (global-undo-tree-mode)
-;; (evil-set-undo-system 'undo-tree)
+(use-package evil-collection
+  :after evil
+  :config
+  (evil-collection-init)
+  )
 
 ;;Numeracion relativa
 (setq display-line-numbers-type 'relative) 
@@ -96,15 +107,6 @@
   (powerline-evil-vim-color-theme)
   
   )
-
-;;Habilitar / Deshabilitar menu de opciones
-(menu-bar-mode -1)
-
-;;Portapapeles global
-(setq x-select-enable-clipboard t)
-
-;;Tema para emacs
-(load-theme 'wombat)
 
 ;;Which key 
 (use-package which-key
