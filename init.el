@@ -54,7 +54,7 @@
  ;; If there is more than one, they won't work right.
  '(aggressive-completion-mode t)
  '(package-selected-packages
-   '(T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent aggressive-completion)))
+   '(company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent aggressive-completion)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -94,6 +94,7 @@
   :init
   :config
   (powerline-evil-vim-color-theme)
+  
   )
 
 ;;Habilitar / Deshabilitar menu de opciones
@@ -145,40 +146,12 @@
   :init
   (global-flycheck-mode t))
 
+;;Yasnippet
+
 (use-package yasnippet
   :ensure t
-  :init (yas-global-mode 1)
-  :config
-
-;;; use popup menu for yas-choose-value
-
-  (require 'popup)
-
-  ;; add some shotcuts in popup menu mode
-  (define-key popup-menu-keymap (kbd "M-n") 'popup-next)
-  (define-key popup-menu-keymap (kbd "TAB") 'popup-next)
-  (define-key popup-menu-keymap (kbd "<tab>") 'popup-next)
-  (define-key popup-menu-keymap (kbd "<backtab>") 'popup-previous)
-  (define-key popup-menu-keymap (kbd "M-p") 'popup-previous)
-
-  (defun yas-popup-isearch-prompt (prompt choices &optional display-fn)
-    (when (featurep 'popup)
-      (popup-menu*
-       (mapcar
-	(lambda (choice)
-          (popup-make-item
-           (or (and display-fn (funcall display-fn choice))
-               choice)
-           :value choice))
-	choices)
-       :prompt prompt
-       ;; start isearch mode immediately
-       :isearch t
-       )))
-
-  (setq yas-prompt-functions '(yas-popup-isearch-prompt yas-maybe-ido-prompt yas-completing-prompt yas-no-prompt))
-
-  )
+  :init
+  (yas-global-mode 1))
 
 ;;Borra todos los espacios en blanco con solo presionar la tecla backspace o suprimir
 (use-package hungry-delete
@@ -503,4 +476,46 @@ _l_: last hunk        set start _R_evision
   )
 
 (use-package org-roam
+  :ensure t
+  :init (setq org-roam-v2-ack t)
+  :custom
+  (org-roam-directory "~/Plantillas/RoamNotes")
+  (org-roam-completion-everywhere t)
+  :bind (
+	 ("C-c n l" . org-roam-buffer-toggle)
+	 ("C-c n f" . org-roam-node-find)
+	 ("C-c n i" . org-roam-node-insert)
+	 :map org-mode-map
+         ("C-M-i"    . completion-at-point)
+	 )
+  :config (org-roam-setup)
+  )
+
+;;Autocompletado
+
+(use-package company
+  :ensure t
+  :config
+  (setq company-idle-delay 0)
+  (setq company-minimum-prefix-length 3)
+  (global-company-mode t)
+  )
+
+(use-package company-ansible
+  :ensure t)
+
+(use-package company-php
+  :ensure t)
+
+(use-package company-phpactor
+  :ensure t)
+
+(use-package company-org-block
+  :ensure t)
+
+(use-package company-wordfreq
+  :ensure t
+  :init)
+
+(use-package yaml-mode
   :ensure t)
