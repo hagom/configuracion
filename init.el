@@ -486,6 +486,10 @@ _l_: last hunk        set start _R_evision
   (defengine google 
     "https://google.co.ve"
     :keybinding "g")
+
+  (defengine github
+    "https://github.com/search?ref=simplesearch&q=%s"
+    :keybinding "G")
   )
 
 (use-package org-roam
