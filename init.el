@@ -151,7 +151,13 @@
 (use-package yasnippet
   :ensure t
   :init
-  (yas-global-mode 1))
+  (yas-global-mode 1)
+  (add-hook 'yas-minor-mode-hook
+	    (lambda ()
+	      (yas-activate-extra-mode 'fundamental-mode)
+	      )
+	    )
+  )
 
 ;;Borra todos los espacios en blanco con solo presionar la tecla backspace o suprimir
 (use-package hungry-delete
