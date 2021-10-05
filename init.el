@@ -40,7 +40,7 @@
 (setq use-package-always-ensure t)
 
 ;;Resalta la posicion actual del cursor
-(global-hl-line-mode t)
+;; (global-hl-line-mode t)
 
 (setq visible-bell t)
 
@@ -64,7 +64,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
+   '(rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -173,9 +173,9 @@
 (use-package multiple-cursors
   :ensure t
   :config
-  (global-set-key (kbd "C->") 'mc/mark-next-like-this)
-  (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
-  (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
+  (global-set-key (kbd "C-c >") 'mc/mark-next-like-this)
+  (global-set-key (kbd "C-c <") 'mc/mark-previous-like-this)
+  (global-set-key (kbd "C-c =") 'mc/mark-all-like-this)
   )
 
 (use-package web-mode
@@ -283,6 +283,7 @@
   :custom
   (sp-escape-quotes-after-insert t)
   :config
+  (smartparens-global-mode 1)
   (require 'smartparens-config))
 
 (show-paren-mode t)
@@ -427,7 +428,9 @@ _l_: last hunk        set start _R_evision
   :bind
   (("M-y" . counsel-yank-pop)
    :map ivy-minibuffer-map
-   ("M-y" . ivy-next-line)))
+   ("M-y" . ivy-next-line)
+   (global-set-key (kbd "C-c C-r") 'ivy-resume)
+   (global-set-key (kbd "<f6>") 'ivy-resume)))
 
 (use-package ivy
   :ensure t
@@ -513,9 +516,11 @@ _l_: last hunk        set start _R_evision
   (global-company-mode t)
   )
 
+;; Autocompletado para ansible
 (use-package company-ansible
   :ensure t)
 
+;; Autocompletado para php
 (use-package company-php
   :ensure t)
 
@@ -529,16 +534,25 @@ _l_: last hunk        set start _R_evision
   :ensure t
   :init)
 
+;; Modo para yaml
 (use-package yaml-mode
   :ensure t)
 
+;; Mostrar todos los iconos
 (use-package all-the-icons
   :ensure t
   :defer t)
 
+(use-package rainbow-delimiters
+  :ensure t
+  :config (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+  )
+
 (use-package rainbow-mode
   :ensure t
-  :commands rainbow-mode)
+  :commands rainbow-mode
+  :config (add-hook 'css-mode 'rainbow-mode)
+  )
 
 (use-package css-mode
   :ensure t
@@ -556,6 +570,7 @@ _l_: last hunk        set start _R_evision
               (evil-define-key 'insert emmet-mode-keymap (kbd "C-S-h") 'emmet-prev-edit-point))))
 
 (use-package lsp-mode
+  :ensure t
   :init
   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
   (setq lsp-keymap-prefix "C-c l")
@@ -565,7 +580,7 @@ _l_: last hunk        set start _R_evision
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp)
 
-;; optionally
+;; Opcional
 (use-package lsp-ui :commands lsp-ui-mode)
 ;; if you are helm user
 (use-package helm-lsp :commands helm-lsp-workspace-symbol)
