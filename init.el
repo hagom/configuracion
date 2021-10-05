@@ -1,3 +1,5 @@
+;;; init.el -- My Emacs configuration
+
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (add-to-list 'package-archives '("elpa" . "https://elpa.gnu.org/packages/") t)
@@ -81,9 +83,11 @@
 
 (use-package evil 
   :ensure t
+  :init
+  (setq evil-want-keybinding nil)
   :config
   (evil-mode 1)
-  
+
   ;;Evil undo-tree
   (global-undo-tree-mode)
   (evil-set-undo-system 'undo-tree)
@@ -395,7 +399,8 @@ _l_: last hunk        set start _R_evision
 ;;Entorno de desarrollo en Python
 (use-package elpy
   :ensure t
-  :init
+  :mode "\\.py\\'"
+  :config
   (elpy-enable))
 
 ;; Muestra un arbol para poder deshacer
@@ -527,3 +532,28 @@ _l_: last hunk        set start _R_evision
 
 (use-package yaml-mode
   :ensure t)
+
+(use-package all-the-icons
+  :ensure t
+  :defer t)
+
+(use-package rainbow-mode
+  :ensure t
+  :commands rainbow-mode)
+
+(use-package css-mode
+  :ensure t
+  :mode "\\.css\\'"
+  :config
+  (add-hook 'css-mode-hook (lambda ()
+                             (rainbow-mode))))
+(use-package emmet-mode
+  :ensure t
+  :commands emmet-mode
+  :config
+  (add-hook 'emmet-mode-hook
+            (lambda ()
+              (evil-define-key 'insert emmet-mode-keymap (kbd "C-S-l") 'emmet-next-edit-point)
+              (evil-define-key 'insert emmet-mode-keymap (kbd "C-S-h") 'emmet-prev-edit-point))))
+
+;;; init.el ends here
