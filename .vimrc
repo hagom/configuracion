@@ -22,7 +22,11 @@ set undodir=~/.vim/undodir
 set undofile
 set scrolloff=8
 set signcolumn=yes
+<<<<<<< HEAD
+filetype plugin on
+=======
 filetype plugin indent on
+>>>>>>> 11d84e600d28cf3186e3661bcecef1ec20b32e51
 filetype indent on
 set omnifunc=syntaxcomplete#Complete
 set completeopt=menuone,longest
@@ -69,10 +73,19 @@ Plug 'rdnetto/YCM-Generator', { 'branch': 'stable' }
 " Using a tagged release; wildcard allowed (requires git 1.9.2 or above)
 Plug 'fatih/vim-go', { 'tag': '*' }
 
+<<<<<<< HEAD
+" Plugin options
+Plug 'nsf/gocode', { 'tag': 'v.20150303', 'rtp': 'vim' }
+
+" Plugin outside ~/.vim/plugged with post-update hook
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+=======
 " Plugin outside ~/.vim/plugged with post-update hook
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug '~/.fzf'
+>>>>>>> 11d84e600d28cf3186e3661bcecef1ec20b32e51
 
 " Unmanaged plugin (manually installed and updated)
 Plug '~/my-prototype-plugin'
@@ -96,9 +109,17 @@ Plug 'jreybert/vimagit'
 "Rust
 Plug 'rust-lang/rust.vim'
 
+<<<<<<< HEAD
+"ALE (ASYNCHRONOUS LINT ENGINE) 
+Plug 'w0rp/ale'
+
+"Esquema de colores gruvbox
+Plug 'morhetz/gruvbox'
+=======
 "Esquema de colores gruvbox
 Plug 'morhetz/gruvbox'
 Plug 'shinchu/lightline-gruvbox.vim'
+>>>>>>> 11d84e600d28cf3186e3661bcecef1ec20b32e51
 
 "Dockerfile.vim
 Plug 'ekalinin/Dockerfile.vim'
@@ -112,6 +133,12 @@ Plug 'luochen1990/rainbow'
 "Autopairs
 Plug 'jiangmiao/auto-pairs'
 
+<<<<<<< HEAD
+"Snippets
+Plug 'honza/vim-snippets'
+
+
+=======
 "Typing
 Plug 'alvan/vim-closetag'
 Plug 'tpope/vim-surround'
@@ -119,6 +146,7 @@ Plug 'tpope/vim-surround'
 "Snippets
 Plug 'honza/vim-snippets'
 
+>>>>>>> 11d84e600d28cf3186e3661bcecef1ec20b32e51
 "vim-pandoc
 Plug 'vim-pandoc/vim-pandoc'
 Plug 'vim-pandoc/vim-pandoc-syntax'
@@ -139,6 +167,8 @@ Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
 " use the autocmd hook to call which_key#register(), e.g., register for the Space key:
 " autocmd! User vim-which-key call which_key#register('<Space>', 'g:which_key_map')
 
+<<<<<<< HEAD
+=======
 "Syntastic syntax checker
 Plug 'vim-syntastic/syntastic'
 
@@ -154,14 +184,18 @@ Plug 'yggdroot/indentline'
 Plug 'scrooloose/nerdcommenter'
 Plug 'tpope/vim-repeat'
 
+>>>>>>> 11d84e600d28cf3186e3661bcecef1ec20b32e51
 call plug#end()
 
 "Mapear para NERDTree
 map <F2> :NERDTreeToggle<CR>
 
+<<<<<<< HEAD
+=======
 "Configuración adicional de NERDTree
 let g:NERDTreeIgnore = ['^node_modules$']
 
+>>>>>>> 11d84e600d28cf3186e3661bcecef1ec20b32e51
 "Mapear Undotree
 nnoremap <F5> :UndotreeToggle<CR>
 
@@ -207,6 +241,8 @@ augroup pandoc_syntax
   autocmd! FileType vimwiki set syntax=markdown.pandoc
 augroup END
 
+<<<<<<< HEAD
+=======
 "Configuración COC
 let g:coc_global_extensions = [
   \ 'coc-snippets',
@@ -285,3 +321,4 @@ let g:NERDTrimTrailingWhitespace = 1
 
 " Enable NERDCommenterToggle to check all selected lines is commented or not 
 let g:NERDToggleCheckAllLines = 1
+>>>>>>> 11d84e600d28cf3186e3661bcecef1ec20b32e51
