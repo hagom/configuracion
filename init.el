@@ -527,10 +527,13 @@ _l_: last hunk        set start _R_evision
   (defengine wikipedia
     "http://www.wikipedia.org/search-redirect.php?language=en&go=Go&search=%s"
     :keybinding "w"
-    :docstring "Searchin' the wikis.")
+    :docstring "Buscar conocimiento")
 
   (defengine wiktionary
-    "https://www.wikipedia.org/search-redirect.php?family=wiktionary&language=en&go=Go&search=%s")
+    "https://www.wikipedia.org/search-redirect.php?family=wiktionary&language=en&go=Go&search=%s"
+    :keybinding "W"
+    :docstring "Buscar definiciones"
+    )
 
   (defengine youtube
     "http://www.youtube.com/results?aq=f&oq=&search_query=%s"
