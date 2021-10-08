@@ -64,7 +64,7 @@
  '(custom-safe-themes
    '("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default))
  '(package-selected-packages
-   '(highlight-indent-guides elfeed ggtags rg smart-mode-line color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
+   '(indent-guide highlight-indent-guides elfeed ggtags rg smart-mode-line color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -241,7 +241,16 @@
           ("html" . (ac-source-words-in-buffer ac-source-abbrev))
 	  )
 	)
-  (setq web-mode-enable-auto-closing t))
+  (setq web-mode-extra-auto-pairs
+	'(("erb"  . (("beg" "end")))
+          ("php"  . (("beg" "end")
+                     ("beg" "end")))
+	  ))
+  (setq web-mode-enable-auto-closing t)
+  (setq web-mode-enable-auto-pairing t)
+  (setq web-mode-enable-css-colorization t)
+  (setq web-mode-enable-part-face t)
+  )
 
 ;;Javascript
 
@@ -313,6 +322,9 @@
   :config
   (projectile-global-mode)
   (setq projectile-completion-system 'ivy)
+  (setq projectile-project-search-path
+	'("~/Codigo/" "~/Documentos" )
+	)
   )
 
 (use-package counsel-projectile
@@ -371,7 +383,7 @@
   :custom
   (sp-escape-quotes-after-insert t)
   :config
-  (smartparens-global-strict-mode 1)
+  (smartparens-global-mode 1)
   (require 'smartparens-config)
   )
 
@@ -639,21 +651,51 @@ _l_: last hunk        set start _R_evision
 
 ;; Autocompletado para ansible
 (use-package company-ansible
-  :ensure t)
+  :ensure t
+  :after company
+  )
 
 ;; Autocompletado para php
 (use-package company-php
-  :ensure t)
+  :ensure t
+  :after company
+  )
 
 (use-package company-phpactor
-  :ensure t)
+  :ensure t
+  :after company
+  )
 
 (use-package company-org-block
-  :ensure t)
+  :ensure t
+  :after company
+  )
 
 (use-package company-wordfreq
   :ensure t
-  :init)
+  :init
+  :after company
+  )
+
+(use-package company-statistics
+  :ensure t
+  :config
+  (add-hook 'after-init-hook 'company-statistics-mode) 
+  :after company
+  )
+
+(use-package company-try-hard
+  :ensure t
+  :after company)
+
+(use-package company-web
+  :ensure t
+  :after company
+  :config
+  (add-to-list 'company-backends 'company-web-html)
+  (add-to-list 'company-backends 'company-web-jade)
+  (add-to-list 'company-backends 'company-web-slim) 
+  )
 
 ;; Modo para yaml
 (use-package yaml-mode
@@ -740,7 +782,8 @@ _l_: last hunk        set start _R_evision
 ;;Renombrado de etiquetas de apertura y cierre de html
 (use-package auto-rename-tag
   :ensure t
-  :config (auto-rename-tag-mode t)
+  :config 
+  (auto-rename-tag-mode t)
   )
 
 ;;Paquete para python-mode
@@ -789,4 +832,5 @@ _l_: last hunk        set start _R_evision
   (set-face-background 'highlight-indent-guides-even-face "dimgray")
   (set-face-foreground 'highlight-indent-guides-character-face "dimgray")
   )
+
 ;;; init.el ends here
