@@ -350,8 +350,10 @@
   :custom
   (sp-escape-quotes-after-insert t)
   :config
-  (smartparens-global-mode 1)
-  (require 'smartparens-config))
+  (smartparens-global-strict-mode 1)
+  (require 'smartparens-config)
+  )
+
 
 (show-paren-mode t)
 
@@ -379,13 +381,13 @@
 (defhydra hydra-git-gutter (:body-pre (git-gutter-mode 1)
 				      :hint nil)
   "
-  Git gutter:
-  _j_: next hunk        _s_tage hunk     _q_uit
-  _k_: previous hunk    _r_evert hunk    _Q_uit and deactivate git-gutter
-  ^ ^                   _p_opup hunk
-  _h_: first hunk
-  _l_: last hunk        set start _R_evision
-  "
+Git gutter:
+_j_: next hunk        _s_tage hunk     _q_uit
+_k_: previous hunk    _r_evert hunk    _Q_uit and deactivate git-gutter
+^ ^                   _p_opup hunk
+_h_: first hunk
+_l_: last hunk        set start _R_evision
+"
   ("j" git-gutter:next-hunk)
   ("k" git-gutter:previous-hunk)
   ("h" (progn (goto-char (point-min))
@@ -410,7 +412,7 @@
   :init
   :config
   (global-set-key (kbd "M-;") 'evilnc-comment-or-uncomment-lines)
-  )
+)
 
 ;; Permite indentar el codigo mientras se escribe 
 (use-package aggressive-indent
