@@ -64,7 +64,7 @@
  '(custom-safe-themes
    '("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default))
  '(package-selected-packages
-   '(rg smart-mode-line color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
+   '(highlight-indent-guides elfeed ggtags rg smart-mode-line color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -108,11 +108,14 @@
 ;; Don't ask for confirmation to delete marked buffers
 (setq ibuffer-expert t)
 
-(use-package async
-  :ensure t)
+(save-place-mode 1)
 
-;;Asincronismo en Emacs
-(async-bytecomp-package-mode 1)
+(use-package async
+  :ensure t
+  :config
+  (dired-async-mode 1)
+  (async-bytecomp-package-mode 1)
+  )
 
 ;; Habilita el clipboard en Emacs
 (setq x-select-enable-clipboard t)
@@ -309,14 +312,32 @@
   :bind ("C-c p" . projectile-command-map)
   :config
   (projectile-global-mode)
-  (setq projectile-completion-system 'ivy))
+  (setq projectile-completion-system 'ivy)
+  )
+
+(use-package counsel-projectile
+  :ensure t
+  ;; :config
+  ;; (counsel-projectile-on)
+  )
 
 ;;Sirve para poder mostrar un explorador de archivos al estilo de VsCode
 
 (use-package treemacs
   :ensure t
-  :defer t
+  ;; :defer t
   :config
+  (treemacs-follow-mode t)
+  (treemacs-filewatch-mode t)
+
+  :bind
+  (:map global-map
+	([f8]        . treemacs-toggle)
+	([f9]        . treemacs-projectile-toggle)
+	("<C-M-tab>" . treemacs-toggle)
+	("M-0"       . treemacs-select-window)
+	("C-c 1"     . treemacs-delete-other-windows)
+	)
   )
 
 (use-package treemacs-all-the-icons
@@ -345,14 +366,14 @@
 
 (use-package smartparens
   :ensure t
-  :hook (prog-mode . smartparens-mode)
+  :hook
+  (prog-mode . smartparens-mode)
   :custom
   (sp-escape-quotes-after-insert t)
   :config
   (smartparens-global-strict-mode 1)
   (require 'smartparens-config)
   )
-
 
 (show-paren-mode t)
 
@@ -740,6 +761,32 @@ _l_: last hunk        set start _R_evision
   :config  
   (load-theme 'zenburn t)
   )
+
 (use-package rg
   :ensure t)
+
+;; Front para GNU global y generador de etiquetas para codigo fuente
+(use-package ggtags
+  :ensure t
+  :init)
+
+;; Lector de feeds para emacs
+(use-package elfeed
+  :ensure t
+  :config
+  (setq elfeed-feeds
+	'("http://nullprogram.com/feed/"
+          "https://planet.emacslife.com/atom.xml")
+	)
+  )
+
+;; Permite colorear la indentacion del codigo
+(use-package highlight-indent-guides
+  :ensure t
+  :config
+  (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
+  (set-face-background 'highlight-indent-guides-odd-face "darkgray")
+  (set-face-background 'highlight-indent-guides-even-face "dimgray")
+  (set-face-foreground 'highlight-indent-guides-character-face "dimgray")
+  )
 ;;; init.el ends here
