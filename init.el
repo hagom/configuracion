@@ -51,7 +51,6 @@
 (setq x-select-enable-clipboard t)
 
 ;;Tema para emacs
-(load-theme 'wombat)
 
 ;; Comment/uncomment this line to enable MELPA Stable if desired.  See `package-archive-priorities`
 ;; and `package-pinned-packages`. Most users will not need or want to do this.
@@ -63,14 +62,52 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default))
  '(package-selected-packages
-   '(emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
+   '(smart-mode-line color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(aw-leading-char-face ((t (:inherit ace-jump-face-foreground :height 3.0)))))
+
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+(setq ibuffer-saved-filter-groups
+      (quote (("default"
+               ("dired" (mode . dired-mode))
+               ("org" (name . "^.*org$"))
+               ("magit" (mode . magit-mode))
+               ("IRC" (or (mode . circe-channel-mode) (mode . circe-server-mode)))
+               ("web" (or (mode . web-mode) (mode . js2-mode)))
+               ("shell" (or (mode . eshell-mode) (mode . shell-mode)))
+               ("mu4e" (or
+
+                        (mode . mu4e-compose-mode)
+                        (name . "\*mu4e\*")
+                        ))
+               ("programming" (or
+                               (mode . clojure-mode)
+                               (mode . clojurescript-mode)
+                               (mode . python-mode)
+                               (mode . c++-mode)))
+               ("emacs" (or
+                         (name . "^\\*scratch\\*$")
+                         (name . "^\\*Messages\\*$")))
+               ))))
+(add-hook 'ibuffer-mode-hook
+          (lambda ()
+            (ibuffer-auto-mode 1)
+            (ibuffer-switch-to-saved-filter-groups "default")))
+
+;; don't show these
+                                        ;(add-to-list 'ibuffer-never-show-predicates "zowie")
+;; Don't show filter groups if there are no buffers in that group
+(setq ibuffer-show-empty-filter-groups nil)
+
+;; Don't ask for confirmation to delete marked buffers
+(setq ibuffer-expert t)
 
 (use-package async
   :ensure t)
@@ -110,7 +147,8 @@
   :ensure t
   :init
   :config
-  (powerline-evil-vim-color-theme))
+  (powerline-evil-vim-color-theme)
+  )
 
 (use-package powerline-evil
   :ensure t
@@ -188,14 +226,20 @@
   :config
   (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
   (add-to-list 'auto-mode-alist '("\\.vue?\\'" . web-mode))
+  (setq web-mode-enable-auto-quoting t) 
+  (setq web-mode-auto-complete t)
   (setq web-mode-engines-alist
-	'(("django"    . "\\.html\\'")))
+	'(
+	  ("django"    . "\\.html\\'")
+	  )
+	)
   (setq web-mode-ac-sources-alist
 	'(("css" . (ac-source-css-property))
 	  ("vue" . (ac-source-words-in-buffer ac-source-abbrev))
-          ("html" . (ac-source-words-in-buffer ac-source-abbrev))))
+          ("html" . (ac-source-words-in-buffer ac-source-abbrev))
+	  )
+	)
   (setq web-mode-enable-auto-closing t))
-(setq web-mode-enable-auto-quoting t) 
 
 ;;Javascript
 
@@ -335,13 +379,13 @@
 (defhydra hydra-git-gutter (:body-pre (git-gutter-mode 1)
 				      :hint nil)
   "
-                            Git gutter:
-                            _j_: next hunk        _s_tage hunk     _q_uit
-                            _k_: previous hunk    _r_evert hunk    _Q_uit and deactivate git-gutter
-                            ^ ^                   _p_opup hunk
-                            _h_: first hunk
-                            _l_: last hunk        set start _R_evision
-                            "
+  Git gutter:
+  _j_: next hunk        _s_tage hunk     _q_uit
+  _k_: previous hunk    _r_evert hunk    _Q_uit and deactivate git-gutter
+  ^ ^                   _p_opup hunk
+  _h_: first hunk
+  _l_: last hunk        set start _R_evision
+  "
   ("j" git-gutter:next-hunk)
   ("k" git-gutter:previous-hunk)
   ("h" (progn (goto-char (point-min))
@@ -412,12 +456,6 @@
 
   ;; Number the candidates (use M-1, M-2 etc to select completions).
   (setq company-show-numbers t))
-
-(use-package web-mode
-  :ensure t
-  :init
-  :config (require 'web-mode)
-  )
 
 ;;Entorno de desarrollo en Python
 (use-package elpy
@@ -574,6 +612,7 @@
   (setq company-idle-delay 0)
   (setq company-minimum-prefix-length 3)
   (global-company-mode t)
+  :bind (:map company-active-map ("<tab>" . company-complete-selection))
   )
 
 ;; Autocompletado para ansible
@@ -620,14 +659,14 @@
   :config
   (add-hook 'css-mode-hook (lambda ()
                              (rainbow-mode))))
+
 (use-package emmet-mode
   :ensure t
-  :commands emmet-mode
   :config
-  (add-hook 'emmet-mode-hook
-            (lambda ()
-              (evil-define-key 'insert emmet-mode-keymap (kbd "C-S-l") 'emmet-next-edit-point)
-              (evil-define-key 'insert emmet-mode-keymap (kbd "C-S-h") 'emmet-prev-edit-point))))
+  (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+  (add-hook 'web-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+  (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
+  )
 
 (use-package lsp-mode
   :ensure t
@@ -688,5 +727,17 @@
   :hook (python-mode . lsp-deferred)
   :custom
   (python-shell-interpreter "python3"))
+
+;; Live server para desarrollo
+(use-package impatient-mode
+  :ensure t
+  )
+
+;; Tema para emacs
+(use-package zenburn-theme
+  :ensure t
+  :config  
+  (load-theme 'zenburn t)
+  )
 
 ;;; init.el ends here
