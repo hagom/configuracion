@@ -64,7 +64,7 @@
  '(custom-safe-themes
    '("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default))
  '(package-selected-packages
-   '(indent-guide highlight-indent-guides elfeed ggtags rg smart-mode-line color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
+   '(electric-operator ti smart-newline indent-guide highlight-indent-guides elfeed ggtags rg smart-mode-line color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -385,6 +385,7 @@
   :config
   (smartparens-global-mode 1)
   (require 'smartparens-config)
+  (electric-pair-mode 1)
   )
 
 (show-paren-mode t)
@@ -399,7 +400,8 @@
     ))
 
 (setq magit-status-margin
-      '(t "%Y-%m-%d %H:%M " magit-log-margin-width t 18))
+      '(t "%Y-%m-%d %H:%M " magit-log-margin-width t 18)
+      )
 
 (use-package git-gutter
   :ensure t
@@ -408,7 +410,9 @@
 (global-set-key (kbd "M-g M-g") 'hydra-git-gutter/body)
 
 
-(use-package git-timemachine :ensure t)
+(use-package git-timemachine
+  :ensure t
+  )
 
 (defhydra hydra-git-gutter (:body-pre (git-gutter-mode 1)
 				      :hint nil)
@@ -444,7 +448,7 @@ _l_: last hunk        set start _R_evision
   :init
   :config
   (global-set-key (kbd "M-;") 'evilnc-comment-or-uncomment-lines)
-)
+  )
 
 ;; Permite indentar el codigo mientras se escribe 
 (use-package aggressive-indent
@@ -453,11 +457,10 @@ _l_: last hunk        set start _R_evision
   (global-aggressive-indent-mode 1)
   )
 
-(use-package fzf :ensure t)
-
 (use-package all-the-icons 
   :ensure t
-  :defer 0.5)
+  :defer 0.5
+  )
 
 (use-package all-the-icons-ivy
   :ensure t
@@ -496,7 +499,8 @@ _l_: last hunk        set start _R_evision
   :ensure t
   :mode "\\.py\\'"
   :config
-  (elpy-enable))
+  (elpy-enable)
+  )
 
 ;; Muestra un arbol para poder deshacer
 (use-package undo-tree
@@ -521,53 +525,68 @@ _l_: last hunk        set start _R_evision
 (use-package counsel
   :ensure t
   :bind
-  (("M-y" . counsel-yank-pop)
+  (
+   ("M-y" . counsel-yank-pop)
    :map ivy-minibuffer-map
-   ("M-y" . ivy-next-line)))
+   ("M-y" . ivy-next-line)
+   )
+  )
 
 (use-package ivy
   :ensure t
   :diminish (ivy-mode)
-  :bind (("C-x b" . ivy-switch-buffer))
+  :bind (
+	 ("C-x b" . ivy-switch-buffer)
+	 )
   :config
   (ivy-mode 1)
   (setq ivy-use-virtual-buffers t)
   (setq ivy-count-format "%d/%d ")
-  (setq ivy-display-style 'fancy))
+  (setq ivy-display-style 'fancy)
+  )
 
 (use-package swiper
   :ensure t
-  :bind (("C-s" . swiper-isearch)
+  :bind (
+	 ("C-s" . swiper-isearch)
 	 ("C-r" . swiper-isearch)
 	 ("C-c C-r" . ivy-resume)
 	 ("M-x" . counsel-M-x)
-	 ("C-x C-f" . counsel-find-file))
+	 ("C-x C-f" . counsel-find-file)
+	 )
   :config
   (progn
     (ivy-mode 1)
     (setq ivy-use-virtual-buffers t)
     (setq ivy-display-style 'fancy)
     (define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
-    ))
+    )
+  )
 
 ;;Modo mayor para apache
-(use-package apache-mode :ensure t)
+(use-package apache-mode
+  :ensure t
+  )
 
 ;;Corrector gramatico
 (use-package languagetool
-  :ensure t)
+  :ensure t
+  )
 
 ;;Interfaz para composer en Emacs
 (use-package composer
-  :ensure t)
+  :ensure t
+  )
 
 ;;Contador de palabras para org
 (use-package org-wc
-  :ensure t)
+  :ensure t
+  )
 
 ;;Exportar de org a Wordpress directamente
 (use-package org2blog
-  :ensure t)
+  :ensure t
+  )
 
 ;; Permite hacer busquedas en cualquier motor de busquedas que se definan
 (use-package engine-mode
