@@ -799,11 +799,17 @@ _l_: last hunk        set start _R_evision
   )
 
 ;;Renombrado de etiquetas de apertura y cierre de html
-(use-package auto-rename-tag
-  :ensure t
-  :config 
-  (auto-rename-tag-mode t)
-  )
+;; (use-package auto-rename-tag
+;;   :ensure t
+;;   :config
+;;   (add-hook 'html-mode 'auto-rename-tag-mode t)
+;;   )
+
+(use-package sgml-mode
+  :hook ((sgml-mode nxml-mode html-mode web-mode)
+         . sgml-electric-tag-pair-mode)
+  :config
+  (setq sgml-basic-offset 4))
 
 ;;Paquete para python-mode
 (use-package python-mode
