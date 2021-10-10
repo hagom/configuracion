@@ -209,6 +209,10 @@
 	    )
   )
 
+;;Editar multiples regiones al mismo tiempo
+(use-package iedit
+  :ensure t)
+
 ;;Borra todos los espacios en blanco con solo presionar la tecla backspace o suprimir
 (use-package hungry-delete
   :ensure t
