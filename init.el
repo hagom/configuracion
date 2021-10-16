@@ -5,9 +5,11 @@
 (add-to-list 'package-archives '("elpa" . "https://elpa.gnu.org/packages/") t)
 (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
 
-;; (package-initialize)
-;; (unless package-archive-contents
-;;   (package-refresh-contents))
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+(require 'use-package)
+(setq use-package-always-ensure 't)
 
 ;; Opciones de rendimiento
 
@@ -124,7 +126,7 @@
   )
 
 ;; Habilita el clipboard en Emacs
-(setq x-select-enable-clipboard t)
+(setq select-enable-clipboard t)
 
 ;;Evil mode
 
@@ -869,5 +871,13 @@ _l_: last hunk        set start _R_evision
 ;;Conexiones remotas desde emacs
 (use-package tramp
   :ensure t)
+
+;; Habilitado el portapapeles de la GUI a la terminal
+
+(use-package xclip
+  :ensure t
+  :init
+  (xclip-mode 1)
+  )
 
 ;;; init.el ends here
