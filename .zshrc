@@ -37,7 +37,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # DISABLE_UPDATE_PROMPT="true"
 
 # Uncomment the following line to change how often to auto-update (in days).
- export UPDATE_ZSH_DAYS=3
+ export UPDATE_ZSH_DAYS=30
 
 # Uncomment the following line if pasting URLs and other text is messed up.
 # DISABLE_MAGIC_FUNCTIONS="true"
@@ -77,7 +77,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(adb command-not-found cargo composer compleat cp debian dirhistory docker docker-compose django fzf gem git git-extras git-flow github gh history node ng nmap npm pip postgres python rust rustup sudo systemd tig tmux z zsh-interactive-cd zsh_reload zsh-autosuggestions zsh-syntax-highlighting)
+plugins=(adb command-not-found cargo composer compleat cp debian dirhistory docker docker-compose fzf git git-extras github gh history node ng nmap npm pip postgres python rust rustup sudo systemd tig tmux zoxide zsh-interactive-cd zsh-autosuggestions zsh-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -98,6 +98,7 @@ source $ZSH/oh-my-zsh.sh
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
+export EDITOR='vim'
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
@@ -143,3 +144,4 @@ source /home/hagom/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
