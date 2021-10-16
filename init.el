@@ -53,6 +53,10 @@
 
 ;;Habilitar / Deshabilitar menu de opciones
 (menu-bar-mode -1)
+(setq inhibit-startup-message t)
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
 
 ;;Portapapeles global
 (setq x-select-enable-clipboard t)
@@ -842,7 +846,7 @@ _l_: last hunk        set start _R_evision
 ;; Tema para emacs
 (use-package zenburn-theme
   :ensure t
-  :config  
+  :init  
   (load-theme 'zenburn t)
   )
 
