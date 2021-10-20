@@ -75,8 +75,10 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    '("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default))
+ '(nxml-auto-insert-xml-declaration-flag t)
+ '(nxml-slash-auto-complete-flag t)
  '(package-selected-packages
-   '(jedi-core electric-operator ti highlight-indent-guides elfeed ggtags rg color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
+   '(company-box company-coq jedi-core electric-operator ti highlight-indent-guides elfeed ggtags rg color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle smartparens tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes powerline-evil pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -226,6 +228,10 @@
 	)
   )
 
+(use-package yasnippet-snippets
+  :ensure t
+  :after yasnippet)
+
 ;;Editar multiples regiones al mismo tiempo
 (use-package iedit
   :ensure t)
@@ -344,8 +350,12 @@
   (projectile-global-mode)
   (setq projectile-completion-system 'ivy)
   (setq projectile-project-search-path
-	'("~/Codigo/" "~/Documentos" )
+	'("/baul/Codigo" "/baul/Documentos")
 	)
+  (setq projectile-auto-discover t)
+
+  ;; Permite hacer cacheo del proyecto
+  (setq projectile-enable-caching t) 
   )
 
 (use-package counsel-projectile
@@ -602,6 +612,9 @@ _l_: last hunk        set start _R_evision
 ;;Interfaz para composer en Emacs
 (use-package composer
   :ensure t
+  :config
+  (composer-get-bin-dir)
+  (composer-get-config "bin-dir")
   )
 
 ;;Contador de palabras para org
@@ -709,6 +722,36 @@ _l_: last hunk        set start _R_evision
 (use-package company-phpactor
   :ensure t
   :after company
+  )
+
+(use-package company-coq
+  :ensure t
+  :after company
+  :config
+  (setq company-coq-features/prettify-symbols-in-terminals t)
+  (setq company-coq-live-on-the-edge t)
+  )
+
+(use-package company-box
+  :hook (company-mode . company-box-mode))
+
+(use-package proof-general
+  :ensure t)
+
+(use-package php-mode
+  ;;
+  :hook ((php-mode . (lambda () (set (make-local-variable 'company-backends)
+				     '(;; list of backends
+				       company-phpactor
+				       company-files
+				       ))))))
+
+(use-package phpunit
+  :ensure t
+  :config
+  (define-key web-mode-map (kbd "C-x t") 'phpunit-current-test)
+  (define-key web-mode-map (kbd "C-x c") 'phpunit-current-class)
+  (define-key web-mode-map (kbd "C-x p") 'phpunit-current-project)
   )
 
 (use-package company-org-block
