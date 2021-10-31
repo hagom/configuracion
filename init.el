@@ -79,7 +79,7 @@
  '(nxml-auto-insert-xml-declaration-flag t)
  '(nxml-slash-auto-complete-flag t)
  '(package-selected-packages
-   '(doom-modeline spacemacs-theme smart-mode-line-powerline powerline-evil editorconfig company-box company-coq jedi-core electric-operator ti highlight-indent-guides elfeed ggtags rg color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
+   '(perspective keycast evil-numbers marginalia doom-modeline spacemacs-theme smart-mode-line-powerline powerline-evil editorconfig company-box company-coq jedi-core electric-operator ti highlight-indent-guides elfeed ggtags rg color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -163,19 +163,6 @@
 (setq display-line-numbers-type 'relative) 
 (global-display-line-numbers-mode) 
 
-;;Powerline
-;; (use-package powerline
-;;   :ensure t
-;;   :init
-;;   :config
-;;   (powerline-center-evil-theme)
-;;   (powerline-raw mode-line-mule-info nil 'l)
-;;   )
-
-;; (use-package powerline-evil
-;;   :ensure t)
-
-
 (use-package doom-modeline
   :ensure t
   :hook (after-init . doom-modeline-mode))
@@ -217,6 +204,9 @@
   :ensure t
   :config
   (global-evil-surround-mode 1))
+
+(use-package evil-numbers
+  :ensure t)
 
 (use-package flycheck
   :ensure t
@@ -752,14 +742,6 @@ _l_: last hunk        set start _R_evision
   :after company
   )
 
-(use-package company-coq
-  :ensure t
-  :after company
-  :config
-  (setq company-coq-features/prettify-symbols-in-terminals t)
-  (setq company-coq-live-on-the-edge t)
-  )
-
 (use-package company-box
   :ensure t
   :hook (company-mode . company-box-mode))
@@ -851,14 +833,12 @@ _l_: last hunk        set start _R_evision
 
 (use-package lsp-mode
   :ensure t
+  :commands (lsp lsp-deferred)
   :init
-  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
   (setq lsp-keymap-prefix "C-c l")
-  :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-         (XXX-mode . lsp)
-         ;; if you want which-key integration
-         (lsp-mode . lsp-enable-which-key-integration))
-  :commands lsp)
+  :config
+  (lsp-enable-which-key-integration 1)
+  )
 
 ;; Opcional
 (use-package lsp-ui :commands lsp-ui-mode)
@@ -976,5 +956,11 @@ _l_: last hunk        set start _R_evision
   ;; enabled right away. Note that this forces loading the package.
   (marginalia-mode))
 
-
+;; Permite crear distantas perspectivas pawera que no se aglomeren muchos buffers en ibuffer o en cualquier otra lista de bufferso
+(use-package perspective
+  :ensure t
+  :bind (("C-x k" . persp-kill-buffer*))
+  :init
+  (persp-mode)
+  )
 ;;; init.el ends here
