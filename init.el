@@ -61,6 +61,9 @@
 ;;Portapapeles global
 (setq x-select-enable-clipboard t)
 
+;; Aumentar el tamaño de data que recibe Emacs del proceso
+(setq read-process-output-max (* 1024 1024)) ;; 1mb
+
 ;;Tema para emacs
 
 ;; Comment/uncomment this line to enable MELPA Stable if desired.  See `package-archive-priorities`
@@ -79,7 +82,7 @@
  '(nxml-auto-insert-xml-declaration-flag t)
  '(nxml-slash-auto-complete-flag t)
  '(package-selected-packages
-   '(perspective keycast evil-numbers marginalia doom-modeline spacemacs-theme smart-mode-line-powerline powerline-evil editorconfig company-box company-coq jedi-core electric-operator ti highlight-indent-guides elfeed ggtags rg color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
+   '(edwina perspective keycast evil-numbers marginalia doom-modeline spacemacs-theme smart-mode-line-powerline powerline-evil editorconfig company-box company-coq jedi-core electric-operator ti highlight-indent-guides elfeed ggtags rg color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -234,6 +237,10 @@
 (use-package yasnippet-snippets
   :ensure t
   :after yasnippet)
+
+;; Snippet para react
+(use-package react-snippets
+  :ensure t)
 
 ;;Editar multiples regiones al mismo tiempo
 (use-package iedit
@@ -445,17 +452,6 @@
 (setq magit-status-margin
       '(t "%Y-%m-%d %H:%M " magit-log-margin-width t 18)
       )
-
-(use-package git-gutter
-  :ensure t
-  :init
-  (global-git-gutter-mode +1))
-(global-set-key (kbd "M-g M-g") 'hydra-git-gutter/body)
-
-
-(use-package git-timemachine
-  :ensure t
-  )
 
 (defhydra hydra-git-gutter (:body-pre (git-gutter-mode 1)
 				      :hint nil)
@@ -831,6 +827,7 @@ _l_: last hunk        set start _R_evision
   (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
   )
 
+;; Language Server Protocol 
 (use-package lsp-mode
   :ensure t
   :commands (lsp lsp-deferred)
@@ -838,22 +835,44 @@ _l_: last hunk        set start _R_evision
   (setq lsp-keymap-prefix "C-c l")
   :config
   (lsp-enable-which-key-integration 1)
+  (add-hook 'prog-mode-hook #'lsp)
+  (setq lsp-log-io nil) ;; if set to true can cause a performance hit
   )
 
 ;; Opcional
-(use-package lsp-ui :commands lsp-ui-mode)
+(use-package lsp-ui
+  :ensure t
+  :commands lsp-ui-mode
+  )
+
+(use-package lsp-jedi
+  :ensure t
+  :config
+  (with-eval-after-load "lsp-mode"
+    (add-to-list 'lsp-disabled-clients 'pyls)
+    (add-to-list 'lsp-enabled-clients 'jedi)))
+
+(use-package lsp-tailwindcss
+  :ensure t)
+
 ;; if you are helm user
 (use-package helm-lsp :commands helm-lsp-workspace-symbol)
+
 ;; if you are ivy user
-(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
-(use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+(use-package lsp-ivy
+  :commands lsp-ivy-workspace-symbol)
+
+(use-package lsp-treemacs
+  :commands lsp-treemacs-errors-list)
 
 ;; optionally if you want to use debugger
-(use-package dap-mode)
+(use-package dap-mode
+  :ensure t)
 ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 
 ;; optional if you want which-key integration
 (use-package which-key
+  :ensure t
   :config
   (which-key-mode))
 
@@ -963,4 +982,13 @@ _l_: last hunk        set start _R_evision
   :init
   (persp-mode)
   )
+
+;; Manejador de ventanas para Emacs al estilo de dwm
+(use-package edwina
+  :ensure t
+  :config
+  (setq display-buffer-base-action '(display-buffer-below-selected))
+  (edwina-setup-dwm-keys)
+  (edwina-mode 1))
+
 ;;; init.el ends here
