@@ -836,6 +836,8 @@ _l_: last hunk        set start _R_evision
   :config
   (lsp-enable-which-key-integration 1)
   (add-hook 'prog-mode-hook #'lsp)
+  (remove-hook 'emacs-lisp-mode-hook #'lsp)
+  (setq lsp-enable-symbol-highlighting t)
   (setq lsp-log-io nil) ;; if set to true can cause a performance hit
   )
 
@@ -843,6 +845,14 @@ _l_: last hunk        set start _R_evision
 (use-package lsp-ui
   :ensure t
   :commands lsp-ui-mode
+  :config
+  (setq lsp-ui-sideline-show-diagnostics 1)
+  (setq lsp-ui-sideline-show-hover 1)
+  (setq lsp-ui-sideline-show-code-actions 1)
+  (setq lsp-ui-doc-enable 1)
+  (lsp-ui-peek-jump-backward)
+  (lsp-ui-peek-jump-forward)
+  (setq lsp-ui-doc-show-with-cursor 1)
   )
 
 (use-package lsp-jedi
@@ -867,7 +877,24 @@ _l_: last hunk        set start _R_evision
 
 ;; optionally if you want to use debugger
 (use-package dap-mode
-  :ensure t)
+  :ensure t
+  :config
+  ;; Enabling only some features
+  (setq dap-auto-configure-features '(sessions locals controls tooltip))
+  (dap-mode 1)
+
+  ;; The modes below are optional
+
+  (dap-ui-mode 1)
+  ;; enables mouse hover support
+  (dap-tooltip-mode 1)
+  ;; use tooltips for mouse hover
+  ;; if it is not enabled `dap-mode' will use the minibuffer.
+  (tooltip-mode 1)
+  ;; displays floating panel with debug buttons
+  (dap-ui-controls-mode 1)
+  (require 'dap-python)
+  )
 ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 
 ;; optional if you want which-key integration
@@ -959,7 +986,9 @@ _l_: last hunk        set start _R_evision
   :ensure t)
 
 (use-package editorconfig
-  :ensure t)
+  :ensure t
+  :config
+  (editorconfig-mode 1))
 
 (use-package marginalia
   ;; Either bind `marginalia-cycle` globally or only in the minibuffer
@@ -990,5 +1019,14 @@ _l_: last hunk        set start _R_evision
   (setq display-buffer-base-action '(display-buffer-below-selected))
   (edwina-setup-dwm-keys)
   (edwina-mode 1))
+
+(use-package typescript-mode
+  :ensure t
+  :mode "\\.ts\\’"
+  :hook (typescript-mode . lsp-deferred)
+  :config
+  ;; (setq typescript-indent-level 4)
+  ;; (dap-node-setup) ;;Instala automaticamente el depurador de node si es necesario
+  )
 
 ;;; init.el ends here
