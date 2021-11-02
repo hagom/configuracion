@@ -401,7 +401,7 @@
   :config
   (treemacs-follow-mode t)
   (treemacs-filewatch-mode t)
-  (treemacs-git-mode 'deferred)
+  (treemacs-git-mode 'extended)
   (treemacs-indent-guide-mode 'line)
   (with-eval-after-load 'treemacs
     (define-key treemacs-mode-map [mouse-1] #'treemacs-single-click-expand-action))
@@ -438,20 +438,6 @@
   (setq treemacs-header-function #'treemacs-projectile-create-header)
   )
 
-;;Para autocompletado de simbolos como parentesis, comillas, etc
-
-;; (use-package smartparens
-;;   :ensure t
-;;   :disabled t
-;;   :hook
-;;   (prog-mode . smartparens-mode)
-;;   :custom
-;;   (sp-escape-quotes-after-insert t)
-;;   :config
-;;   (smartparens-global-mode 1)
-;;   (require 'smartparens-config)
-;;   (electric-pair-mode 1)
-;;   )
 
 ;;Para autocompletado de simbolos como parentesis, comillas, etc. Parte de las funciones de electric que vienen por defecto en emacs
 
