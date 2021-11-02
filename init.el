@@ -1050,7 +1050,7 @@ _l_: last hunk        set start _R_evision
 (use-package apt-sources-list
   :ensure t)
 
-Modo para poder ejecutar npm dentro de Emacs
+;; Modo para poder ejecutar npm dentro de Emacs
 (use-package npm
   :ensure t)
 
