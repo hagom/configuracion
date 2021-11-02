@@ -845,11 +845,14 @@ _l_: last hunk        set start _R_evision
                              (rainbow-mode))))
 
 (use-package emmet-mode
-  :ensure t
+  :hook ((html-mode sgml-mode css-mode web-mode) . emmet-preview-mode)
+  :bind("<tab>" . emmet-expand-line)
   :config
-  (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
-  (add-hook 'web-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
-  (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
+  (add-hook 'rjsx-mode-hook
+            (lambda ()
+              (setq-local emmet-expand-jsx-className? t)))
+  
+  (setq emmet-move-cursor-between-quotes t) ;; default nil
   )
 
 ;; Language Server Protocol 
