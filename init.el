@@ -858,11 +858,13 @@ _l_: last hunk        set start _R_evision
 
 (use-package emmet-mode
   :hook ((html-mode sgml-mode css-mode web-mode) . emmet-preview-mode)
-  :bind("<tab>" . emmet-expand-line)
+  :bind("C-j" . emmet-expand-line)
   :config
   (add-hook 'rjsx-mode-hook
             (lambda ()
-              (setq-local emmet-expand-jsx-className? t)))
+              (setq-local emmet-expand-jsx-className? t)
+	      )
+	    )
   
   (setq emmet-move-cursor-between-quotes t) ;; default nil
   )
