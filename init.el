@@ -173,8 +173,10 @@
 ;;Which key 
 (use-package which-key
   :ensure t 
+  :defer t
   :config
-  (which-key-mode))
+  (which-key-mode t)
+  )
 
 ;;Org mode
 (use-package org 
@@ -236,6 +238,7 @@
 
 (use-package yasnippet-snippets
   :ensure t
+  :defer t
   :after yasnippet)
 
 ;; Snippet para react
@@ -363,6 +366,7 @@
 
 (use-package projectile
   :ensure t
+  :defer t
   :bind ("C-c p" . projectile-command-map)
   :config
   (projectile-global-mode)
