@@ -881,6 +881,10 @@ _l_: last hunk        set start _R_evision
   (add-hook 'prog-mode-hook #'lsp)
   (setq lsp-enable-symbol-highlighting t)
   (setq lsp-log-io nil) ;; if set to true can cause a performance hit
+  (with-eval-after-load 'lsp-mode
+    (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\.my-folder\\'")
+    ;; or
+    (add-to-list 'lsp-file-watch-ignored-files "[/\\\\]\\.my-files\\'"))
   )
 
 ;; Opcional
