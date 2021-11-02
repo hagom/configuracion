@@ -82,7 +82,7 @@
  '(nxml-auto-insert-xml-declaration-flag t)
  '(nxml-slash-auto-complete-flag t)
  '(package-selected-packages
-   '(edwina perspective keycast evil-numbers marginalia doom-modeline spacemacs-theme smart-mode-line-powerline powerline-evil editorconfig company-box company-coq jedi-core electric-operator ti highlight-indent-guides elfeed ggtags rg color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
+   '(apt-sources-list try edwina perspective keycast evil-numbers marginalia doom-modeline spacemacs-theme smart-mode-line-powerline powerline-evil editorconfig company-box company-coq jedi-core electric-operator ti highlight-indent-guides elfeed ggtags rg color-theme impatient-mode emmet-mode yaml-mode beacon git-timemachine git-gutter projectile flycheck powerline evil-collection evil treemacs-magit treemacs-icons-dired origami auto-rename-tag treemacs-evil treemacs-all-the-icons json-reformat lsp-mode magit pdf-tools django-snippets django-mode rainbow-delimiters dap-mode lsp-treemacs lsp-ivy helm-lsp lsp-ui company-wordfreq company-org-block company-phpactor company-php company-ansible T org-roam engine-mode emojify org2blog org-wc languagetool apache-mode counsel ox-publish elpy company-tabnine all-the-icons-dired all-the-icons-ivy all-the-icons fzf treemacs-projectile treemacs neotree-toggle tern-auto-complete tern js2-refactor ac-js2 web-mode multiple-cursors hungry-delete ace-window org-bullets use-package magit-popup web-search org-web-tools powerthesaurus org-alert org-review evil-args evil-commentary evil-mc evil-mc-extras evil-nerd-commenter evil-org evil-surround airline-themes pandoc-mode tss typescript-mode import-js js2-mode node-resolver npm-mode github-search magit-circleci magit-lfs magit-org-todos magit-rbr magit-reviewboard magit-todos magit-vcsh orgit org-ac org-context org-evil org-jira org-kanban org-multi-wiki org-preview-html org-sidebar org-sync weechat weechat-alert viking-mode captain seq yasnippet auto-virtualenv indent-tools lsp-jedi pony-mode pydoc pylint python-mode python-pytest 2048-game composer flycheck-phpstan flymake-phpcs php-mode php-refactor-mode php-runtime phpactor phpunit smarty-mode async-await bpr concurrent ac-emmet yasnippet-classic-snippets xclip which-key websocket web-server undo-tree transcribe svg-lib svg-clock sql-indent scanner rainbow-mode python poker phps-mode orgalist org-translate org-edna ivy-hydra gnu-elpa-keyring-update gnu-elpa flymake-proselint eldoc-eval el-search eglot dict-tree csv-mode company-statistics company-ebdb cobol-mode chess auto-correct async aggressive-indent)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -799,6 +799,14 @@ _l_: last hunk        set start _R_evision
   (add-to-list 'company-backends 'company-web-slim) 
   )
 
+;;Probar paquetes sin instarlos
+(use-package try
+  :ensure t)
+
+;;Editar archivos que necesitan permisos de administrador usando su o sudo en Emacs
+(use-package su
+  :ensure t)
+
 ;; Modo para yaml
 (use-package yaml-mode
   :ensure t)
@@ -1009,7 +1017,8 @@ _l_: last hunk        set start _R_evision
 
   ;; Must be in the :init section of use-package such that the mode gets
   ;; enabled right away. Note that this forces loading the package.
-  (marginalia-mode))
+  (marginalia-mode)
+  )
 
 ;; Permite crear distantas perspectivas pawera que no se aglomeren muchos buffers en ibuffer o en cualquier otra lista de bufferso
 (use-package perspective
@@ -1027,6 +1036,7 @@ _l_: last hunk        set start _R_evision
   (edwina-setup-dwm-keys)
   (edwina-mode 1))
 
+;; Modo mayor para archivos typescript
 (use-package typescript-mode
   :ensure t
   :mode "\\.ts\\’"
@@ -1036,4 +1046,13 @@ _l_: last hunk        set start _R_evision
   ;; (dap-node-setup) ;;Instala automaticamente el depurador de node si es necesario
   )
 
+;; Añade resaltado de sintaxis para archivos de configuracion sources.list
+(use-package apt-sources-list
+  :ensure t)
+
+Modo para poder ejecutar npm dentro de Emacs
+(use-package npm
+  :ensure t)
+
 ;;; init.el ends here
+
