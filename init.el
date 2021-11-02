@@ -377,7 +377,15 @@
   (setq projectile-auto-discover t)
 
   ;; Permite hacer cacheo del proyecto
-  (setq projectile-enable-caching t) 
+  (setq projectile-enable-caching t)
+  (add-to-list 'projectile-globally-ignored-directories "*node_modules")
+  (setq projectile-mode-line
+        '(:eval
+          (format " Proj[%s]"
+                  (projectile-project-name)
+		  )
+	  )
+	)
   )
 
 (use-package counsel-projectile
