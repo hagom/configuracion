@@ -878,7 +878,6 @@ _l_: last hunk        set start _R_evision
   :config
   (lsp-enable-which-key-integration 1)
   (add-hook 'prog-mode-hook #'lsp)
-  (remove-hook 'emacs-lisp-mode-hook #'lsp)
   (setq lsp-enable-symbol-highlighting t)
   (setq lsp-log-io nil) ;; if set to true can cause a performance hit
   )
@@ -1054,14 +1053,6 @@ _l_: last hunk        set start _R_evision
   :init
   (persp-mode)
   )
-
-;; Manejador de ventanas para Emacs al estilo de dwm
-(use-package edwina
-  :ensure t
-  :config
-  (setq display-buffer-base-action '(display-buffer-below-selected))
-  (edwina-setup-dwm-keys)
-  (edwina-mode 1))
 
 ;; Modo mayor para archivos typescript
 (use-package typescript-mode
