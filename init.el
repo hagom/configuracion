@@ -1072,5 +1072,14 @@ _l_: last hunk        set start _R_evision
 (use-package npm
   :ensure t)
 
-;;; init.el ends here
+(use-package markdown-mode
+  :ensure t
+  :mode "\\.md\\'"
+  )
 
+(use-package markdown-preview-mode
+  :ensure t
+  :config
+  (add-to-list 'markdown-preview-javascript '("http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML" . async))
+  )
+;;; init.el ends here
