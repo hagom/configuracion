@@ -398,18 +398,19 @@
 
 (use-package treemacs
   :ensure t
-  ;; :defer t
   :config
   (treemacs-follow-mode t)
   (treemacs-filewatch-mode t)
-
+  (treemacs-git-mode 'deferred)
+  (treemacs-indent-guide-mode 'line)
+  (with-eval-after-load 'treemacs
+    (define-key treemacs-mode-map [mouse-1] #'treemacs-single-click-expand-action))
   :bind
   (:map global-map
-	([f8]        . treemacs-toggle)
-	([f9]        . treemacs-projectile-toggle)
-	("<C-M-tab>" . treemacs-toggle)
-	("M-0"       . treemacs-select-window)
-	("C-c 1"     . treemacs-delete-other-windows)
+	([f7] . treemacs-select-window)
+	([f8] . treemacs)
+	([f9] . treemacs-projectile)
+	("C-c 1" . treemacs-delete-other-windows)
 	)
   )
 
@@ -914,7 +915,12 @@ _l_: last hunk        set start _R_evision
   :commands lsp-ivy-workspace-symbol)
 
 (use-package lsp-treemacs
-  :commands lsp-treemacs-errors-list)
+  :commands lsp-treemacs-errors-list
+  :config
+  (setq lsp-treemacs-symbols t)
+  (setq lsp-treemacs-errors-list t)
+  (lsp-treemacs-sync-mode 1)
+  )
 
 ;; optionally if you want to use debugger
 (use-package dap-mode
