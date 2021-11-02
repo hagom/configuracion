@@ -817,7 +817,9 @@ _l_: last hunk        set start _R_evision
 
 ;; Modo para yaml
 (use-package yaml-mode
-  :ensure t)
+  :ensure t
+  ;; .yaml or .yml
+  :mode "\\(?:\\(?:\\.y\\(?:a?ml\\)\\)\\)\\'")
 
 ;; Mostrar todos los iconos
 (use-package all-the-icons
