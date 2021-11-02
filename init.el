@@ -262,6 +262,7 @@
 
 (use-package web-mode
   :ensure t
+  :mode "\\(?:\\(?:\\.\\(?:html\\|twig\\)\\)\\)\\'"
   :config
   (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
   (add-to-list 'auto-mode-alist '("\\.vue?\\'" . web-mode))
@@ -287,6 +288,13 @@
   (setq web-mode-enable-auto-pairing t)
   (setq web-mode-enable-css-colorization t)
   (setq web-mode-enable-part-face t)
+  (add-hook 'web-mode-hook
+            (lambda ()
+              (setq web-mode-style-padding 2)
+              (yas-minor-mode t)
+              (emmet-mode)
+              (flycheck-add-mode 'html-tidy 'web-mode)
+              (flycheck-mode)))
   )
 
 ;;Javascript
