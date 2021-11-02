@@ -770,10 +770,10 @@ _l_: last hunk        set start _R_evision
 
 (use-package phpunit
   :ensure t
-  :config
-  (define-key web-mode-map (kbd "C-x t") 'phpunit-current-test)
-  (define-key web-mode-map (kbd "C-x c") 'phpunit-current-class)
-  (define-key web-mode-map (kbd "C-x p") 'phpunit-current-project)
+  ;; :config
+  ;; (define-key web-mode-map (kbd "C-x t") 'phpunit-current-test)
+  ;; (define-key web-mode-map (kbd "C-x c") 'phpunit-current-class)
+  ;; (define-key web-mode-map (kbd "C-x p") 'phpunit-current-project)
   )
 
 (use-package company-org-block
