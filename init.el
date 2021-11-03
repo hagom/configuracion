@@ -852,7 +852,6 @@ _l_: last hunk        set start _R_evision
               (setq-local emmet-expand-jsx-className? t)
 	      )
 	    )
-  
   (setq emmet-move-cursor-between-quotes t) ;; default nil
   )
 
