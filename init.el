@@ -1067,17 +1067,20 @@ _l_: last hunk        set start _R_evision
 (use-package npm
   :ensure t)
 
+;;Modo para markdown
 (use-package markdown-mode
   :ensure t
   :mode "\\.md\\'"
   )
 
+;;Permite hacer preview del archivo de markdown que se esta editando
 (use-package markdown-preview-mode
   :ensure t
   :config
   (add-to-list 'markdown-preview-javascript '("http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML" . async))
   )
 
+;;Permite descargar plantillas de gitignore
 (use-package gitignore-templates
   :ensure t
   )
