@@ -38,6 +38,17 @@
 ;; Muestra los niveles de indentacion con colores
 (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
 
+;; Cambia la ubicación de donde se crean los archivos temporales
+(setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
+      url-history-file (expand-file-name "url/history" user-emacs-directory))
+
+;; Keep customization settings in a temporary file (thanks Ambrevar!)
+(setq custom-file
+      (if (boundp 'server-socket-dir)
+          (expand-file-name "custom.el" server-socket-dir)
+        (expand-file-name (format "emacs-custom-%s.el" (user-uid)) temporary-file-directory)))
+(load custom-file t)
+
 ;;Use-package
 
 (unless (package-installed-p 'use-package)
