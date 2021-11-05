@@ -391,7 +391,7 @@
   (projectile-global-mode)
   (setq projectile-completion-system 'ivy)
   (setq projectile-project-search-path
-	'("~/Codigo /baul/Codigo" "/baul/Documentos")
+	'("/home/hagom/Codigo" "/baul")
 	)
   (setq projectile-auto-discover t)
 
