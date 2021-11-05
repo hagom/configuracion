@@ -180,7 +180,14 @@
 
 (use-package doom-modeline
   :ensure t
-  :hook (after-init . doom-modeline-mode))
+  :hook (after-init . doom-modeline-mode)
+  :config
+  (setq doom-modeline-lsp t) ;;Muestra el estado de lsp-mode
+  (setq doom-modeline-persp-name t) ;;Muestra en el modeline el nombre de la perspectiva
+  (setq doom-modeline-persp-icon t) ;;Muestra el icono en el modeline de perspective
+  (setq doom-modeline-modal-icon t) ;;Muestra el icono modal
+  (setq doom-modeline-env-version t) ;;Muestra en el modeline la version del enviroment para cualquier lenguaje de programación
+  )
 
 ;;Which key 
 (use-package which-key
