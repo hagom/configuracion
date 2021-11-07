@@ -753,6 +753,16 @@ _l_: last hunk        set start _R_evision
   :bind (:map company-active-map ("<tab>" . company-complete-selection))
   )
 
+(use-package company-emojify
+  :ensure t
+  :after company
+  )
+
+(use-package company-fuzzy
+  :ensure t
+  :after company
+  )
+
 ;; Autocompletado para ansible
 (use-package company-ansible
   :ensure t
@@ -1062,8 +1072,7 @@ _l_: last hunk        set start _R_evision
 ;; Permite crear distantas perspectivas pawera que no se aglomeren muchos buffers en ibuffer o en cualquier otra lista de bufferso
 (use-package perspective
   :ensure t
-  :bind (("C-x k" . persp-kill-buffer*))
-  :init
+  :config
   (persp-mode)
   )
 
