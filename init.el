@@ -384,34 +384,54 @@
 
 ;;Javascript
 
-(use-package js2-mode
+;; (use-package rjsx-mode
+;;   :ensure t
+;;   :mode "\\.js\\'"
+;;   :config
+;;   (add-to-list 'auto-mode-alist '("components\\/.*\\.js\\'" . rjsx-mode))
+;;   (with-eval-after-load 'rjsx-mode
+;;     (define-key rjsx-mode-map "<" t)
+;;     (define-key rjsx-mode-map (kbd "C-d") nil)
+;;     (define-key rjsx-mode-map ">" t))
+;;   )
+
+;; (setq js-jsx-syntax t)
+
+;; (use-package js2-mode
+;;   :ensure t
+;;   :ensure ac-js2
+;;   :defer t
+;;   :init
+;;   (progn
+;;     (add-hook 'js-mode-hook 'js2-minor-mode)
+;;     (add-hook 'js2-mode-hook 'ac-js2-mode)
+;;     )
+;;   )
+
+;;Importa cualquier dependencia desde el proyecto en el que se encuentre
+(use-package js-import
   :ensure t
-  :ensure ac-js2
-  :init
-  (progn
-    (add-hook 'js-mode-hook 'js2-minor-mode)
-    (add-hook 'js2-mode-hook 'ac-js2-mode)
-    ))
+  )
 
 ;;Refactorizar para javascript
-(use-package js2-refactor
-  :ensure t
-  :config 
-  (progn
-    (js2r-add-keybindings-with-prefix "C-c C-m")
-    ;; eg. extract function with `C-c C-m ef`.
-    (add-hook 'js2-mode-hook #'js2-refactor-mode)))
+;; (use-package js2-refactor
+;;   :ensure t
+;;   :config 
+;;   (progn
+;;     (js2r-add-keybindings-with-prefix "C-c C-m")
+;;     ;; eg. extract function with `C-c C-m ef`.
+;;     (add-hook 'js2-mode-hook #'js2-refactor-mode)))
 
-(use-package tern
-  :ensure tern
-  :ensure tern-auto-complete
-  :config
-  (progn
-    (add-hook 'js-mode-hook (lambda () (tern-mode t)))
-    (add-hook 'js2-mode-hook (lambda () (tern-mode t)))
-    (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-    ;;(tern-ac-setup)
-    ))
+;; (use-package tern
+;;   :ensure tern
+;;   :ensure tern-auto-complete
+;;   :config
+;;   (progn
+;;     (add-hook 'js-mode-hook (lambda () (tern-mode t)))
+;;     (add-hook 'js2-mode-hook (lambda () (tern-mode t)))
+;;     (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+;;     ;;(tern-ac-setup)
+;;     ))
 
 ;; use web-mode for .jsx files
 (add-to-list 'auto-mode-alist '("\\.jsx$" . web-mode))
@@ -451,7 +471,8 @@
   :defer t
   :bind ("C-c p" . projectile-command-map)
   :config
-  (projectile-global-mode)
+  ;; (projectile-global-mode)
+  (projectile-mode)
   (setq projectile-completion-system 'ivy)
   (setq projectile-project-search-path
 	'("/home/hagom/Codigo" "/baul")
@@ -936,13 +957,13 @@ _l_: last hunk        set start _R_evision
 
 (use-package emmet-mode
   :hook ((html-mode sgml-mode css-mode web-mode) . emmet-preview-mode)
-  :bind("C-j" . emmet-expand-line)
+  :bind ("C-j" . emmet-expand-line)
   :config
-  (add-hook 'rjsx-mode-hook
-            (lambda ()
-              (setq-local emmet-expand-jsx-className? t)
-	      )
-	    )
+  ;; (add-hook 'rjsx-mode-hook
+  ;;           (lambda ()
+  ;;             (setq-local emmet-expand-jsx-className? t)
+  ;; 	      )
+  ;; 	    )
   (setq emmet-move-cursor-between-quotes t) ;; default nil
   )
 
@@ -956,11 +977,18 @@ _l_: last hunk        set start _R_evision
   (lsp-enable-which-key-integration 1)
   (add-hook 'prog-mode-hook #'lsp)
   (setq lsp-enable-symbol-highlighting t)
+  ;; (setq lsp-eslint-enable t)
   (setq lsp-log-io nil) ;; if set to true can cause a performance hit
   (with-eval-after-load 'lsp-mode
     (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\.my-folder\\'")
     ;; or
     (add-to-list 'lsp-file-watch-ignored-files "[/\\\\]\\.my-files\\'"))
+  )
+
+(use-package lsp-origami
+  :ensure t
+  :config
+  (add-hook 'lsp-after-open-hook #'lsp-origami-try-enable)
   )
 
 ;; Opcional
@@ -1188,6 +1216,13 @@ _l_: last hunk        set start _R_evision
   (add-to-list 'company-backends 'company-emoji)
   )
 
+(use-package company-prescient
+  :ensure t
+  :after company
+  :config
+  (company-prescient-mode +1)
+  )
+
 ;;Plugin para autocompletado
 (use-package corfu
   :ensure t
@@ -1230,5 +1265,28 @@ _l_: last hunk        set start _R_evision
   (setq completion-styles '(orderless)
         completion-category-defaults nil
         completion-category-overrides '((file (styles . (partial-completion))))))
+
+;;Añade indentacion coloreada
+
+(use-package highlight-indent-guides
+  :commands highlight-indent-guides-mode
+  :diminish highlight-indent-guides-mode
+  :preface
+  (progn
+    (add-hook 'prog-mode-hook 'highlight-indent-guides-mode))
+  :config
+  (progn
+    (setq highlight-indent-guides-method 'bitmap)))
+
+;;Sistema de refactorización de Emacs
+
+(use-package emr
+  :bind ("M-RET" . emr-show-refactor-menu)
+  :config
+  (progn
+    (add-hook 'prog-mode-hook 'emr-initialize)
+    )
+  )
+
 
 ;;; init.el ends here
