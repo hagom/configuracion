@@ -177,9 +177,6 @@
   (async-bytecomp-package-mode 1)
   )
 
-;; Habilita el clipboard en Emacs
-(setq select-enable-clipboard t)
-
 ;;Evil mode
 
 (use-package evil 
@@ -201,7 +198,7 @@
   )
 
 ;;Numeracion relativa
-(setq display-line-numbers-type 'relative) 
+(setq display-line-numbers-type 'relative)
 (global-display-line-numbers-mode) 
 
 (use-package doom-modeline
@@ -232,7 +229,8 @@
 (use-package org-bullets
   :ensure t
   :config
-  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+  )
 
 (use-package org-superstar
   :ensure t)
@@ -247,13 +245,17 @@
     (global-set-key [remap other-window] 'ace-window)
     (custom-set-faces
      '(aw-leading-char-face
-       ((t (:inherit ace-jump-face-foreground :height 3.0))))) 
-    ))
+       ((t (:inherit ace-jump-face-foreground :height 2.0)))
+       )
+     )
+    )
+  )
 
 (use-package evil-surround
   :ensure t
   :config
-  (global-evil-surround-mode 1))
+  (global-evil-surround-mode 1)
+  )
 
 (use-package evil-numbers
   :ensure t)
@@ -261,7 +263,11 @@
 (use-package flycheck
   :ensure t
   :init
-  (global-flycheck-mode t))
+  (global-flycheck-mode t)
+  :config
+  ;; use eslint with web-mode for jsx files
+  (flycheck-add-mode 'javascript-eslint 'web-mode)
+  )
 
 ;;Yasnippet
 
