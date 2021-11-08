@@ -59,7 +59,7 @@
 ;; (add-hook 'window-setup-hook 'delete-other-windows)
 
 ;; Muestra los niveles de indentacion con colores
-(add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
+;; (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
 
 ;; Cambia la ubicación de donde se crean los archivos temporales
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
