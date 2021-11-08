@@ -132,7 +132,7 @@
                ("org" (name . "^.*org$"))
                ("magit" (mode . magit-mode))
                ("IRC" (or (mode . circe-channel-mode) (mode . circe-server-mode)))
-               ("web" (or (mode . web-mode) (mode . js2-mode)))
+               ("web" (or (mode . web-mode) (mode . js-mode)))
                ("shell" (or (mode . eshell-mode) (mode . shell-mode)))
                ("mu4e" (or
 
