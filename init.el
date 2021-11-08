@@ -13,6 +13,12 @@
 
 ;; Opciones de rendimiento
 
+(package-refresh-contents t)
+
+;;Actualiza automaticamente los buffers dired
+
+(setq global-auto-revert-non-file-buffers t)
+(setq auto-revert-verbose nil)
 ;; -*- lexical-binding: t; -*-
 
 ;; The default is 800 kilobytes.  Measured in bytes.
