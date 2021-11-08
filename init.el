@@ -349,6 +349,8 @@
   :config
   (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
   (add-to-list 'auto-mode-alist '("\\.vue?\\'" . web-mode))
+  ;; use web-mode for .jsx files
+  (add-to-list 'auto-mode-alist '("\\.jsx$" . web-mode))
   (setq web-mode-enable-auto-quoting t) 
   (setq web-mode-auto-complete t)
   (setq web-mode-engines-alist
