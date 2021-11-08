@@ -27,6 +27,23 @@
 ;; Para crear archivos de respaldo ~
 (setq make-backup-files nil) 
 
+;;Recarga automaticamente la configuracion de emacs
+(defun my-reload-emacs-configuration ()
+  (interactive)
+  (load-file "~/code/.emacs.d/init.el"))
+
+;;Para guardar el historial de Emacs
+
+(setq savehist-file "~/.config/emacs/savehist")
+(savehist-mode 1)
+(setq history-length t)
+(setq history-delete-duplicates t)
+(setq savehist-save-minibuffer-history 1)
+(setq savehist-additional-variables
+      '(kill-ring
+        search-ring
+        regexp-search-ring))
+
 ;; Essential settings.
 (setq inhibit-splash-screen t
       inhibit-startup-message t
