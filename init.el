@@ -163,6 +163,9 @@
 
 (save-place-mode 1)
 
+;; Habilita el clipboard en Emacs
+(setq select-enable-clipboard t)
+
 ;; Paquetes que se instalan con use-package
 
 ;; Asincronismo para emacs
