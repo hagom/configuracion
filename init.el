@@ -1288,5 +1288,16 @@ _l_: last hunk        set start _R_evision
     )
   )
 
+(use-package auto-package-update
+  :ensure t
+  :config
+  (auto-package-update-maybe)
+  (setq auto-package-update-delete-old-versions t)
+  (add-hook 'auto-package-update-before-hook
+            (lambda ()
+	      (message "Actualización de paquetes en progreso")
+	      )
+	    )
+  )
 
 ;;; init.el ends here
