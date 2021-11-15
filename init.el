@@ -52,6 +52,9 @@
 (show-paren-mode 1)
 (setq show-paren-delay 0)
 
+;; Iniciar Emacs maximizado
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
 ;;Muestra solamente y or n en los mensaje de confirmacion
 (fset 'yes-or-no-p 'y-or-n-p)
 
