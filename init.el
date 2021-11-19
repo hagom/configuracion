@@ -288,6 +288,7 @@
 			       yas-ido-prompt
 			       yas-completing-prompt)
 	)
+  (yas-reload-all)
   )
 
 (defun check-expansion ()
