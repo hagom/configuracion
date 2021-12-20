@@ -1,13 +1,13 @@
 set encoding=utf-8
 set showmode
 set autoindent
+set smartindent                             ""Makes indenting smart
 set tabstop=4
 set shiftwidth=4
 set expandtab smarttab
 set nu
 set nolist
 set rnu
-set smartindent                             ""Makes indenting smart
 set smartcase
 set noswapfile
 set incsearch
@@ -25,7 +25,7 @@ set signcolumn=yes
 filetype plugin indent on
 filetype indent on
 set omnifunc=syntaxcomplete#Complete
-set completeopt=menuone,longest
+set completeopt=menuone,longest,noinsert,noselect
 set mouse=a                                 ""Enables mouse
 set wildmenu
 set wildmode=longest,list,full
@@ -37,6 +37,9 @@ set wildignore=\*.git/\*
 set clipboard=unnamedplus                   ""Enables clipboard to copy and paste
 set shortmess+=c
 set termguicolors
+
+" Don't redraw while executing macros (good performance config)
+set lazyredraw
 
 "Archivos a ignorar
 set wildignore+=**/.git/*
@@ -53,13 +56,9 @@ set ruler
 syntax on                                   ""Enalbes sintax highlighting
 
 call plug#begin('~/.vim/plugged')
-" Plug 'overcache/NeoSolarized'
 
 "Iconos para el editor
 Plug 'ryanoasis/vim-devicons'
-
-" Shorthand notation; fetches https://github.com/junegunn/vim-easy-align
-Plug 'junegunn/vim-easy-align'
 
 " Any valid git URL is allowed
 Plug 'https://github.com/junegunn/vim-github-dashboard.git'
@@ -81,8 +80,6 @@ Plug '~/.fzf'
 
 " Unmanaged plugin (manually installed and updated)
 Plug '~/my-prototype-plugin'
-
-" Initialize plugin system
 
 " Use release branch (recommend)
 Plug 'neoclide/coc.nvim', {'branch': 'master', 'do': 'yarn install --frozen-lockfile'}
@@ -110,9 +107,6 @@ Plug 'mbbill/undotree'
 
 "RAINBOW PARENTHESES IMPROVED
 Plug 'luochen1990/rainbow'
-
-"Autopairs
-" Plug 'jiangmiao/auto-pairs'
 
 "Typing
 Plug 'alvan/vim-closetag'
@@ -159,15 +153,15 @@ Plug 'nvim-lua/popup.nvim'
 "Fuzzy finder para vim
 Plug 'nvim-telescope/telescope.nvim'
 
-"Frontend para git
-Plug 'tpope/vim-fugitive'
-Plug 'tpope/vim-git'
 
 if has("nvim")
     Plug 'neovim/nvim-lspconfig'
-    Plug 'glepnir/lspsaga.vim'
+    Plug 'glepnir/lspsaga.nvim'
     Plug 'github/copilot.vim'
     Plug 'ThePrimeagen/git-worktree.nvim'
+    "Frontend para git
+    Plug 'tpope/vim-fugitive'
+    Plug 'tpope/vim-git'
 endif
 
 Plug 'Xuyuanp/nerdtree-git-plugin'
@@ -289,6 +283,9 @@ let g:NERDTreeGitStatusIndicatorMapCustom = {
 
 let g:NERDTreeIgnore = ['^node_modules$']
 
+" Configuración para el autocompletado
+let g:completion_matching_stategy_list = ['exact', 'substring', 'fuzzy']
+
 " sync open file with NERDTree
 " " Check if NERDTree is open or active
 function! IsNERDTreeOpen()        
@@ -310,7 +307,6 @@ autocmd BufEnter * call SyncTree()
 "Configuración para nerdcommenter
 vmap ++ <plug>NERDCommenterToggle
 nmap ++ <plug>NERDCommenterToggle
-
 
 "Configuración gitgutter
 "Funcion para mosrtar en el statusline si hay cambios en el archivo
