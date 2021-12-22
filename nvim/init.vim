@@ -1,3 +1,5 @@
+set spellsuggest=best,9                     " Show nine spell checking candidates at most
+set spelllang=en,es,fr                      " Usa diccionarios en ingles, espanol y francés
 set encoding=utf-8
 set showmode
 set autoindent
@@ -81,9 +83,6 @@ Plug '~/.fzf'
 " Unmanaged plugin (manually installed and updated)
 Plug '~/my-prototype-plugin'
 
-" Use release branch (recommend)
-Plug 'neoclide/coc.nvim', {'branch': 'master', 'do': 'yarn install --frozen-lockfile'}
-
 "Vim airline
 Plug 'vim-airline/vim-airline'
 
@@ -120,7 +119,7 @@ Plug 'vim-pandoc/vim-pandoc'
 Plug 'vim-pandoc/vim-pandoc-syntax'
 
 "Emmet
-Plug 'emmetio/emmet'
+Plug 'mattn/emmet-vim'
 
 "Which Key
 Plug 'liuchengxu/vim-which-key'
@@ -144,21 +143,33 @@ Plug 'yggdroot/indentline'
 "Permite comentar lineas de codigo
 Plug 'scrooloose/nerdcommenter'
 
-Plug 'tpope/vim-repeat'
-Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
-Plug 'nvim-treesitter/playground'
-Plug 'nvim-lua/plenary.nvim'
-Plug 'nvim-lua/popup.nvim'
-
-"Fuzzy finder para vim
-Plug 'nvim-telescope/telescope.nvim'
-
-
 if has("nvim")
+
+    "Fuzzy finder para vim
+    Plug 'nvim-telescope/telescope.nvim'
+    " Use release branch (recommend)
+    Plug 'sudormrfbin/cheatsheet.nvim'
+    Plug 'neoclide/coc.nvim', {'branch': 'master', 'do': 'yarn install --frozen-lockfile'}
+    Plug 'tpope/vim-repeat'
+    Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
+    Plug 'nvim-treesitter/playground'
+    Plug 'nvim-lua/plenary.nvim'
+    Plug 'nvim-lua/popup.nvim'
+    "Fuzzy finder para vim
+    Plug 'nvim-telescope/telescope.nvim'
+    Plug 'nvim-telescope/telescope-media-files.nvim'
+    Plug 'xiyaowong/telescope-emoji.nvim'
+    Plug 'jvgrootveld/telescope-zoxide'
+    Plug 'fannheyward/telescope-coc.nvim'
+    Plug 'nvim-telescope/telescope-symbols.nvim'
+    Plug 'nvim-telescope/telescope-project.nvim'
+    Plug 'dhruvmanila/telescope-bookmarks.nvim'
+    Plug 'nvim-telescope/telescope-frecency.nvim'
     Plug 'neovim/nvim-lspconfig'
     Plug 'glepnir/lspsaga.nvim'
     Plug 'github/copilot.vim'
     Plug 'ThePrimeagen/git-worktree.nvim'
+    Plug 'ThePrimeagen/refactoring.nvim'
     "Frontend para git
     Plug 'tpope/vim-fugitive'
     Plug 'tpope/vim-git'
@@ -170,6 +181,10 @@ Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'airblade/vim-gitgutter'
 
 call plug#end()
+
+"Configuración IndentLine
+let g:indentLine_color_term = 255 "Color de la linea de indentacion
+let g:indentLine_char = '|' "Caracter de la linea de indentacion
 
 "Mapear para NERDTree
 map <F2> :NERDTreeToggle<CR>
@@ -236,6 +251,11 @@ nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
+" Use <C-l> for trigger snippet expand.
+imap <C-l> <Plug>(coc-snippets-expand)
+
+" Use <C-j> for select text for visual placeholder of snippet.
+vmap <C-j> <Plug>(coc-snippets-select)
 
 " Create default mappings
 let g:NERDCreateDefaultMappings = 1
@@ -267,6 +287,8 @@ let g:NERDToggleCheckAllLines = 1
 let g:NERDTreeGitStatusUseNerdFonts = 1 " you should install nerdfonts by yourself. default: 0
 
 let g:NERDTreeGitStatusUntrackedFilesMode = 'all' " a heavy feature too. default: normal
+
+let NERDTreeShowHidden=1 "Muestra archivos ocultos en el tree
 
 let g:NERDTreeGitStatusIndicatorMapCustom = {
                 \ 'Modified'  :'✹',
@@ -325,3 +347,30 @@ nnoremap <leader>fh <cmd>Telescope help_tags<cr>
 nnoremap <leader>ft <cmd>Telescope tags<cr>
 nnoremap <leader>fs <cmd>Telescope git_status<cr>
 nnoremap <leader>fc <cmd>Telescope command_history<cr>
+
+"Configuración para emmet
+let g:user_emmet_mode='a'    "enable all function in all mode.
+let g:user_emmet_settings = {
+\  'variables': {'lang': 'es'},
+\  'html': {
+\    'default_attributes': {
+\      'option': {'value': v:null},
+\      'textarea': {'id': v:null, 'name': v:null, 'cols': 10, 'rows': 10},
+\    },
+\    'snippets': {
+\      'html:5': "<!DOCTYPE html>\n"
+\              ."<html lang=\"${lang}\">\n"
+\              ."<head>\n"
+\              ."\t<meta charset=\"${charset}\">\n"
+\              ."\t<title></title>\n"
+\              ."\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
+\              ."</head>\n"
+\              ."<body>\n\t${child}|\n</body>\n"
+\              ."</html>",
+\    },
+\  },
+\}
+
+"Configuración para el diccionario del editor
+nnoremap <silent> <F11> :set spell!<cr>
+inoremap <silent> <F11> <C-O>:set spell!<cr>
