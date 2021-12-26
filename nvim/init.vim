@@ -104,8 +104,8 @@ Plug 'ekalinin/Dockerfile.vim'
 "Vim undotree
 Plug 'mbbill/undotree'
 
-"RAINBOW PARENTHESES IMPROVED
-Plug 'luochen1990/rainbow'
+"Colorea los pares de llaves y corchetes
+Plug 'junegunn/rainbow_parentheses.vim'
 
 "Typing
 Plug 'alvan/vim-closetag'
@@ -144,7 +144,8 @@ Plug 'yggdroot/indentline'
 Plug 'scrooloose/nerdcommenter'
 
 if has("nvim")
-
+    "Plugin para iniciar proyectos en nvim en la pantalla de inicio
+    Plug 'mhinz/vim-startify'
     "Fuzzy finder para vim
     Plug 'nvim-telescope/telescope.nvim'
     " Use release branch (recommend)
@@ -173,6 +174,7 @@ if has("nvim")
     "Frontend para git
     Plug 'tpope/vim-fugitive'
     Plug 'tpope/vim-git'
+    Plug 'norcalli/nvim-colorizer.lua'
 endif
 
 Plug 'Xuyuanp/nerdtree-git-plugin'
@@ -374,3 +376,31 @@ let g:user_emmet_settings = {
 "Configuración para el diccionario del editor
 nnoremap <silent> <F11> :set spell!<cr>
 inoremap <silent> <F11> <C-O>:set spell!<cr>
+
+lua require'plug-colorizer'
+
+"Configuración para rainbow indent
+let g:rainbow#max_level = 16
+let g:rainbow#pairs = [['(', ')'], ['[', ']'], ['{', '}']]
+
+autocmd FileType * RainbowParentheses
+
+"Configuración para startify
+let g:startify_session_dir = '~/.config/nvim/session'
+
+let g:startify_lists = [
+          \ { 'type': 'files',     'header': ['   Archivos']            },
+          \ { 'type': 'dir',       'header': ['   Directorio actual  '. getcwd()] },
+          \ { 'type': 'sessions',  'header': ['   Sesiones']       },
+          \ { 'type': 'bookmarks', 'header': ['   Marcadores']      },
+          \ ]
+
+let g:startify_bookmarks = [
+            \ '~/Codigo',
+            \ ]
+
+let g:startify_session_autoload = 1
+let g:startify_change_to_vcs_root = 1
+let g:startify_fortune_use_unicode = 1
+let g:startify_enable_special = 0
+

@@ -1,5 +1,5 @@
 if !exists('g:loaded_nvim_treesitter')
-  finish
+    finish
 endif
 
 lua << EOF
@@ -19,12 +19,14 @@ require 'nvim-treesitter.configs'.setup {
     "json",
     "yaml",
     "python",
+    "php",
     "html",
     "scss",
     "css",
     "lua",
     "cpp",
     "c",
+    "cpp",
     "javascript",
   },
 }
