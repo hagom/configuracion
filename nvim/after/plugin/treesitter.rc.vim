@@ -29,6 +29,9 @@ require 'nvim-treesitter.configs'.setup {
     "cpp",
     "javascript",
   },
+  autotag = {
+    enable = true
+  }
 }
 
 local parser_config = require "nvim-treesitter.parsers".get_parser_configs()

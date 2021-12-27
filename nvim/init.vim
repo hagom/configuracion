@@ -143,7 +143,11 @@ Plug 'yggdroot/indentline'
 "Permite comentar lineas de codigo
 Plug 'scrooloose/nerdcommenter'
 
+" post install (yarn install | npm install) then load plugin only for editing supported files
+Plug 'prettier/vim-prettier', { 'do': 'yarn install --frozen-lockfile --production' }
+
 if has("nvim")
+    Plug 'windwp/nvim-ts-autotag'
     "Plugin para iniciar proyectos en nvim en la pantalla de inicio
     Plug 'mhinz/vim-startify'
     "Fuzzy finder para vim
