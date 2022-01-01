@@ -30,7 +30,7 @@ require 'nvim-treesitter.configs'.setup {
     "javascript",
   },
   autotag = {
-    enable = true
+    enable = true,
   }
 }
 
