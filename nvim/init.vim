@@ -62,18 +62,8 @@ call plug#begin('~/.vim/plugged')
 "Iconos para el editor
 Plug 'ryanoasis/vim-devicons'
 
-" Any valid git URL is allowed
-Plug 'https://github.com/junegunn/vim-github-dashboard.git'
-
 " On-demand loading
-Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
-Plug 'tpope/vim-fireplace', { 'for': 'clojure' }
-
-" Using a non-default branch
-Plug 'rdnetto/YCM-Generator', { 'branch': 'stable' }
-
-" Using a tagged release; wildcard allowed (requires git 1.9.2 or above)
-Plug 'fatih/vim-go', { 'tag': '*' }
+" Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
 
 " Plugin outside ~/.vim/plugged with post-update hook
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
@@ -87,9 +77,9 @@ Plug '~/my-prototype-plugin'
 Plug 'vim-airline/vim-airline'
 
 "vim-lsp
-Plug 'prabirshrestha/vim-lsp'
-Plug 'prabirshrestha/vim-lsp'
-Plug 'mattn/vim-lsp-settings'
+" Plug 'prabirshrestha/vim-lsp'
+" Plug 'prabirshrestha/vim-lsp'
+" Plug 'mattn/vim-lsp-settings'
 
 "Rust
 Plug 'rust-lang/rust.vim'
@@ -146,7 +136,17 @@ Plug 'scrooloose/nerdcommenter'
 " post install (yarn install | npm install) then load plugin only for editing supported files
 Plug 'prettier/vim-prettier', { 'do': 'yarn install --frozen-lockfile --production' }
 
+"Plugin para mejorar el movimiento a traves del buffer
+Plug 'justinmk/vim-sneak'
+
+"Plugin para mejorar el movimiento horizontal en las lineas del buffer
+Plug 'unblevable/quick-scope'
+
 if has("nvim")
+    "Soporte para LSP
+    Plug 'neovim/nvim-lspconfig'
+    Plug 'williamboman/nvim-lsp-installer'
+    Plug 'stevearc/flow-coverage.nvim'
     Plug 'windwp/nvim-ts-autotag'
     "Plugin para iniciar proyectos en nvim en la pantalla de inicio
     Plug 'mhinz/vim-startify'
@@ -170,7 +170,6 @@ if has("nvim")
     Plug 'nvim-telescope/telescope-project.nvim'
     Plug 'dhruvmanila/telescope-bookmarks.nvim'
     Plug 'nvim-telescope/telescope-frecency.nvim'
-    Plug 'neovim/nvim-lspconfig'
     Plug 'glepnir/lspsaga.nvim'
     Plug 'github/copilot.vim'
     Plug 'ThePrimeagen/git-worktree.nvim'
@@ -181,7 +180,7 @@ if has("nvim")
     Plug 'norcalli/nvim-colorizer.lua'
 endif
 
-Plug 'Xuyuanp/nerdtree-git-plugin'
+" Plug 'Xuyuanp/nerdtree-git-plugin'
 
 "Resalta los cambios hechos en un archivo en git en la parte izquierda de la ventana
 Plug 'airblade/vim-gitgutter'
@@ -193,7 +192,7 @@ let g:indentLine_color_term = 255 "Color de la linea de indentacion
 let g:indentLine_char = '|' "Caracter de la linea de indentacion
 
 "Mapear para NERDTree
-map <F2> :NERDTreeToggle<CR>
+" map <F2> :NERDTreeToggle<CR>
 
 "Mapear Undotree
 nnoremap <F5> :UndotreeToggle<CR>
@@ -332,10 +331,6 @@ endfunction
 " Highlight currently open buffer in NERDTree
 autocmd BufEnter * call SyncTree()
 
-"Configuración para nerdcommenter
-vmap ++ <plug>NERDCommenterToggle
-nmap ++ <plug>NERDCommenterToggle
-
 "Configuración gitgutter
 "Funcion para mosrtar en el statusline si hay cambios en el archivo
 function! GitStatus()
@@ -408,3 +403,85 @@ let g:startify_change_to_vcs_root = 1
 let g:startify_fortune_use_unicode = 1
 let g:startify_enable_special = 0
 
+" coc extensions
+let g:coc_global_extensions = ['coc-tslint-plugin', 'coc-tsserver', 'coc-emmet', 'coc-css', 'coc-html', 'coc-json', 'coc-yank', 'coc-prettier', 'coc-explorer']
+
+"Configuración para sneak
+let g:sneak#label = 1
+
+" case insensitive sneak
+let g:sneak#use_ic_scs = 1
+
+" immediately move to the next instance of search, if you move the cursor sneak is back to default behavior
+let g:sneak#s_next = 1
+
+" remap so I can use , and ; with f and t
+map gS <Plug>Sneak_,
+map gs <Plug>Sneak_;
+
+" Change the colors
+highlight Sneak guifg=black guibg=#00C7DF ctermfg=black ctermbg=cyan
+highlight SneakScope guifg=red guibg=yellow ctermfg=red ctermbg=yellow
+
+" Cool prompts
+let g:sneak#prompt = '🕵'
+let g:sneak#prompt = '🔎'
+
+" I like quickscope better for this since it keeps me in the scope of a single line
+" map f <Plug>Sneak_f
+" map F <Plug>Sneak_F
+" map t <Plug>Sneak_t
+" map T <Plug>Sneak_T
+
+"Configuración para quickscope
+
+"Atajos para activar quickscope
+let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
+
+highlight QuickScopePrimary guifg='#00C7DF' gui=underline ctermfg=155 cterm=underline
+highlight QuickScopeSecondary guifg='#afff5f' gui=underline ctermfg=81 cterm=underline
+
+let g:qs_max_chars=150
+
+"Configuración para Coc-yank
+nnoremap <silent> <space>y  :<C-u>CocList -A --normal yank<cr>
+
+"Configuración para coc-explorer
+" Explorer
+let g:coc_explorer_global_presets = {
+\   '.vim': {
+\     'root-uri': '~/.vim',
+\   },
+\   'tab': {
+\     'position': 'tab',
+\     'quit-on-open': v:true,
+\   },
+\   'floating': {
+\     'position': 'floating',
+\     'open-action-strategy': 'sourceWindow',
+\   },
+\   'floatingTop': {
+\     'position': 'floating',
+\     'floating-position': 'center-top',
+\     'open-action-strategy': 'sourceWindow',
+\   },
+\   'floatingLeftside': {
+\     'position': 'floating',
+\     'floating-position': 'left-center',
+\     'floating-width': 50,
+\     'open-action-strategy': 'sourceWindow',
+\   },
+\   'floatingRightside': {
+\     'position': 'floating',
+\     'floating-position': 'right-center',
+\     'floating-width': 50,
+\     'open-action-strategy': 'sourceWindow',
+\   },
+\   'simplify': {
+\     'file-child-template': '[selection | clip | 1] [indent][icon | 1] [filename omitCenter 1]'
+\   }
+\ }
+
+nmap <space>e :CocCommand explorer<CR>
+nmap <space>f :CocCommand explorer --preset floating<CR>
+autocmd BufEnter * if (winnr("$") == 1 && &filetype == 'coc-explorer') | q | endif
