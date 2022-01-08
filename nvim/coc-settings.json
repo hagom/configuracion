@@ -40,7 +40,8 @@
         "stylus": "stylus",
         "typescript": "typescript",
         "tsx": "typescript",
-        "vue": "vue"
+        "vue": "vue",
+        "vuex": "vuex"
     },
 
     "emmet.showAbbreviationSuggestions": true,
@@ -164,5 +165,15 @@
     "explorer.keyMappings.global": {
         "<cr>": ["expandable?", "expand", "open"],
         "v": "open:vsplit"
-    }
+    },
+    "vetur.completion.scaffoldSnippetSources": [
+        "tailwindcss",
+        "cssBlockComments",
+        "cssSnippets",
+        "htmlSnippets",
+        "javascriptSnippets",
+        "typescriptSnippets",
+        "vueSnippets"
+    ],
+    "vetur.format.enable": true,
 }

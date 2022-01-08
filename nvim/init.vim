@@ -1,5 +1,6 @@
 set spellsuggest=best,9                     " Show nine spell checking candidates at most
 set spelllang=en,es,fr                      " Usa diccionarios en ingles, espanol y francés
+set spell
 set encoding=utf-8
 set showmode
 set autoindent
@@ -51,7 +52,8 @@ set wildignore+=**/coverage/*
 set wildignore+=**/node_modules/*
 set wildignore+=**/android/*
 set wildignore+=**/ios/*
-set updatetime=300                          ""Faster completion
+set updatetime=500                          ""Faster completion
+set timeoutlen=500
 set notimeout
 set ruler
 
@@ -111,15 +113,6 @@ Plug 'vim-pandoc/vim-pandoc-syntax'
 "Emmet
 Plug 'mattn/emmet-vim'
 
-"Which Key
-Plug 'liuchengxu/vim-which-key'
-
-" On-demand lazy load
-Plug 'liuchengxu/vim-which-key', { 'on': ['WhichKey', 'WhichKey!'] }
-
-" To register the descriptions when using the on-demand load feature,
-" use the autocmd hook to call which_key#register(), e.g., register for the Space key:
-" autocmd! User vim-which-key call which_key#register('<Space>', 'g:which_key_map')
 
 "Editorconfig
 Plug 'editorconfig/editorconfig-vim' 
@@ -142,7 +135,18 @@ Plug 'justinmk/vim-sneak'
 "Plugin para mejorar el movimiento horizontal en las lineas del buffer
 Plug 'unblevable/quick-scope'
 
+"Emojis
+Plug 'https://github.com/adelarsq/vim-devicons-emoji'
+
 if has("nvim")
+    "Permite tener el foco en la ventana activa
+    Plug 'sunjon/shade.nvim'
+    "WhichKey
+    Plug 'folke/which-key.nvim'
+    "Navegador de archivos para neovim
+    Plug 'ThePrimeagen/harpoon'
+    "Plugin para tener una terminal en el editor de manera flotante
+    Plug 'akinsho/toggleterm.nvim'
     "Soporte para LSP
     Plug 'neovim/nvim-lspconfig'
     Plug 'williamboman/nvim-lsp-installer'
@@ -159,6 +163,8 @@ if has("nvim")
     Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
     Plug 'nvim-treesitter/playground'
     Plug 'nvim-lua/plenary.nvim'
+    "Cargar repositorios de git en nvim sin ninguna configuración adicional
+    Plug 'cljoly/telescope-repo.nvim'
     Plug 'nvim-lua/popup.nvim'
     "Fuzzy finder para vim
     Plug 'nvim-telescope/telescope.nvim'
@@ -341,7 +347,7 @@ set statusline+=%{GitStatus()}
 
 " Configuración para telescope
 " Find files using Telescope command-line sugar.
-nnoremap <leader>ff <cmd>Telescope find_files<cr>
+nnoremap <leader>ff <cmd>Telescope file_browser hidden=true<cr>
 nnoremap <leader>fg <cmd>Telescope live_grep<cr>
 nnoremap <leader>fb <cmd>Telescope buffers<cr>
 nnoremap <leader>fh <cmd>Telescope help_tags<cr>
@@ -406,6 +412,9 @@ let g:startify_enable_special = 0
 " coc extensions
 let g:coc_global_extensions = ['coc-tslint-plugin', 'coc-tsserver', 'coc-emmet', 'coc-css', 'coc-html', 'coc-json', 'coc-yank', 'coc-prettier', 'coc-explorer']
 
+"Habilitar / Deshabilitar transparencia del cursor para COC
+let g:coc_disable_transparent_cursor = 1
+
 "Configuración para sneak
 let g:sneak#label = 1
 
@@ -424,8 +433,8 @@ highlight Sneak guifg=black guibg=#00C7DF ctermfg=black ctermbg=cyan
 highlight SneakScope guifg=red guibg=yellow ctermfg=red ctermbg=yellow
 
 " Cool prompts
-let g:sneak#prompt = '🕵'
-let g:sneak#prompt = '🔎'
+let g:sneak#prompt = '👁️ '
+" let g:sneak#prompt = '🔎'
 
 " I like quickscope better for this since it keeps me in the scope of a single line
 " map f <Plug>Sneak_f
@@ -485,3 +494,12 @@ let g:coc_explorer_global_presets = {
 nmap <space>e :CocCommand explorer<CR>
 nmap <space>f :CocCommand explorer --preset floating<CR>
 autocmd BufEnter * if (winnr("$") == 1 && &filetype == 'coc-explorer') | q | endif
+
+"Archivos de configuración
+source ~/.config/nvim/lua/user/shade.lua
+source ~/.config/nvim/lua/user/which-key.lua
+source ~/.config/nvim/lua/user/toggleterm.lua
+source ~/.config/nvim/lua/user/harpoon.lua
+source ~/.config/nvim/lua/user/treesitter.lua
+source ~/.config/nvim/lua/user/telescope.lua
+source ~/.config/nvim/lua/user/refactoring.lua
