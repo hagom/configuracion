@@ -26,7 +26,6 @@
         "value": "  ",
         "enumMember": "  "
     },
-
     "emmet.includeLanguages": {
         "html": "html",
         "vue-html": "html",
@@ -43,10 +42,12 @@
         "vue": "vue",
         "vuex": "vuex"
     },
-
     "emmet.showAbbreviationSuggestions": true,
     "emmet.showSuggestionsAsSnippets": true,
-
+    "prettier.enable": true,
+    "coc.preferences.formatOnSaveFiletypes": [
+        "*"
+    ],
     "codeLens.enable": true,
     "tailwindCSS.enable": true,
     "tailwindCSS.includeLanguages": {
@@ -64,10 +65,9 @@
         "tsx": "typescript",
         "vue": "vue"
     },
-
     "tailwindCSS.emmetCompletions": true,
     "css.validate": true,
-    "importCost.typescriptExtensions": ["\\.jsx?$", "\\.tsx?$"],
+    "importCost.showCalculatingDecoration": true,
     "importCost.bundleSizeDecoration": "gzipped",
     "typescript.suggest.importStatements": true,
     "tsserver.watchOptions": {
@@ -86,9 +86,7 @@
         "jsx": true,
         "tsx": true
     },
-
     "vetur.completion.autoImport": true,
-
     "importCost.javascriptExtensions": [
         ".js",
         ".jsx",
@@ -102,8 +100,13 @@
         ".json",
         ".node"
     ],
-    "importCost.cssExtensions": [".css", ".scss", ".sass", ".less", ".styl"],
-    "importCost.showCalculatingDecoration": true,
+    "importCost.cssExtensions": [
+        ".css",
+        ".scss",
+        ".sass",
+        ".less",
+        ".styl"
+    ],
     "typescript.suggest.autoImports": true,
     "typescript.suggest.completeFunctionCalls": true,
     "typescript.suggest.completePropertyAccess": true,
@@ -123,7 +126,13 @@
         "reason",
         "typescriptreact"
     ],
-    "tailwindCSS.cssLanguages": ["css", "scss", "sass", "less", "stylus"],
+    "tailwindCSS.cssLanguages": [
+        "css",
+        "scss",
+        "sass",
+        "less",
+        "stylus"
+    ],
     "tailwindCSS.htmlLanguages": [
         "blade",
         "edge",
@@ -154,7 +163,10 @@
     ],
     "tailwindCSS.validate": true,
     "tailwindCSS.headwind.runOnSave": true,
-    "cssBlockComments.enabledLanguages": ["css", "scss"],
+    "cssBlockComments.enabledLanguages": [
+        "css",
+        "scss"
+    ],
     "tailwindCSS.headwind.removeDuplicates": true,
     "snippets.autoTrigger": true,
     "yank.highlight.enable": true,
@@ -163,9 +175,14 @@
     "explorer.icon.enableNerdfont": true,
     "explorer.previewAction.onHover": false,
     "explorer.keyMappings.global": {
-        "<cr>": ["expandable?", "expand", "open"],
+        "<cr>": [
+            "expandable?",
+            "expand",
+            "open"
+        ],
         "v": "open:vsplit"
     },
+    "explorer.file.showHiddenFiles": true,
     "vetur.completion.scaffoldSnippetSources": [
         "tailwindcss",
         "cssBlockComments",
@@ -174,6 +191,5 @@
         "javascriptSnippets",
         "typescriptSnippets",
         "vueSnippets"
-    ],
-    "vetur.format.enable": true,
+    ]
 }
