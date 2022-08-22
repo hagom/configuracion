@@ -153,8 +153,8 @@ vim.cmd([[
     \   }
     \ }
 
-    nmap <leader>e :CocCommand explorer<CR>
-    nmap <leader>E :CocCommand explorer --preset floating<CR>
+    " nmap <leader>e :CocCommand explorer<CR>
+    " nmap <leader>E :CocCommand explorer --preset floating<CR>
     autocmd BufEnter * if (winnr("$") == 1 && &filetype == 'coc-explorer') | q | endif
 
     "Configuración LuaSnip

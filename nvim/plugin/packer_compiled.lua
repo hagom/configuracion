@@ -124,6 +124,11 @@ _G.packer_plugins = {
     path = "/home/hagom/.local/share/nvim/site/pack/packer/start/coc.nvim",
     url = "https://github.com/neoclide/coc.nvim"
   },
+  ["diffview.nvim"] = {
+    loaded = true,
+    path = "/home/hagom/.local/share/nvim/site/pack/packer/start/diffview.nvim",
+    url = "https://github.com/sindrets/diffview.nvim"
+  },
   ["editorconfig-vim"] = {
     loaded = true,
     path = "/home/hagom/.local/share/nvim/site/pack/packer/start/editorconfig-vim",
@@ -181,6 +186,11 @@ _G.packer_plugins = {
     path = "/home/hagom/.local/share/nvim/site/pack/packer/opt/markdown-preview.nvim",
     url = "https://github.com/iamcco/markdown-preview.nvim"
   },
+  neogit = {
+    loaded = true,
+    path = "/home/hagom/.local/share/nvim/site/pack/packer/start/neogit",
+    url = "https://github.com/TimUntersberger/neogit"
+  },
   ["nvim-autopairs"] = {
     loaded = true,
     path = "/home/hagom/.local/share/nvim/site/pack/packer/start/nvim-autopairs",
@@ -221,10 +231,20 @@ _G.packer_plugins = {
     path = "/home/hagom/.local/share/nvim/site/pack/packer/start/nvim-lsputils",
     url = "https://github.com/RishabhRD/nvim-lsputils"
   },
+  ["nvim-tree.lua"] = {
+    loaded = true,
+    path = "/home/hagom/.local/share/nvim/site/pack/packer/start/nvim-tree.lua",
+    url = "https://github.com/kyazdani42/nvim-tree.lua"
+  },
   ["nvim-treesitter"] = {
     loaded = true,
     path = "/home/hagom/.local/share/nvim/site/pack/packer/start/nvim-treesitter",
     url = "https://github.com/nvim-treesitter/nvim-treesitter"
+  },
+  ["nvim-ts-autotag"] = {
+    loaded = true,
+    path = "/home/hagom/.local/share/nvim/site/pack/packer/start/nvim-ts-autotag",
+    url = "https://github.com/windwp/nvim-ts-autotag"
   },
   ["nvim-ts-rainbow"] = {
     loaded = true,
@@ -375,16 +395,6 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/hagom/.local/share/nvim/site/pack/packer/start/vim-devicons",
     url = "https://github.com/ryanoasis/vim-devicons"
-  },
-  ["vim-fugitive"] = {
-    loaded = true,
-    path = "/home/hagom/.local/share/nvim/site/pack/packer/start/vim-fugitive",
-    url = "https://github.com/tpope/vim-fugitive"
-  },
-  ["vim-git"] = {
-    loaded = true,
-    path = "/home/hagom/.local/share/nvim/site/pack/packer/start/vim-git",
-    url = "https://github.com/tpope/vim-git"
   },
   ["vim-repeat"] = {
     loaded = true,

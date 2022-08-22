@@ -33,7 +33,6 @@ require("nvim-lsp-installer").setup({
     "tailwindcss",
     "terraformls",
     "tsserver",
-    "tsserver",
     "vimls",
     "volar",
     "yamlls",

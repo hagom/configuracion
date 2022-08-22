@@ -12,13 +12,15 @@ if fn.empty(fn.glob(install_path)) > 0 then
 end
 
 return require("packer").startup(function()
-    -- A partir de aca se colocan los plugins
+	-- A partir de aca se colocan los plugins
 
 	-- Automatically set up your configuration after cloning packer.nvim
 	-- Put this at the end after all plugins
 	if packer_bootstrap then
 		require("packer").sync()
 	end --packer se puede administrar a si mismo
+
+	use("windwp/nvim-ts-autotag")
 	use("wbthomason/packer.nvim") -- Manejador de plugins para Neovim
 	use("gruvbox-community/gruvbox") -- Tema para el editor
 	use("ryanoasis/vim-devicons")
@@ -28,6 +30,14 @@ return require("packer").startup(function()
 	use({
 		"nvim-lualine/lualine.nvim",
 		requires = { "kyazdani42/nvim-web-devicons", opt = true },
+	})
+
+	use({
+		"kyazdani42/nvim-tree.lua",
+		requires = {
+			"kyazdani42/nvim-web-devicons", -- optional, for file icons
+		},
+		tag = "nightly", -- optional, updated every week. (see issue #1193)
 	})
 
 	use("Vonr/align.nvim")
@@ -94,12 +104,14 @@ return require("packer").startup(function()
 	use("mbbill/undotree") -- Muestra un arbol de cambios en el editor
 	use("editorconfig/editorconfig-vim")
 	use("lukas-reineke/indent-blankline.nvim")
+
 	use({
 		"nvim-treesitter/nvim-treesitter",
 		run = ":TSUpdate",
 	})
-	use("tpope/vim-fugitive")
-	use("tpope/vim-git")
+
+	use({ "TimUntersberger/neogit", requires = "nvim-lua/plenary.nvim" }) -- Manejador de repositorios en GIT
+	use({ "sindrets/diffview.nvim", requires = "nvim-lua/plenary.nvim" }) -- Permite ver las diferencias entre las modificaciones realizadas a un archivo
 	use("norcalli/nvim-colorizer.lua")
 	use({
 		"ThePrimeagen/refactoring.nvim",
