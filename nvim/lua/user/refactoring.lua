@@ -1,5 +1,23 @@
 local refactor = require("refactoring")
-refactor.setup({})
+refactor.setup({
+ -- prompt for return type
+    prompt_func_return_type = {
+        go = true,
+        cpp = true,
+        c = true,
+        java = true,
+    },
+    -- prompt for function parameters
+    prompt_func_param_type = {
+        go = true,
+        cpp = true,
+        c = true,
+        java = true,
+    },
+})
+
+-- load refactoring Telescope extension
+require("telescope").load_extension("refactoring")
 
 -- telescope refactoring helper
 local function refactor(prompt_bufnr)
@@ -34,3 +52,5 @@ end
 vim.api.nvim_set_keymap("v", "<Leader>re", [[ <Esc><Cmd>lua require('refactoring').refactor('Extract Function')<CR>]], {noremap = true, silent = true, expr = false})
 vim.api.nvim_set_keymap("v", "<Leader>rf", [[ <Esc><Cmd>lua require('refactoring').refactor('Extract Function To File')<CR>]], {noremap = true, silent = true, expr = false})
 vim.api.nvim_set_keymap("v", "<Leader>rt", [[ <Esc><Cmd>lua M.refactors()<CR>]], {noremap = true, silent = true, expr = false})
+vim.api.nvim_set_keymap("v", "<Leader>ri", [[ <Esc><Cmd>lua require('refactoring').refactor('Inline Variable')<CR>]], {noremap = true, silent = true, expr = false})
+vim.api.nvim_set_keymap("n", "<Leader>ri", [[ <Esc><Cmd>lua require('refactoring').refactor('Inline Variable')<CR>]], {noremap = true, silent = true, expr = false})

@@ -169,6 +169,11 @@ _G.packer_plugins = {
     path = "/home/hagom/.local/share/nvim/site/pack/packer/start/indent-blankline.nvim",
     url = "https://github.com/lukas-reineke/indent-blankline.nvim"
   },
+  ["lightspeed.nvim"] = {
+    loaded = true,
+    path = "/home/hagom/.local/share/nvim/site/pack/packer/start/lightspeed.nvim",
+    url = "https://github.com/ggandor/lightspeed.nvim"
+  },
   ["lspkind.nvim"] = {
     loaded = true,
     path = "/home/hagom/.local/share/nvim/site/pack/packer/start/lspkind.nvim",
@@ -291,11 +296,6 @@ _G.packer_plugins = {
     path = "/home/hagom/.local/share/nvim/site/pack/packer/start/promise-async",
     url = "https://github.com/kevinhwang91/promise-async"
   },
-  ["quick-scope"] = {
-    loaded = true,
-    path = "/home/hagom/.local/share/nvim/site/pack/packer/start/quick-scope",
-    url = "https://github.com/unblevable/quick-scope"
-  },
   ["refactoring.nvim"] = {
     loaded = true,
     path = "/home/hagom/.local/share/nvim/site/pack/packer/start/refactoring.nvim",
@@ -400,11 +400,6 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/hagom/.local/share/nvim/site/pack/packer/start/vim-repeat",
     url = "https://github.com/tpope/vim-repeat"
-  },
-  ["vim-sneak"] = {
-    loaded = true,
-    path = "/home/hagom/.local/share/nvim/site/pack/packer/start/vim-sneak",
-    url = "https://github.com/justinmk/vim-sneak"
   },
   ["vim-startify"] = {
     loaded = true,

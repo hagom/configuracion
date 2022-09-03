@@ -42,6 +42,8 @@ vim.opt.wildmenu       = true
 vim.opt.wildmode       = "longest,list,full"
 vim.opt.wrap           = false
 vim.opt.writebackup    = false
+vim.opt.guicursor      = "a:blinkon100"
+vim.keymap.set('n','<Leader>e',':NvimTreeToggle<CR>')
 
 vim.cmd([[
 	" autocmd filetype plugin indent on
@@ -56,8 +58,6 @@ vim.cmd([[
 	set wildignore+=**/node_modules/*
 	set wildignore+=**/android/*
 	set wildignore+=**/ios/*
-
-	syntax on                                   "Enalbes sintax highlighting
 
     "Configuración para startify
     let g:startify_session_dir = '~/.config/nvim/session'
@@ -78,37 +78,9 @@ vim.cmd([[
     let g:startify_fortune_use_unicode = 1
     let g:startify_enable_special = 0
 
-    "Configuración para sneak
-    let g:sneak#label = 1
-
-    " case insensitive sneak
-    let g:sneak#use_ic_scs = 1
-
-    " immediately move to the next instance of search, if you move the cursor sneak is back to default behavior
-    let g:sneak#s_next = 1
-
-    " remap so I can use , and ; with f and t
-    map gS <Plug>Sneak_,
-    map gs <Plug>Sneak_;
-
     " Change the colors
     highlight Sneak guifg=black guibg=#00C7DF ctermfg=black ctermbg=cyan
     highlight SneakScope guifg=red guibg=yellow ctermfg=red ctermbg=yellow
-
-    " Cool prompts
-    let g:sneak#prompt = '👁️ '
-    " let g:sneak#prompt = '🔎'
-
-    " I like quickscope better for this since it keeps me in the scope of a single line
-    " map f <Plug>Sneak_f
-    " map F <Plug>Sneak_F
-    " map t <Plug>Sneak_t
-    " map T <Plug>Sneak_T
-
-    "Configuración para quickscope
-
-    "Atajos para activar quickscope
-    let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
 
     highlight QuickScopePrimary guifg='#00C7DF' gui=underline ctermfg=155 cterm=underline
     highlight QuickScopeSecondary guifg='#afff5f' gui=underline ctermfg=81 cterm=underline
@@ -118,61 +90,24 @@ vim.cmd([[
     "Configuración para Coc-yank
     nnoremap <silent> <space>y  :<C-u>CocList -A --normal yank<cr>
 
-    "Configuración para coc-explorer
-    let g:coc_explorer_global_presets = {
-    \   '.vim': {
-    \     'root-uri': '~/.vim',
-    \   },
-    \   'tab': {
-    \     'position': 'tab',
-    \     'quit-on-open': v:true,
-    \   },
-    \   'floating': {
-    \     'position': 'floating',
-    \     'open-action-strategy': 'sourceWindow',
-    \   },
-    \   'floatingTop': {
-    \     'position': 'floating',
-    \     'floating-position': 'center-top',
-    \     'open-action-strategy': 'sourceWindow',
-    \   },
-    \   'floatingLeftside': {
-    \     'position': 'floating',
-    \     'floating-position': 'left-center',
-    \     'floating-width': 50,
-    \     'open-action-strategy': 'sourceWindow',
-    \   },
-    \   'floatingRightside': {
-    \     'position': 'floating',
-    \     'floating-position': 'right-center',
-    \     'floating-width': 50,
-    \     'open-action-strategy': 'sourceWindow',
-    \   },
-    \   'simplify': {
-    \     'file-child-template': '[selection | clip | 1] [indent][icon | 1] [filename omitCenter 1]'
-    \   }
-    \ }
+    "Configuracion coc-snippets
+    " Use <C-l> for trigger snippet expand.
+    imap <C-l> <Plug>(coc-snippets-expand)
 
-    " nmap <leader>e :CocCommand explorer<CR>
-    " nmap <leader>E :CocCommand explorer --preset floating<CR>
-    autocmd BufEnter * if (winnr("$") == 1 && &filetype == 'coc-explorer') | q | endif
+    " Use <C-j> for select text for visual placeholder of snippet.
+    vmap <C-j> <Plug>(coc-snippets-select)
 
-    "Configuración LuaSnip
-    " press <Tab> to expand or jump in a snippet. These can also be mapped separately
-    " via <Plug>luasnip-expand-snippet and <Plug>luasnip-jump-next.
-    " imap <silent><expr> <Tab> luasnip#expand_or_jumpable() ? '<Plug>luasnip-expand-or-jump' : '<Tab>' 
-    " " -1 for jumping backwards.
-    " inoremap <silent> <S-Tab> <cmd>lua require'luasnip'.jump(-1)<Cr>
-    "
-    " snoremap <silent> <Tab> <cmd>lua require('luasnip').jump(1)<Cr>
-    " snoremap <silent> <S-Tab> <cmd>lua require('luasnip').jump(-1)<Cr>
-    "
-    " " For changing choices in choiceNodes (not strictly necessary for a basic setup).
-    " imap <silent><expr> <C-E> luasnip#choice_active() ? '<Plug>luasnip-next-choice' : '<C-E>'
-    " smap <silent><expr> <C-E> luasnip#choice_active() ? '<Plug>luasnip-next-choice' : '<C-E>'
-    
-    " Configuracion para Prettier instalado con coc
-    command! -nargs=0 Prettier :CocCommand prettier.forceFormatDocument
+    " Use <C-j> for jump to next placeholder, it's default of coc.nvim
+    let g:coc_snippet_next = '<c-j>'
+
+    " Use <C-k> for jump to previous placeholder, it's default of coc.nvim
+    let g:coc_snippet_prev = '<c-k>'
+
+    " Use <C-j> for both expand and jump (make expand higher priority.)
+    imap <C-j> <Plug>(coc-snippets-expand-jump)
+
+    " Use <leader>x for convert visual selected code to snippet
+    xmap <leader>x  <Plug>(coc-convert-snippet)
 ]])
 
 require("packer-plugins")

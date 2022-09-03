@@ -25,7 +25,8 @@ return require("packer").startup(function()
 	use("gruvbox-community/gruvbox") -- Tema para el editor
 	use("ryanoasis/vim-devicons")
 	use("windwp/nvim-autopairs") -- Autocompleta los simbolos en el editor
-	use({ "L3MON4D3/LuaSnip", requires = { "rafamadriz/friendly-snippets" } }) -- Snippets
+	use({ "L3MON4D3/LuaSnip" }) -- Snippets
+	use("rafamadriz/friendly-snippets") --Snippets para LuaSnip
 	use({ "mfussenegger/nvim-dap", requires = { "mfussenegger/nvim-dap-ui" } }) -- Debug Adapter Protocol
 	use({
 		"nvim-lualine/lualine.nvim",
@@ -90,15 +91,16 @@ return require("packer").startup(function()
 	use("sunjon/shade.nvim")
 	use("tpope/vim-repeat")
 	use("hrsh7th/cmp-buffer")
-	use("hrsh7th/cmp-cmdline")
 	use("hrsh7th/cmp-path")
+	use("hrsh7th/cmp-cmdline")
 	use("hrsh7th/nvim-cmp")
 	use("hrsh7th/cmp-nvim-lsp")
 	use("saadparwaiz1/cmp_luasnip")
 	use({ "tzachar/cmp-tabnine", run = "./install.sh", requires = "hrsh7th/nvim-cmp" })
 	use("mhinz/vim-startify")
-	use("justinmk/vim-sneak") -- Plugin para mejorar el movimiento dentro de neovim
-	use("unblevable/quick-scope") -- Plugin para mejorar el movimiento horizontal
+	-- use("justinmk/vim-sneak") -- Plugin para mejorar el movimiento dentro de neovim
+	-- use("unblevable/quick-scope") -- Plugin para mejorar el movimiento horizontal
+	use("ggandor/lightspeed.nvim") -- Mejora el movimiento dentro del editor
 	use("mattn/emmet-vim")
 	use("alvan/vim-closetag")
 	use("mbbill/undotree") -- Muestra un arbol de cambios en el editor
