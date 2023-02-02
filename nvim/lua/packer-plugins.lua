@@ -25,8 +25,8 @@ return require("packer").startup(function()
 	use("gruvbox-community/gruvbox") -- Tema para el editor
 	use("ryanoasis/vim-devicons")
 	use("windwp/nvim-autopairs") -- Autocompleta los simbolos en el editor
-	use({ "L3MON4D3/LuaSnip" }) -- Snippets
-	use("rafamadriz/friendly-snippets") --Snippets para LuaSnip
+	-- use({ "L3MON4D3/LuaSnip" }) -- Snippets
+	-- use("rafamadriz/friendly-snippets") --Snippets para LuaSnip
 	use({ "mfussenegger/nvim-dap", requires = { "mfussenegger/nvim-dap-ui" } }) -- Debug Adapter Protocol
 	use({
 		"nvim-lualine/lualine.nvim",
@@ -58,7 +58,7 @@ return require("packer").startup(function()
 			{ "dhruvmanila/telescope-bookmarks.nvim" },
 			{ "nvim-telescope/telescope-frecency.nvim" },
 			{ "nvim-telescope/telescope-file-browser.nvim" },
-			{ "benfowler/telescope-luasnip.nvim" },
+			-- { "benfowler/telescope-luasnip.nvim" },
 		},
 	})
 	use("tpope/vim-surround")
@@ -70,6 +70,11 @@ return require("packer").startup(function()
 	})
 
 	use({ "neoclide/coc.nvim", branch = "master", run = "yarn install --frozen-lockfile" })
+
+	use("prettier/vim-prettier", {
+		run = "yarn install --frozen-lockfile --production",
+		branch = "master",
+	})
 
 	use({
 		"folke/which-key.nvim",
@@ -90,12 +95,12 @@ return require("packer").startup(function()
 	})
 	use("sunjon/shade.nvim")
 	use("tpope/vim-repeat")
-	use("hrsh7th/cmp-buffer")
-	use("hrsh7th/cmp-path")
+	-- use("hrsh7th/cmp-buffer")
+	-- use("hrsh7th/cmp-path")
 	use("hrsh7th/cmp-cmdline")
 	use("hrsh7th/nvim-cmp")
-	use("hrsh7th/cmp-nvim-lsp")
-	use("saadparwaiz1/cmp_luasnip")
+	-- use("hrsh7th/cmp-nvim-lsp")
+	-- use("saadparwaiz1/cmp_luasnip")
 	use({ "tzachar/cmp-tabnine", run = "./install.sh", requires = "hrsh7th/nvim-cmp" })
 	use("mhinz/vim-startify")
 	-- use("justinmk/vim-sneak") -- Plugin para mejorar el movimiento dentro de neovim
@@ -124,7 +129,7 @@ return require("packer").startup(function()
 		},
 	})
 	use("numToStr/Comment.nvim")
-	use({ "kevinhwang91/nvim-ufo", requires = "kevinhwang91/promise-async" }) -- Permite hacer pliegues en el codigo
+	-- use({ "kevinhwang91/nvim-ufo", requires = "kevinhwang91/promise-async" }) -- Permite hacer pliegues en el codigo
 
 	use("nvim-orgmode/orgmode")
 	use({
@@ -148,4 +153,5 @@ return require("packer").startup(function()
 
 	use("RishabhRD/popfix")
 	use("RishabhRD/nvim-lsputils")
+	use("nvim-treesitter/nvim-treesitter-context")
 end)

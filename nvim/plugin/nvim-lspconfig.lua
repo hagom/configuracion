@@ -53,7 +53,7 @@ require("lspconfig")["rust_analyzer"].setup({
 		["rust-analyzer"] = {},
 	},
 })
-require("lspconfig")["vimls"].setup({
+require("lspconfig")["gopls"].setup({
 	on_attach = on_attach,
 	flags = lsp_flags,
 })
@@ -97,7 +97,11 @@ require("lspconfig")["dockerls"].setup({
 	on_attach = on_attach,
 	flags = lsp_flags,
 })
-require("lspconfig")["lemminx"].setup({
+
+require("lspconfig").rust_analyzer.setup({
+	capabilities = capabilities,
 	on_attach = on_attach,
-	flags = lsp_flags,
+	cmd = {
+		"rustup", "run", "stable", "rust-analyzer",
+	}
 })

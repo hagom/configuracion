@@ -5,7 +5,7 @@ require("telescope").load_extension("project")
 require("telescope").load_extension("bookmarks")
 require("telescope").load_extension("coc")
 require("telescope").load_extension("media_files")
-require("telescope").load_extension("luasnip")
+-- require("telescope").load_extension("luasnip")
 require("telescope").load_extension("zoxide")
 require("telescope").load_extension("emoji")
 
@@ -76,14 +76,3 @@ require("telescope").setup({
 --   end,
 -- })
 
--- vim.api.nvim_set_keymap("n", "<Leader>ff", [[ <Cmd>lua require('telescope.builtin').find_files()<CR> ]], {noremap =true, silent = true, expr = false})
--- vim.api.nvim_set_keymap("n", "<Leader>fq", [[ <Cmd>lua require('telescope.builtin').live_grep()<CR> ]], {noremap =true, silent = true, expr = false})
--- vim.api.nvim_set_keymap("n", "<Leader>fb", [[ <Cmd>lua require('telescope.builtin').buffers()<CR> ]], {noremap =true, silent = true, expr = false})
--- vim.api.nvim_set_keymap("n", "<Leader>fh", [[ <Cmd>lua require('telescope.builtin').help_tags()<CR> ]], {noremap =true, silent = true, expr = false})
-
-vim.cmd([[
-	nnoremap <leader>ff <cmd>lua require('telescope.builtin').find_files()<cr>
-	nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
-	nnoremap <leader>fb <cmd>lua require('telescope.builtin').buffers()<cr>
-	nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
-]])
