@@ -12,141 +12,14 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-require("lazy").setup({
-	{ "windwp/nvim-ts-autotag" },
+-- [[ Basic Keymaps ]]
+-- Set <space> as the leader key
+-- See `:help mapleader`
+--  NOTE: Must happen before plugins are required (otherwise wrong leader will be used)
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
 
-	{ "tpope/vim-surround" }, -- Change symbols
-
-    { -- LSP Configuration & Plugins
-      "neovim/nvim-lspconfig",
-      dependencies = {
-        -- Automatically install LSPs to stdpath for neovim
-        "williamboman/mason.nvim",
-        "williamboman/mason-lspconfig.nvim",
-
-        -- ful status updates for LSP
-        "j-hui/fidget.nvim",
-
-        -- Additional lua configuration, makes nvim stuff amazing
-        "folke/neodev.nvim",
-      },
-    },
-
-    { -- Autocompletion
-      "hrsh7th/nvim-cmp",
-      dependencies = { "hrsh7th/cmp-nvim-lsp", "L3MON4D3/LuaSnip", "saadparwaiz1/cmp_luasnip", "hrsh7th/cmp-buffer", "hrsh7th/cmp-path", "hrsh7th/cmp-cmdline"},
-    },
-
-	-- Snippets
-	{ "rafamadriz/friendly-snippets" },
-	-- { "L3MON4D3/LuaSnip", version = "master" },
-
-  -- {
-  --   "L3MON4D3/LuaSnip",
-  --   -- follow latest release.
-  --   version = "master",
-  --   -- install jsregexp (optional!).
-  --   build = "make install_jsregexp"
-  -- },
-
-    { -- Highlight, edit, and navigate code
-      "nvim-treesitter/nvim-treesitter",
-      dependencies = {
-        "nvim-treesitter/nvim-treesitter-textobjects",
-      },
-      build = function()
-        pcall(require("nvim-treesitter.install").update({ with_sync = true }))
-      end,
-    },
-
-	-- Git related plugins
-	--  'tpope/vim-fugitive'
-	"tpope/vim-rhubarb",
-	"lewis6991/gitsigns.nvim",
-
-	"navarasu/onedark.nvim", -- Theme inspired by Atom
-	"nvim-lualine/lualine.nvim", -- Fancier statusline
-	"lukas-reineke/indent-blankline.nvim", -- Add indentation guides even on blank lines
-	"numToStr/Comment.nvim", -- "gc" to comment visual regions/lines
-	"tpope/vim-sleuth", -- Detect tabstop and shiftwidth automatically
-
-	-- Fuzzy Finder (files, lsp, etc)
-    {
-      "nvim-telescope/telescope.nvim",
-      branch = "0.1.x",
-      dependencies = { "nvim-lua/plenary.nvim" },
-      { "nvim-telescope/telescope-dap.nvim" },
-      { "cljoly/telescope-repo.nvim" },
-      { "nvim-telescope/telescope-media-files.nvim" },
-      { "xiyaowong/telescope-emoji.nvim" },
-      { "jvgrootveld/telescope-zoxide" },
-      { "fannheyward/telescope-coc.nvim" },
-      { "nvim-telescope/telescope-symbols.nvim" },
-      { "nvim-telescope/telescope-project.nvim" },
-      { "dhruvmanila/telescope-bookmarks.nvim" },
-      { "nvim-telescope/telescope-frecency.nvim" },
-      { "nvim-telescope/telescope-file-browser.nvim" },
-    },
-
-	-- ("mhinz/vim-startify") -- Shows a welcome screen
-    {
-      "goolord/alpha-nvim",
-      -- dependencies = { "nvim-tree/nvim-web-devicons" },
-      config = function()
-        require("alpha").setup(require("alpha.themes.startify").config)
-      end,
-    },
-
-	{ "tzachar/cmp-tabnine", build = "./install.sh", dependencies = "hrsh7th/nvim-cmp" }, -- Autocomplete
-	"ggandor/lightspeed.nvim", -- Mejora el movimiento dentro del editor
-	{ "ckipp01/stylua-nvim", build = "cargo install stylua" }, -- Formateador para Lua
-	"mattn/emmet-vim",
-	"alvan/vim-closetag", -- Autoclose tag
-	"mbbill/undotree", -- Muestra un arbol de cambios en el editor
-	"editorconfig/editorconfig-vim",
-
-    {
-      "ThePrimeagen/refactoring.nvim",
-      dependencies = {
-        { "nvim-lua/plenary.nvim" },
-        { "nvim-treesitter/nvim-treesitter" },
-        { "ThePrimeagen/git-worktree.nvim" },
-      },
-    },
-
-	"nvim-orgmode/orgmode", -- Org Mode for neovim
-	"onsails/lspkind.nvim",
-	"nvim-treesitter/nvim-treesitter-context",
-	{ "TimUntersberger/neogit", dependencies = "nvim-lua/plenary.nvim" }, -- Manejador de repositorios en GIT
-
-	-- Fuzzy Finder Algorithm which dependencies local dependencies to be built. Only load if `make` is available
-	{ "nvim-telescope/telescope-fzf-native.nvim", build = "make", cond = vim.fn.executable("make") == 1 },
-
-	{ "ThePrimeagen/harpoon", dependencies = { { "nvim-lua/plenary.nvim" } } },
-	"akinsho/toggleterm.nvim", -- Floating Terminal
-
-    {
-      "folke/which-key.nvim",
-    },
-
-	"windwp/nvim-autopairs", -- Autocompleta los simbolos en el editor
-	{ "mfussenegger/nvim-dap", dependencies = { "mfussenegger/nvim-dap-ui" } }, -- Debug Adapter Protocol
-	"Vonr/align.nvim",
-
-  {
-  "prettier/vim-prettier",
-    build = "yarn install --frozen-lockfile --production",
-    branch = "master",
-  },
-
-    {
-      "kyazdani42/nvim-tree.lua",
-      dependencies = {
-        "kyazdani42/nvim-web-devicons", -- optional, for file icons
-      },
-      tag = "nightly", -- optional, updated every week. (see issue #1193)
-  },
-})
+require("lazy").setup("plugins")
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -212,13 +85,6 @@ vim.cmd([[colorscheme onedark]])
 -- Set completeopt to have a better completion experience
 vim.o.completeopt = "menuone,noselect"
 
--- [[ Basic Keymaps ]]
--- Set <space> as the leader key
--- See `:help mapleader`
---  NOTE: Must happen before plugins are required (otherwise wrong leader will be used)
-vim.g.mapleader = " "
-vim.g.maplocalleader = " "
-
 -- Keymaps for better default experience
 -- See `:help vim.keymap.set()`
 vim.keymap.set({ "n", "v" }, "<Space>", "<Nop>", { silent = true })
@@ -242,17 +108,6 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	pattern = "*",
 })
 
--- Set lualine as statusline
--- See `:help lualine.txt`
-require("lualine").setup({
-	options = {
-		icons_enabled = false,
-		theme = "onedark",
-		component_separators = "|",
-		section_separators = "",
-	},
-})
-
 -- Enable Comment.nvim
 require("Comment").setup()
 
@@ -272,19 +127,6 @@ require("gitsigns").setup({
 		delete = { text = "_" },
 		topdelete = { text = "‾" },
 		changedelete = { text = "~" },
-	},
-})
-
--- [[ Configure Telescope ]]
--- See `:help telescope` and `:help telescope.setup()`
-require("telescope").setup({
-	defaults = {
-		mappings = {
-			i = {
-				["<C-u>"] = false,
-				["<C-d>"] = false,
-			},
-		},
 	},
 })
 
