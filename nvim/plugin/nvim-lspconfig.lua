@@ -37,67 +37,67 @@ local lsp_flags = {
 	debounce_text_changes = 150,
 }
 
-require("lspconfig")["pyright"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-})
-require("lspconfig")["tsserver"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-})
-require("lspconfig")["rust_analyzer"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-	-- Server-specific settings...
-	settings = {
-		["rust-analyzer"] = {},
-	},
-})
-require("lspconfig")["gopls"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-})
-require("lspconfig")["sqlls"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-})
-require("lspconfig")["tailwindcss"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-})
-require("lspconfig")["html"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-})
-require("lspconfig")["cssls"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-})
-require("lspconfig")["jsonls"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-})
-require("lspconfig")["sumneko_lua"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-})
-require("lspconfig")["volar"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-})
-require("lspconfig")["emmet_ls"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-})
-require("lspconfig")["bashls"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-})
-require("lspconfig")["dockerls"].setup({
-	on_attach = on_attach,
-	flags = lsp_flags,
-})
-
+-- require("lspconfig")["pyright"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- })
+-- require("lspconfig")["tsserver"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- })
+-- require("lspconfig")["rust_analyzer"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- 	-- Server-specific settings...
+-- 	settings = {
+-- 		["rust-analyzer"] = {},
+-- 	},
+-- })
+-- require("lspconfig")["gopls"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- })
+-- require("lspconfig")["sqlls"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- })
+-- require("lspconfig")["tailwindcss"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- })
+-- require("lspconfig")["html"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- })
+-- require("lspconfig")["cssls"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- })
+-- require("lspconfig")["jsonls"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- })
+-- require("lspconfig")["lua_ls"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- })
+-- require("lspconfig")["volar"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- })
+-- require("lspconfig")["emmet_ls"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- })
+-- require("lspconfig")["bashls"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- })
+-- require("lspconfig")["dockerls"].setup({
+-- 	on_attach = on_attach,
+-- 	flags = lsp_flags,
+-- })
+--
 require("lspconfig").rust_analyzer.setup({
 	capabilities = capabilities,
 	on_attach = on_attach,
