@@ -50,6 +50,6 @@ return {
 
         -- set termguicolors to enable highlight groups
         vim.opt.termguicolors = true
-        vim.keymap.set("n", "<leader>e", ":NvimTreeToggle<CR>", { desc = "NvimTreeToggle" })
+        vim.keymap.set("n", "<leader>e", ":NvimTreeToggle<CR>", {desc = "NvimTreeToggle"})
     end
 }

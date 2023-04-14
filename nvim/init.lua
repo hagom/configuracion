@@ -11,6 +11,7 @@ if not vim.loop.fs_stat(lazypath) then
   })
 end
 vim.opt.rtp:prepend(lazypath)
+--
 
 -- [[ Basic Keymaps ]]
 -- Set <space> as the leader key
@@ -79,7 +80,7 @@ vim.o.updatetime = 250
 vim.wo.signcolumn = "yes"
 
 -- Set colorscheme
-vim.o.termguicolors = true
+vim.opt.termguicolors = true
 vim.cmd([[colorscheme onedark]])
 
 -- Set completeopt to have a better completion experience
