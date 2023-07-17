@@ -1,13 +1,13 @@
 return {
-    "kyazdani42/nvim-tree.lua",
+    "nvim-tree/nvim-tree.lua",
     cmd = "NvimTreeToggle",
     dependencies = {
-        "kyazdani42/nvim-web-devicons", -- optional, for file icons
+        "nvim-tree/nvim-web-devicons", -- optional, for file icons
     },
-    tag = "nightly", -- optional, updated every week. (see issue #1193)
     keys = { "<leader>e", desc = "NvimTree" },
     config = function()
         require("nvim-tree").setup({
+            on_attach = on_attach,
             sort_by = "case_sensitive",
             view = {
                 relativenumber = true,

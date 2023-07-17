@@ -59,7 +59,7 @@ vim.wo.rnu = true
 vim.wo.number = true
 
 -- Make System clipboard available
-vim.o.clipboard = "unnamedplus"
+vim.opt.clipboard = 'unnamedplus'
 
 -- Enable mouse mode
 vim.o.mouse = "a"
