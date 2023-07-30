@@ -86,7 +86,7 @@ return {
             view = {
                 relativenumber = true,
                 number = true,
-                adaptive_size = true,
+                adaptive_size = false,
                 mappings = {
                     list = {
                         { key = "u", action = "dir_up" },
