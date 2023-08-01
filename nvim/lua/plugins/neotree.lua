@@ -44,7 +44,6 @@ return {
 		vim.fn.sign_define("DiagnosticSignHint",
 			{ text = "󰌵", texthl = "DiagnosticSignHint" })
 		require("neo-tree").setup({
-			-- vim.keymap.set("n", "<leader>e", ":Neotree toggle<CR>", { desc = "Neotree toggle" }),
 			close_if_last_window = true, -- Close Neo-tree if it is the last window left in the tab
 			popup_border_style = "rounded",
 			enable_git_status = true,
@@ -96,7 +95,7 @@ return {
 					highlight = "NeoTreeModified",
 				},
 				name = {
-					trailing_slash = false,
+					trailing_slash = true,
 					use_git_status_colors = true,
 					highlight = "NeoTreeFileName",
 				},
