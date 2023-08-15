@@ -59,6 +59,17 @@ return {
 			--           return a.type > b.type
 			--       end
 			--   end , -- this sorts files and directories descendantly
+			event_handlers = {
+				{
+					event = "vim_buffer_enter",
+					handler = function()
+						if vim.bo.filetype == "neo-tree" then
+							vim.cmd("setlocal number")
+							vim.cmd("setlocal relativenumber")
+						end
+					end,
+				},
+			},
 			source_selector = {
 				winbar = true,
 				statusline = true
