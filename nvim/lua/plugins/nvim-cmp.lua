@@ -53,6 +53,7 @@ return
                 { name = 'nvim_lsp' },
                 { name = 'nvim_lua' },
                 { name = 'emoji' },
+                { name = 'cmp_tabnine' },
                 -- { name = 'vsnip' }, -- For vsnip users.
                 { name = 'luasnip' }, -- For luasnip users.
                 -- { name = 'ultisnips' }, -- For ultisnips users.
