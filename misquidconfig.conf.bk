@@ -167,7 +167,7 @@
 #	Remove this line. Squid no longer supports preferential treatment of DNS A records.
 #Default:
 # none
-dns_v4_first on
+#dns_v4_first on
 #  TAG: cache_peer_domain
 #	Replace with dstdomain ACLs and cache_peer_access.
 #Default:
@@ -366,6 +366,7 @@ dns_v4_first on
 # -----------------------------------------------------------------------------
 
 #  TAG: workers
+workers 4
 #	Number of main Squid processes or "workers" to fork and maintain.
 #	0: "no daemon" mode, like running "squid -N ..."
 #	1: "no SMP" mode, start one main Squid process daemon (default)
@@ -1340,18 +1341,28 @@ acl localnet src 192.168.1.0/24		# RFC 1918 local private network (LAN)
 acl localnet src fc00::/7       	# RFC 4193 local private network range
 acl localnet src fe80::/10      	# RFC 4291 link-local (directly plugged) machines
 
-acl SSL_ports port 443
-acl Safe_ports port 80		# http
-acl Safe_ports port 53
-acl Safe_ports port 21		# ftp
-acl Safe_ports port 443		# https
-acl Safe_ports port 70		# gopher
-acl Safe_ports port 210		# wais
-acl Safe_ports port 1025-65535	# unregistered ports
-acl Safe_ports port 280		# http-mgmt
-acl Safe_ports port 488		# gss-http
-acl Safe_ports port 591		# filemaker
-acl Safe_ports port 777		# multiling http
+acl SSL_ports port 1-65535
+#acl SSL_ports port 443
+#acl Safe_ports port 80		# http
+#acl Safe_ports port 53
+#acl Safe_ports port 21		# ftp
+#acl Safe_ports port 443		# https
+#acl Safe_ports port 70		# gopher
+#acl Safe_ports port 210		# wais
+#acl Safe_ports port 1025-65535	# unregistered ports
+acl Safe_ports port 1-65535	# Open All ports
+#acl Safe_ports port 280		# http-mgmt
+#acl Safe_ports port 488		# gss-http
+#acl Safe_ports port 591		# filemaker
+#acl Safe_ports port 777		# multiling http
+
+#Whatsapp
+# SSL bump rules
+#acl DiscoverSNIHost at_step SslBump1
+#acl NoSSLIntercept ssl::server_name_regex "/usr/local/squid/etc/acl.url.nobump"
+ssl_bump peek DiscoverSNIHost
+ssl_bump splice NoSSLIntercept
+ssl_bump bump all
 
 # Media Streams
 
@@ -2132,7 +2143,7 @@ http_access allow all
 
 # Squid normally listens to port 3128
 http_port 3128
-
+#
 #  TAG: https_port
 #	Usage:  [ip:]port [mode] tls-cert=certificate.pem [options]
 #
@@ -3634,16 +3645,14 @@ http_port 3128
 #	accessed frequently in memory to improve performance whilst low
 #	enough to keep larger objects from hoarding cache_mem.
 #Default:
-maximum_object_size_in_memory 8192 KB
+maximum_object_size_in_memory 2 MB
 
 #  TAG: memory_cache_shared	on|off
 #	Controls whether the memory cache is shared among SMP workers.
 #
 #	The shared memory cache is meant to occupy cache_mem bytes and replace
 #	the non-shared memory cache, although some entities may still be
-#	cached locally by workers for now (e.g., internal and in-transit
-#	objects may be served from a local memory cache even if shared memory
-#	caching is enabled).
+#	cached locally by workers for now ().
 #
 #	By default, the memory cache is shared if and only if all of the
 #	following conditions are satisfied: Squid runs in SMP mode with
