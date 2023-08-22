@@ -1390,6 +1390,32 @@ acl media rep_mime_type x-fcs
 http_access deny mediapr
 http_reply_access deny media
 
+acl cdn_domains dstdomain .akamaihd.net .cloudflare.net .fastly.net
+cache allow cdn_domains
+
+# Caching Rules
+
+refresh_pattern ^ftp: 1440 20% 10080
+
+refresh_pattern ^gopher: 1440 0% 1440
+
+refresh_pattern -i \.(gif|png|jpg|jpeg|ico)$ 10080 90% 43200 override-expire ignore-no-cache ignore-no-store ignore-private
+
+refresh_pattern -i \.(iso|avi|wav|mp3|mp4|mpeg|swf|flv|x-flv)$ 43200 90% 432000 override-expire ignore-no-cache ignore-no-store ignore-private
+
+refresh_pattern -i \.(deb|rpm|exe|zip|tar|tgz|ram|rar|bin|ppt|doc|tiff)$ 10080 90% 43200 override-expire ignore-no-cache ignore-no-store ignore-private
+
+refresh_pattern -i \.index.(html|htm)$ 0 40% 10080
+
+refresh_pattern -i \.(html|htm|css|js)$ 1440 40% 40320
+
+refresh_pattern . 0 40% 40320
+# Specific rule for youtube caching.
+
+refresh_pattern -i youtube.com/.* 10080 90% 43200
+refresh_pattern (/cgi-bin/|\?) 0 0% 0
+
+
 #  TAG: proxy_protocol_access
 #	Determine which client proxies can be trusted to provide correct
 #	information regarding real client IP address using PROXY protocol.
