@@ -45,7 +45,7 @@ return
                 enable_rename = true,
                 enable_close = true,
                 enable_close_on_slash = true,
-                -- filetypes = { "html", "xml", "jsx" },
+                -- filetypes = { "html", "xml", "jsx","js","ts","tsx" },
             }
         }
     end
