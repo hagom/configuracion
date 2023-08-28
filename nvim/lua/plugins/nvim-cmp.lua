@@ -7,17 +7,88 @@ return
         "L3MON4D3/LuaSnip",
         "saadparwaiz1/cmp_luasnip",
         "hrsh7th/cmp-buffer",
+        "hrsh7th/cmp-emoji",
+        "hrsh7th/cmp-nvim-lua",
         "hrsh7th/cmp-path",
-        "hrsh7th/cmp-cmdline" },
+        "hrsh7th/cmp-cmdline",
+        "hrsh7th/cmp-nvim-lsp-signature-help",
+        "dcampos/cmp-emmet-vim",
+        "hrsh7th/cmp-nvim-lsp-document-symbol",
+        "lukas-reineke/cmp-rg",
+        "uga-rosa/cmp-dictionary",
+        "kkharji/sqlite.lua",
+        -- "fazibear/cmp-nerdfonts",
+        {
+            "David-Kunz/cmp-npm",
+            dependencies = { 'nvim-lua/plenary.nvim' },
+            ft = "json",
+            config = function()
+                require('cmp-npm').setup({})
+            end
+        },
+        {
+            "roobert/tailwindcss-colorizer-cmp.nvim",
+            -- optionally, override the default options:
+            config = function()
+                require("tailwindcss-colorizer-cmp").setup({
+                    color_square_width = 2,
+                })
+            end
+        },
+    },
     event = "InsertEnter",
     config = function()
         -- Set up nvim-cmp.
+        -- require('cmp_nerdfonts').update()
         local cmp = require 'cmp'
         local lspkind = require('lspkind')
+        local luasnip = require('luasnip')
+        local source_mapping = {
+            buffer = "[Buffer]",
+            nvim_lsp = "[LSP]",
+            nvim_lua = "[Lua]",
+            cmp_tabnine = "[TN]",
+            path = "[Path]",
+        }
+
+        local has_words_before = function()
+            unpack = unpack or table.unpack
+            local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+            return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
+        end
+
+        local dict = require("cmp_dictionary")
+
+        dict.setup({
+            -- The following are default values.
+            exact = 2,
+            first_case_insensitive = false,
+            document = false,
+            document_command = "wn %s -over",
+            sqlite = false,
+            max_items = -1,
+            capacity = 5,
+            debug = false,
+        })
+
+        -- dict.switcher({
+        --     filetype = {
+        --         lua = "/path/to/lua.dict",
+        --         javascript = { "/path/to/js.dict", "/path/to/js2.dict" },
+        --     },
+        --     filepath = {
+        --         [".*xmake.lua"] = { "/path/to/xmake.dict", "/path/to/lua.dict" },
+        --         ["%.tmux.*%.conf"] = { "/path/to/js.dict", "/path/to/js2.dict" },
+        --     },
+        --     spelllang = {
+        --         en = "/path/to/english.dict",
+        --     },
+        -- })
 
         cmp.setup({
             formatting = {
                 format = lspkind.cmp_format({
+                    require("tailwindcss-colorizer-cmp").formatter,
                     mode = 'symbol',       -- show only symbol annotations
                     maxwidth = 50,         -- prevent the popup from showing more than provided characters (e.g 50 will not show more than 50 characters)
                     ellipsis_char = '...', -- when popup menu exceed maxwidth, the truncated part would show ellipsis_char instead (must define maxwidth first)
@@ -29,6 +100,7 @@ return
                     end
                 })
             },
+
             snippet = {
                 -- REQUIRED - you must specify a snippet engine
                 expand = function(args)
@@ -48,9 +120,36 @@ return
                 ['<C-Space>'] = cmp.mapping.complete(),
                 ['<C-e>'] = cmp.mapping.abort(),
                 ['<CR>'] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+                ["<Tab>"] = cmp.mapping(function(fallback)
+                    if cmp.visible() then
+                        cmp.select_next_item()
+                        -- You could replace the expand_or_jumpable() calls with expand_or_locally_jumpable()
+                        -- they way you will only jump inside the snippet region
+                    elseif luasnip.expand_or_jumpable() then
+                        luasnip.expand_or_jump()
+                    elseif has_words_before() then
+                        cmp.complete()
+                    else
+                        fallback()
+                    end
+                end, { "i", "s" }),
+
+                ["<S-Tab>"] = cmp.mapping(function(fallback)
+                    if cmp.visible() then
+                        cmp.select_prev_item()
+                    elseif luasnip.jumpable(-1) then
+                        luasnip.jump(-1)
+                    else
+                        fallback()
+                    end
+                end, { "i", "s" }),
             }),
             sources = cmp.config.sources({
                 { name = 'orgmode' },
+                -- { name = 'nerdfonts' },
+                { name = 'npm',        keyword_length = 4 },
+                { name = "rg" },
+                -- { name = 'emmet_vim' },
                 { name = 'nvim_lsp' },
                 { name = 'nvim_lua' },
                 { name = 'emoji' },
@@ -61,6 +160,10 @@ return
                 -- { name = 'snippy' }, -- For snippy users.
             }, {
                 { name = 'buffer' },
+                {
+                    name = "dictionary",
+                    keyword_length = 2,
+                },
             })
         })
 
@@ -77,7 +180,8 @@ return
         cmp.setup.cmdline({ '/', '?' }, {
             mapping = cmp.mapping.preset.cmdline(),
             sources = {
-                { name = 'buffer' }
+                { name = 'buffer' },
+                { name = 'nvim_lsp_document_symbol' }
             }
         })
 
