@@ -3,6 +3,10 @@ return {
   dependencies = {
     "theHamsta/nvim-dap-virtual-text",
     "rcarriga/nvim-dap-ui",
+    opts = 
+    {
+      event = "VeryLazy",
+    },
     "leoluz/nvim-dap-go",
     "mxsdev/nvim-dap-vscode-js",
     -- "anuvyklack/hydra.nvim",
@@ -10,5 +14,5 @@ return {
     "rcarriga/cmp-dap",
   },
   branch = "master",
-  keys = { { "<leader>d", desc = "Open Debug menu" } },
+  keys = { { "<leader>db", desc = "Open Debug menu" } },
 }
