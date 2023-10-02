@@ -1,7 +1,7 @@
 return {
 	"mhartington/formatter.nvim",
 	keys = {
-		{ "<leader>f", "<cmd>Format<cr>", desc = "Formatter" },
+		{ "<leader>f<cr>", "<cmd>Format<cr>", desc = "Formatter" },
 	},
 	config = function()
 		-- Utilities for creating configurations

@@ -29,7 +29,7 @@ return {
                 lualine_y = {},
                 lualine_z = {},
             },
-            tabline = {},
+            -- tabline = {},
             extensions = {
                 "nvim-tree",
                 "symbols-outline",

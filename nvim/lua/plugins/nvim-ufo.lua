@@ -1,5 +1,6 @@
 return {
 	'kevinhwang91/nvim-ufo',
+	-- enabled = false,
 	-- keys = {
 	-- 	{ "zR", "require('ufo').openAllFolds",  desc = "Open All Folds" },
 	-- 	{ "zM", "require('ufo').closeAllFolds", desc = "Close All Folds" },

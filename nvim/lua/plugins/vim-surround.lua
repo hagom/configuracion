@@ -1,2 +1,5 @@
 return
-{ "tpope/vim-surround", enabled = false } -- Change symbols
+{
+	"tpope/vim-surround",
+	enabled = true
+} -- Change symbols

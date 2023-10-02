@@ -2,13 +2,12 @@ return
 {
     -- Highlight, edit, and navigate code
     "nvim-treesitter/nvim-treesitter",
+    event = "VeryLazy",
     dependencies = {
         "nvim-treesitter/nvim-treesitter-textobjects",
         "HiPhish/nvim-ts-rainbow2",
     },
-    build = function()
-        pcall(require("nvim-treesitter.install").update({ with_sync = true }))
-    end,
+    build = ":TSUpdate",
     config = function()
         require 'nvim-treesitter.configs'.setup {
             ensure_installed = { "c", "bash", "c_sharp", "css", "cpp", "dockerfile", "dot", "git_config", "git_rebase",
@@ -59,6 +58,20 @@ return
                 query = 'rainbow-parens',
                 -- Highlight the entire buffer all at once
                 strategy = require('ts-rainbow').strategy.global,
+            },
+            textobjects = {
+                select = {
+                    enable = true,
+                    lookahead = true,
+                    keymaps = {
+                        ["af"] = "@function.outer",
+                        ["if"] = "@function.inner",
+                        ["ac"] = "@conditional.outer",
+                        ["ic"] = "@conditional.inner",
+                        ["al"] = "@loop.outer",
+                        ["il"] = "@loop.inner",
+                    }
+                }
             }
         }
     end
