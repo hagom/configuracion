@@ -1,5 +1,6 @@
 return {
 	"Vonr/align.nvim",
+	lazy = true,
 	config = function()
 		-- align_to_char(length, reverse, preview, marks)
 		-- align_to_string(is_pattern, reverse, preview, marks)
