@@ -1,8 +1,9 @@
 return {
   "ThePrimeagen/harpoon",
+  dependencies = "nvim-lua/plenary.nvim",
   branch = "master",
   config = function()
-    require("telescope").load_extension('harpoon')
+    -- require("telescope").load_extension('harpoon')
     vim.api.nvim_set_keymap("n", "<Leader>hs", [[ <Cmd>lua require("harpoon.ui").toggle_quick_menu()<CR>]],
       { noremap = true, silent = true, expr = false })
     vim.api.nvim_set_keymap("n", "<Leader>ha", [[ <Cmd>lua require("harpoon.mark").add_file()<CR>]],

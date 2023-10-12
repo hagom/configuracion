@@ -3,7 +3,22 @@ return
 {
     "nvim-telescope/telescope.nvim",
     cmd = "Telescope",
-    branch = "0.1.x",
+    dependencies = {
+        "nvim-telescope/telescope-frecency.nvim",
+        "nvim-lua/plenary.nvim",
+        "nvim-telescope/telescope-dap.nvim",
+        "cljoly/telescope-repo.nvim",
+        "nvim-telescope/telescope-media-files.nvim",
+        "xiyaowong/telescope-emoji.nvim",
+        "jvgrootveld/telescope-zoxide",
+        "nvim-telescope/telescope-symbols.nvim",
+        "nvim-telescope/telescope-project.nvim",
+        "dhruvmanila/telescope-bookmarks.nvim",
+        "nvim-telescope/telescope-frecency.nvim",
+        "nvim-telescope/telescope-file-browser.nvim",
+        'nvim-lua/plenary.nvim',
+    },
+    branch = "master",
     config = function()
         -- [[ Configure Telescope ]]
         -- See `:help telescope` and `:help telescope.setup()`
@@ -18,8 +33,8 @@ return
             },
         })
 
+        -- require("telescope").load_extension('harpoon')
         require("telescope").load_extension("git_worktree")
-        require("telescope").load_extension("harpoon")
         require("telescope").load_extension("refactoring")
         require("telescope").load_extension("project")
         require("telescope").load_extension("bookmarks")
@@ -147,18 +162,7 @@ return
         --     print([[Press p or "*p to paste this emoji]] .. emoji.value)
         --   end,
         -- })
-        vim.api.nvim_set_keymap("n", "<leader>fb", ":Telescope file_browser<CR>", { noremap = true, desc = "[F]ile [B]rowser "})
+        vim.api.nvim_set_keymap("n", "<leader>fb", ":Telescope file_browser<CR>",
+            { noremap = true, desc = "[F]ile [B]rowser " })
     end,
-    dependencies = { "nvim-lua/plenary.nvim",
-        "nvim-telescope/telescope-dap.nvim",
-        "cljoly/telescope-repo.nvim",
-        "nvim-telescope/telescope-media-files.nvim",
-        "xiyaowong/telescope-emoji.nvim",
-        "jvgrootveld/telescope-zoxide",
-        "nvim-telescope/telescope-symbols.nvim",
-        "nvim-telescope/telescope-project.nvim",
-        "dhruvmanila/telescope-bookmarks.nvim",
-        "nvim-telescope/telescope-frecency.nvim",
-        "nvim-telescope/telescope-file-browser.nvim",
-    }
 }

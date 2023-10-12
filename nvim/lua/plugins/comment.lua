@@ -1,6 +1,6 @@
 return {
     "numToStr/Comment.nvim", -- "gc" to comment visual regions/lines
-    lazy = false,
+    lazy = true,
     config = function()
       require('Comment').setup(
           {
