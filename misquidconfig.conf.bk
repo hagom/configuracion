@@ -167,7 +167,7 @@
 #	Remove this line. Squid no longer supports preferential treatment of DNS A records.
 #Default:
 # none
-#dns_v4_first on
+
 #  TAG: cache_peer_domain
 #	Replace with dstdomain ACLs and cache_peer_access.
 #Default:
@@ -366,7 +366,6 @@
 # -----------------------------------------------------------------------------
 
 #  TAG: workers
-workers 4
 #	Number of main Squid processes or "workers" to fork and maintain.
 #	0: "no daemon" mode, like running "squid -N ..."
 #	1: "no SMP" mode, start one main Squid process daemon (default)
@@ -376,6 +375,7 @@ workers 4
 #	does (e.g., listen on http_port and forward HTTP requests).
 #Default:
 # SMP support disabled.
+workers 4
 
 #  TAG: cpu_affinity_map
 #	Usage: cpu_affinity_map process_numbers=P1,P2,... cores=C1,C2,...
@@ -423,7 +423,7 @@ workers 4
 #	Locking memory may require a large enough RLIMIT_MEMLOCK OS limit,
 #	CAP_IPC_LOCK capability, or equivalent.
 #Default:
-# shared_memory_locking off
+ #shared_memory_locking on
 
 #  TAG: hopeless_kid_revival_delay	time-units
 #	Normally, when a kid process dies, Squid immediately restarts the
@@ -1337,84 +1337,21 @@ acl localnet src 100.64.0.0/10		# RFC 6598 shared address space (CGN)
 acl localnet src 169.254.0.0/16 	# RFC 3927 link-local (directly plugged) machines
 acl localnet src 172.16.0.0/12		# RFC 1918 local private network (LAN)
 #acl localnet src 192.168.0.0/16		# RFC 1918 local private network (LAN)
-acl localnet src 192.168.1.0/24		# RFC 1918 local private network (LAN)
+acl localnet src 192.168.1.0/24         # RFC 1918 local private network (LAN)
 acl localnet src fc00::/7       	# RFC 4193 local private network range
 acl localnet src fe80::/10      	# RFC 4291 link-local (directly plugged) machines
 
-acl SSL_ports port 1-65535
-#acl SSL_ports port 443
-#acl Safe_ports port 80		# http
-#acl Safe_ports port 53
-#acl Safe_ports port 21		# ftp
-#acl Safe_ports port 443		# https
-#acl Safe_ports port 70		# gopher
-#acl Safe_ports port 210		# wais
-#acl Safe_ports port 1025-65535	# unregistered ports
-acl Safe_ports port 1-65535	# Open All ports
-#acl Safe_ports port 280		# http-mgmt
-#acl Safe_ports port 488		# gss-http
-#acl Safe_ports port 591		# filemaker
-#acl Safe_ports port 777		# multiling http
-
-#Whatsapp
-# SSL bump rules
-#acl DiscoverSNIHost at_step SslBump1
-#acl NoSSLIntercept ssl::server_name_regex "/usr/local/squid/etc/acl.url.nobump"
-ssl_bump peek DiscoverSNIHost
-ssl_bump splice NoSSLIntercept
-ssl_bump bump all
-
-# Media Streams
-
-## MediaPlayer MMS Protocol
-acl media rep_mime_type mms
-acl mediapr url_regex dvrplayer mediastream ^mms://
-## (Squid does not yet handle the URI as a known proto type.)
-
-## Active Stream Format (Windows Media Player)
-acl media rep_mime_type x-ms-asf
-#acl mediapr urlpath_regex \.(afx|asf)(\?.*)?$
-
-## Flash Video Format
-acl media rep_mime_type video/flv video/x-flv
-#acl mediapr urlpath_regex \.flv(\?.*)?$
-
-## Flash General Media Scripts (Animation)
-acl media rep_mime_type application/x-shockwave-flash
-#acl mediapr urlpath_regex \.swf(\?.*)?$
-
-## Others currently unknown
-acl media rep_mime_type ms-hdr
-acl media rep_mime_type x-fcs
-
-http_access deny mediapr
-http_reply_access deny media
-
-acl cdn_domains dstdomain .akamaihd.net .cloudflare.net .fastly.net
-cache allow cdn_domains
-
-# Caching Rules
-
-refresh_pattern ^ftp: 1440 20% 10080
-
-refresh_pattern ^gopher: 1440 0% 1440
-
-refresh_pattern -i \.(gif|png|jpg|jpeg|ico)$ 10080 90% 43200 override-expire ignore-no-cache ignore-no-store ignore-private
-
-refresh_pattern -i \.(iso|avi|wav|mp3|mp4|mpeg|swf|flv|x-flv)$ 43200 90% 432000 override-expire ignore-no-cache ignore-no-store ignore-private
-
-refresh_pattern -i \.(deb|rpm|exe|zip|tar|tgz|ram|rar|bin|ppt|doc|tiff)$ 10080 90% 43200 override-expire ignore-no-cache ignore-no-store ignore-private
-
-refresh_pattern -i \.index.(html|htm)$ 0 40% 10080
-
-refresh_pattern -i \.(html|htm|css|js)$ 1440 40% 40320
-
-refresh_pattern . 0 40% 40320
-# Specific rule for youtube caching.
-
-refresh_pattern -i youtube.com/.* 10080 90% 43200
-refresh_pattern (/cgi-bin/|\?) 0 0% 0
-
+acl SSL_ports port 443
+acl Safe_ports port 80		# http
+acl Safe_ports port 21		# ftp
+acl Safe_ports port 443		# https
+acl Safe_ports port 70		# gopher
+acl Safe_ports port 210		# wais
+acl Safe_ports port 1025-65535	# unregistered ports
+acl Safe_ports port 280		# http-mgmt
+acl Safe_ports port 488		# gss-http
+acl Safe_ports port 591		# filemaker
+acl Safe_ports port 777		# multiling http
 
 #  TAG: proxy_protocol_access
 #	Determine which client proxies can be trusted to provide correct
@@ -1507,6 +1444,8 @@ refresh_pattern (/cgi-bin/|\?) 0 0% 0
 #Default:
 # X-Forwarded-For header will be ignored.
 
+http_access allow all
+
 #  TAG: acl_uses_indirect_client	on|off
 #	Controls whether the indirect client address
 #	(see follow_x_forwarded_for) is used instead of the
@@ -1591,10 +1530,10 @@ refresh_pattern (/cgi-bin/|\?) 0 0% 0
 # Recommended minimum Access Permission configuration:
 #
 # Deny requests to certain unsafe ports
-http_access allow !Safe_ports
+http_access deny !Safe_ports
 
 # Deny CONNECT to other than secure SSL ports
-http_access allow CONNECT !SSL_ports
+http_access deny CONNECT !SSL_ports
 
 # Only allow cachemgr access from localhost
 http_access allow localhost manager
@@ -1613,11 +1552,11 @@ include /etc/squid/conf.d/*.conf
 # Example rule allowing access from your local networks.
 # Adapt localnet in the ACL section to list your (internal) IP networks
 # from where browsing should be allowed
-http_access allow localnet
+#http_access allow localnet
 http_access allow localhost
 
 # And finally deny all other access to this proxy
-http_access allow all
+#http_access deny all
 
 #  TAG: adapted_http_access
 #	Allowing or Denying access based on defined access lists
@@ -2169,7 +2108,7 @@ http_access allow all
 
 # Squid normally listens to port 3128
 http_port 3128
-#
+
 #  TAG: https_port
 #	Usage:  [ip:]port [mode] tls-cert=certificate.pem [options]
 #
@@ -3663,7 +3602,7 @@ http_port 3128
 #	local memory as they need. For more details about the shared memory
 #	cache, see memory_cache_shared.
 #Default:
- cache_mem 4096 MB
+cache_mem 4096 MB
 
 #  TAG: maximum_object_size_in_memory	(bytes)
 #	Objects greater than this size will not be attempted to kept in
@@ -3671,15 +3610,16 @@ http_port 3128
 #	accessed frequently in memory to improve performance whilst low
 #	enough to keep larger objects from hoarding cache_mem.
 #Default:
-maximum_object_size_in_memory 2 MB
-memory_cache_shared on
+maximum_object_size_in_memory 10 MB
 
 #  TAG: memory_cache_shared	on|off
 #	Controls whether the memory cache is shared among SMP workers.
 #
 #	The shared memory cache is meant to occupy cache_mem bytes and replace
 #	the non-shared memory cache, although some entities may still be
-#	cached locally by workers for now ().
+#	cached locally by workers for now (e.g., internal and in-transit
+#	objects may be served from a local memory cache even if shared memory
+#	caching is enabled).
 #
 #	By default, the memory cache is shared if and only if all of the
 #	following conditions are satisfied: Squid runs in SMP mode with
@@ -3692,6 +3632,7 @@ memory_cache_shared on
 #	shared among SMP workers will actually be shared.
 #Default:
 # "on" where supported if doing memory caching with multiple SMP workers.
+memory_cache_shared on
 
 #  TAG: memory_cache_mode
 #	Controls which objects to keep in the memory cache (cache_mem)
@@ -3776,7 +3717,7 @@ memory_cache_shared on
 #	this value to maximize the byte hit rate improvement of LFUDA!
 #	See cache_replacement_policy for a discussion of this policy.
 #Default:
- maximum_object_size 8192 MB
+# maximum_object_size 4 MB
 
 #  TAG: cache_dir
 #	Format:
@@ -3934,11 +3875,10 @@ memory_cache_shared on
 #
 
 # Uncomment and adjust the following to add a disk cache directory.
-#cache_dir ufs /var/spool/squid 100 16 256
 
-#cache_dir aufs /var/spool/squid 8192 16 256
-cache_dir aufs /media/pi/Hector/squid 8192 16 256
-#cache_dir diskd /media/pi/Hector/squid 8192 16 256
+#cache_dir ufs /var/spool/squid 100 16 256
+cache_dir diskd /media/pi/Hector/squid 10000 16 256
+#cache_dir rock /media/pi/Hector/squid 10000 
 
 #  TAG: store_dir_select_algorithm
 #	How Squid selects which cache_dir to use when the response
@@ -6266,7 +6206,7 @@ refresh_pattern .		0	20%	4320
 #	may also set different timeout values for individual neighbors
 #	with the 'connect-timeout' option on a 'cache_peer' line.
 #Default:
-# peer_connect_timeout 30 seconds
+ peer_connect_timeout 3 seconds
 
 #  TAG: read_timeout	time-units
 #	Applied on peer server connections.
