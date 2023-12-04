@@ -2,7 +2,11 @@ return
 -- Fuzzy Finder (files, lsp, etc)
 {
     "nvim-telescope/telescope.nvim",
+    event = "VeryLazy",
     cmd = "Telescope",
+    keys = {
+        { "<leader>sm", "<cmd>Telescope harpoon marks", desc = "[S]earch [M]arks" },
+    },
     dependencies = {
         "nvim-telescope/telescope-frecency.nvim",
         "nvim-lua/plenary.nvim",
@@ -17,6 +21,15 @@ return
         "nvim-telescope/telescope-frecency.nvim",
         "nvim-telescope/telescope-file-browser.nvim",
         'nvim-lua/plenary.nvim',
+        "ThePrimeagen/harpoon",
+    },
+    opts = {
+        fzf = {
+            fuzzy = true,
+            override_generic_sorter = true,
+            override_file_sorter = true,
+            case_mode = "smart_case",
+        },
     },
     branch = "master",
     config = function()
@@ -33,7 +46,7 @@ return
             },
         })
 
-        -- require("telescope").load_extension('harpoon')
+        require("telescope").load_extension("harpoon")
         require("telescope").load_extension("git_worktree")
         require("telescope").load_extension("refactoring")
         require("telescope").load_extension("project")

@@ -36,7 +36,7 @@ return
             end
         },
     },
-    event = "InsertEnter",
+    event = "VeryLazy",
     config = function()
         -- Set up nvim-cmp.
         -- require('cmp_nerdfonts').update()

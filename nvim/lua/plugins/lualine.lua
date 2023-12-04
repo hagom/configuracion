@@ -21,6 +21,9 @@ return {
                 lualine_y = { "progress" },
                 lualine_z = { "location" },
             },
+            -- inactive_winbar = {
+            --     lualine_c = { "filename" },
+            -- },
             inactive_sections = {
                 lualine_a = {},
                 lualine_b = {},
