@@ -5,7 +5,7 @@ return
     event = "VeryLazy",
     cmd = "Telescope",
     keys = {
-        { "<leader>sm", "<cmd>Telescope harpoon marks", desc = "[S]earch [M]arks" },
+        { "<leader>sm", "<cmd>Telescope harpoon marks<CR>", desc = "[S]earch [M]arks" },
     },
     dependencies = {
         "nvim-telescope/telescope-frecency.nvim",
