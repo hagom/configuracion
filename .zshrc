@@ -77,7 +77,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(adb command-not-found cargo composer compleat cp debian dirhistory docker docker-compose fzf git git-extras github gh history node ng nmap npm pip postgres python rust rustup sudo systemd tig tmux zoxide zsh-interactive-cd zsh-autosuggestions zsh-syntax-highlighting)
+plugins=(adb command-not-found composer compleat cp debian dirhistory docker docker-compose fzf git git-extras github gitignore gh history node ng nmap npm pip postgres python rust sudo systemd tig tmux zoxide zsh-interactive-cd zsh-autosuggestions zsh-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -92,13 +92,13 @@ source $ZSH/oh-my-zsh.sh
  if [[ -n $SSH_CONNECTION ]]; then
    export EDITOR='vim'
  else
-   export EDITOR='mvim'
+   export EDITOR='nvim'
  fi
 
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
-export EDITOR='vim'
+export EDITOR='nvim'
 # Set personal aliases, overriding those provided by oh-my-zsh libs,
 # plugins, and themes. Aliases can be placed here, though oh-my-zsh
 # users are encouraged to define aliases within the ZSH_CUSTOM folder.
@@ -112,16 +112,22 @@ source /usr/share/doc/fzf/examples/key-bindings.zsh
 
 #alias zs="source ~/.zshrc"
 alias sp="speedtest"
-alias actualizar="sudo apt update ; sudo apt upgrade -y ; sudo apt install -f ; sudo apt autoremove -y ; sudo apt autoclean ; sudo apt clean ; pip3 install -U --user --compile glances noteshrink youtube-dl classifier wordcloud meson"
+alias actualizar="sudo apt update ; sudo apt upgrade -y ; sudo apt install -f ; sudo apt autoremove -y ; sudo apt autoclean ; sudo apt clean ; pip3 install -U --user --compile --break-system-packages glances noteshrink yt-dlp classifier meson"
 
-export CCACHE_DIR=/home/hagom/.ccache
-export CC="ccache gcc"
-export CXX="ccache g++"
+# export CCACHE_DIR=/home/hagom/.ccache
+# export CC="ccache gcc"
+# export CXX="ccache g++"
+# export RUSTC_WRAPPER=/home/hagom/.cargo/sccache
 export PATH=/usr/lib/ccache:$PATH
-#export CCACHE_PREFIX=distcc
+# export CCACHE_PREFIX=distcc
 export PAGER="most"
 export PATH=/home/hagom/.local/bin:$PATH
+export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
 export PATH="$PATH:$HOME/flutter/bin"
+#export FZF_DEFAULT_OPTS='--preview "bat --style=numbers --color=always --line-range :500 {}"'
+export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix'
+#export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
 #Historial de ZSH
 export HISTFILE="$HOME/.zsh_history"
@@ -140,8 +146,29 @@ setopt HIST_SAVE_NO_DUPS         # Don't write duplicate entries in the history 
 setopt HIST_REDUCE_BLANKS        # Remove superfluous blanks before recording entry.
 setopt HIST_VERIFY               # Don't execute immediately upon history expansion.
 setopt HIST_BEEP                 # Beep when accessing nonexistent history.
-source /home/hagom/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+#source /home/hagom/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+export PATH="$PATH:/opt/mssql-tools/bin"
+
+
+source /home/hagom/.config/broot/launcher/bash/br
+#source /home/hagom/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+#source /home/hagom/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# pnpm
+export PNPM_HOME="/home/hagom/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+
+# bun completions
+[ -s "/home/hagom/.bun/_bun" ] && source "/home/hagom/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
