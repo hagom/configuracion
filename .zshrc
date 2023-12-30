@@ -124,9 +124,21 @@ export PAGER="most"
 export PATH=/home/hagom/.local/bin:$PATH
 export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
 export PATH="$PATH:$HOME/flutter/bin"
-#export FZF_DEFAULT_OPTS='--preview "bat --style=numbers --color=always --line-range :500 {}"'
+export FZF_DEFAULT_OPTS='--info=inline'
 export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix'
-#export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
+export FZF_ALT_C_OPTS="--preview 'tree -C {}'"
+
+export FZF_CTRL_T_OPTS="
+  --preview 'bat -n --color=always {}'
+  --bind 'ctrl-/:change-preview-window(down|hidden|)'"
+
+export FZF_CTRL_R_OPTS="
+  --preview 'echo {}' --preview-window up:3:hidden:wrap
+  --bind 'ctrl-/:toggle-preview'
+  --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
+  --color header:italic
+  --header 'Press CTRL-Y to copy command into clipboard'"
+
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
 #Historial de ZSH
