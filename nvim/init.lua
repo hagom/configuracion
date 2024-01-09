@@ -152,7 +152,8 @@ vim.keymap.set("n", "<leader>sg", require("telescope.builtin").live_grep, { desc
 vim.keymap.set("n", "<leader>sd", require("telescope.builtin").diagnostics, { desc = "[S]earch [D]iagnostics" })
 vim.keymap.set("n", "<leader>sk", require("telescope.builtin").keymaps, { desc = "[S]earch [K]eymaps" })
 vim.keymap.set("n", "<leader>sc", require("telescope.builtin").commands, { desc = "[S]earch [C]ommands" })
-vim.keymap.set("n", "<leader>ff", require("telescope.builtin").current_buffer_fuzzy_find, { desc = "[F]uzzy [F]ind Current Buffer" })
+vim.keymap.set("n", "<leader>ff", require("telescope.builtin").current_buffer_fuzzy_find,
+  { desc = "[F]uzzy [F]ind Current Buffer" })
 
 
 -- Diagnostic keymaps
@@ -234,16 +235,18 @@ local servers = {
   },
   bashls = {},
   clangd = {},
+  cssmodules_ls = {},
   gopls = {},
-  pyright = {
-    python = {
-      analysis = {
-        autoSearchPaths = true,
-        -- diagnosticMode = "openFilesOnly",
-        useLibraryCodeForTypes = true
-      }
-    }
-  },
+  -- pyright = {
+  --   python = {
+  --     analysis = {
+  --       autoSearchPaths = true,
+  --       -- diagnosticMode = "openFilesOnly",
+  --       useLibraryCodeForTypes = true
+  --     }
+  --   }
+  -- },
+  ruff_lsp = {},
   rust_analyzer = {},
   tsserver = {
     javascript = {
