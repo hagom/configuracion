@@ -6,6 +6,6 @@ return {
 		"williamboman/mason-lspconfig.nvim",
 	},
 	--
-	-- ful status updates for LSP
+	-- full status updates for LSP
 	"j-hui/fidget.nvim",
 }
