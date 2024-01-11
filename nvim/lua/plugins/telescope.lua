@@ -113,6 +113,19 @@ return
                     },
                     hidden_files = true, -- default: false
                 },
+
+                emoji = {
+                    action = function(emoji)
+                        -- argument emoji is a table.
+                        -- {name="", value="", cagegory="", description=""}
+
+                        vim.fn.setreg("*", emoji.value)
+                        print([[Press p or "*p to paste this emoji]] .. emoji.value)
+
+                        -- insert emoji when picked
+                        -- vim.api.nvim_put({ emoji.value }, 'c', false, true)
+                    end,
+                }
             },
         })
 
@@ -165,17 +178,5 @@ return
         vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
         vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float)
         vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist)
-
-
-        -- require("telescope-emoji").setup({
-        --   action = function(emoji)
-        --     -- argument emoji is a table.
-        --     -- {name="", value="", cagegory="", description=""}
-        --     vim.fn.setreg("*", emoji.value)
-        --     print([[Press p or "*p to paste this emoji]] .. emoji.value)
-        --   end,
-        -- })
-        vim.api.nvim_set_keymap("n", "<leader>fb", ":Telescope file_browser<CR>",
-            { noremap = true, desc = "[F]ile [B]rowser " })
     end,
 }
