@@ -49,6 +49,7 @@ return
             nvim_lua = "[Lua]",
             cmp_tabnine = "[TN]",
             path = "[Path]",
+            codeium = "[Codeium]",
         }
 
         local has_words_before = function()
@@ -100,6 +101,14 @@ return
                     end
                 })
             },
+            formatting = {
+                format = require('lspkind').cmp_format({
+                    mode = "symbol",
+                    maxwidth = 50,
+                    ellipsis_char = '...',
+                    symbol_map = { Codeium = "", }
+                })
+            },
 
             snippet = {
                 -- REQUIRED - you must specify a snippet engine
@@ -148,15 +157,15 @@ return
                 { name = 'orgmode' },
                 { name = 'codeium' },
                 { name = 'nerdfonts' },
-                { name = 'npm',        keyword_length = 4 },
+                { name = 'npm',      keyword_length = 4 },
                 { name = "rg" },
-                -- { name = 'emmet_vim' },
+                { name = 'emmet_vim' },
                 { name = 'nvim_lsp' },
                 { name = 'nvim_lua' },
                 { name = 'emoji' },
-                { name = 'cmp_tabnine' },
-                -- { name = 'vsnip' }, -- For vsnip users.
+                -- { name = 'cmp_tabnine' },
                 { name = 'luasnip' }, -- For luasnip users.
+                -- { name = 'vsnip' }, -- For vsnip users.
                 -- { name = 'ultisnips' }, -- For ultisnips users.
                 -- { name = 'snippy' }, -- For snippy users.
             }, {
@@ -219,9 +228,9 @@ return
             capabilities = capabilities
         }
 
-        require('lspconfig')['pyright'].setup {
-            capabilities = capabilities
-        }
+        -- require('lspconfig')['pyright'].setup {
+        --     capabilities = capabilities
+        -- }
 
         require('lspconfig')['ruff_lsp'].setup {
             capabilities = capabilities
