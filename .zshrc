@@ -166,7 +166,7 @@ setopt HIST_BEEP                 # Beep when accessing nonexistent history.
 export PATH="$PATH:/opt/mssql-tools/bin"
 
 
-source /home/hagom/.config/broot/launcher/bash/br
+# source /home/hagom/.config/broot/launcher/bash/br
 #source /home/hagom/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 #source /home/hagom/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
