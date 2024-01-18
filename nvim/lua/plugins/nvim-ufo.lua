@@ -1,10 +1,10 @@
 return {
 	'kevinhwang91/nvim-ufo',
 	-- enabled = false,
-	-- keys = {
-	-- 	{ "zR", "require('ufo').openAllFolds",  desc = "Open All Folds" },
-	-- 	{ "zM", "require('ufo').closeAllFolds", desc = "Close All Folds" },
-	-- },
+	keys = {
+		{ "zR", "require('ufo').openAllFolds",  desc = "Open All Folds" },
+		{ "zM", "require('ufo').closeAllFolds", desc = "Close All Folds" },
+	},
 	dependencies = 'kevinhwang91/promise-async',
 	config = function()
 		vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
