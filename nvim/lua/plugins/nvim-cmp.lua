@@ -156,6 +156,7 @@ return
             sources = cmp.config.sources({
                 { name = 'orgmode' },
                 { name = 'codeium' },
+                { name = 'cody' },
                 { name = 'nerdfonts' },
                 { name = 'npm',      keyword_length = 4 },
                 { name = "rg" },
