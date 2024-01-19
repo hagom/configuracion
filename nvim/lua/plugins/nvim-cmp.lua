@@ -50,6 +50,7 @@ return
             cmp_tabnine = "[TN]",
             path = "[Path]",
             codeium = "[Codeium]",
+            cody = "[Cody]",
         }
 
         local has_words_before = function()
