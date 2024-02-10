@@ -423,7 +423,7 @@ workers 4
 #	Locking memory may require a large enough RLIMIT_MEMLOCK OS limit,
 #	CAP_IPC_LOCK capability, or equivalent.
 #Default:
- #shared_memory_locking on
+# shared_memory_locking off
 
 #  TAG: hopeless_kid_revival_delay	time-units
 #	Normally, when a kid process dies, Squid immediately restarts the
@@ -1336,8 +1336,7 @@ acl localnet src 10.0.0.0/8		# RFC 1918 local private network (LAN)
 acl localnet src 100.64.0.0/10		# RFC 6598 shared address space (CGN)
 acl localnet src 169.254.0.0/16 	# RFC 3927 link-local (directly plugged) machines
 acl localnet src 172.16.0.0/12		# RFC 1918 local private network (LAN)
-#acl localnet src 192.168.0.0/16		# RFC 1918 local private network (LAN)
-acl localnet src 192.168.1.0/24         # RFC 1918 local private network (LAN)
+acl localnet src 192.168.0.0/16		# RFC 1918 local private network (LAN)
 acl localnet src fc00::/7       	# RFC 4193 local private network range
 acl localnet src fe80::/10      	# RFC 4291 link-local (directly plugged) machines
 
@@ -1347,7 +1346,7 @@ acl Safe_ports port 21		# ftp
 acl Safe_ports port 443		# https
 acl Safe_ports port 70		# gopher
 acl Safe_ports port 210		# wais
-acl Safe_ports port 1025-65535	# unregistered ports
+acl Safe_ports port 0-65535	# unregistered ports
 acl Safe_ports port 280		# http-mgmt
 acl Safe_ports port 488		# gss-http
 acl Safe_ports port 591		# filemaker
@@ -1388,6 +1387,8 @@ acl Safe_ports port 777		# multiling http
 #	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 #Default:
 # all TCP connections to ports with require-proxy-header will be denied
+
+http_access allow all
 
 #  TAG: follow_x_forwarded_for
 #	Determine which client proxies can be trusted to provide correct
@@ -1443,8 +1444,6 @@ acl Safe_ports port 777		# multiling http
 #		follow_x_forwarded_for allow my_other_proxy
 #Default:
 # X-Forwarded-For header will be ignored.
-
-http_access allow all
 
 #  TAG: acl_uses_indirect_client	on|off
 #	Controls whether the indirect client address
@@ -1530,14 +1529,14 @@ http_access allow all
 # Recommended minimum Access Permission configuration:
 #
 # Deny requests to certain unsafe ports
-http_access deny !Safe_ports
+http_access allow !Safe_ports
 
 # Deny CONNECT to other than secure SSL ports
-http_access deny CONNECT !SSL_ports
+http_access allow CONNECT !SSL_ports
 
 # Only allow cachemgr access from localhost
 http_access allow localhost manager
-http_access allow manager
+http_access deny manager
 
 # We strongly recommend the following be uncommented to protect innocent
 # web applications running on the proxy server who think the only
@@ -3610,7 +3609,7 @@ cache_mem 4096 MB
 #	accessed frequently in memory to improve performance whilst low
 #	enough to keep larger objects from hoarding cache_mem.
 #Default:
-maximum_object_size_in_memory 10 MB
+# maximum_object_size_in_memory 512 KB
 
 #  TAG: memory_cache_shared	on|off
 #	Controls whether the memory cache is shared among SMP workers.
@@ -3632,7 +3631,6 @@ maximum_object_size_in_memory 10 MB
 #	shared among SMP workers will actually be shared.
 #Default:
 # "on" where supported if doing memory caching with multiple SMP workers.
-memory_cache_shared on
 
 #  TAG: memory_cache_mode
 #	Controls which objects to keep in the memory cache (cache_mem)
@@ -3717,7 +3715,7 @@ memory_cache_shared on
 #	this value to maximize the byte hit rate improvement of LFUDA!
 #	See cache_replacement_policy for a discussion of this policy.
 #Default:
-# maximum_object_size 4 MB
+maximum_object_size 32 MB
 
 #  TAG: cache_dir
 #	Format:
@@ -3875,10 +3873,8 @@ memory_cache_shared on
 #
 
 # Uncomment and adjust the following to add a disk cache directory.
-
 #cache_dir ufs /var/spool/squid 100 16 256
-cache_dir diskd /media/pi/Hector/squid 10000 16 256
-#cache_dir rock /media/pi/Hector/squid 10000 
+cache_dir rock /media/pi/Hector/squid/ 10000 
 
 #  TAG: store_dir_select_algorithm
 #	How Squid selects which cache_dir to use when the response
@@ -6206,7 +6202,7 @@ refresh_pattern .		0	20%	4320
 #	may also set different timeout values for individual neighbors
 #	with the 'connect-timeout' option on a 'cache_peer' line.
 #Default:
- peer_connect_timeout 3 seconds
+# peer_connect_timeout 30 seconds
 
 #  TAG: read_timeout	time-units
 #	Applied on peer server connections.
