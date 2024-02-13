@@ -61,18 +61,6 @@ return
 
         local dict = require("cmp_dictionary")
 
-        dict.setup({
-            -- The following are default values.
-            exact = 2,
-            first_case_insensitive = false,
-            document = false,
-            document_command = "wn %s -over",
-            sqlite = false,
-            max_items = -1,
-            capacity = 5,
-            debug = false,
-        })
-
         -- dict.switcher({
         --     filetype = {
         --         lua = "/path/to/lua.dict",
@@ -124,6 +112,7 @@ return
                 -- completion = cmp.config.window.bordered(),
                 -- documentation = cmp.config.window.bordered(),
             },
+
             mapping = cmp.mapping.preset.insert({
                 ['<C-b>'] = cmp.mapping.scroll_docs(-4),
                 ['<C-f>'] = cmp.mapping.scroll_docs(4),
@@ -154,6 +143,7 @@ return
                     end
                 end, { "i", "s" }),
             }),
+
             sources = cmp.config.sources({
                 { name = 'orgmode' },
                 { name = 'codeium' },

@@ -6,6 +6,7 @@ return
     cmd = "Telescope",
     keys = {
         { "<leader>sm", "<cmd>Telescope harpoon marks<CR>", desc = "[S]earch [M]arks" },
+        { "<leader>st", "<cmd>Telescope git_worktree<CR>", desc = "[S]earch [T]ree" },
     },
     dependencies = {
         "nvim-telescope/telescope-frecency.nvim",
@@ -22,6 +23,7 @@ return
         "nvim-telescope/telescope-file-browser.nvim",
         'nvim-lua/plenary.nvim',
         "ThePrimeagen/harpoon",
+        "ThePrimeagen/git-worktree.nvim",
     },
     opts = {
         fzf = {
