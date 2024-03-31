@@ -16,7 +16,7 @@ return {
       start_in_insert = true,
       insert_mappings = true,
       persist_size = true,
-      direction = "horizontal",
+      direction = "float", -- Esta es la opción a cambiar en caso de querer la terminal en otra dirección
       close_on_exit = true,
       shell = vim.o.shell,
       float_opts = {
