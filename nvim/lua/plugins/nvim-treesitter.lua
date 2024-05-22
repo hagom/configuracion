@@ -5,7 +5,7 @@ return
     event = "VeryLazy",
     dependencies = {
         "nvim-treesitter/nvim-treesitter-textobjects",
-        "HiPhish/nvim-ts-rainbow2",
+        "HiPhish/rainbow-delimiters.nvim",
     },
     build = ":TSUpdate",
     config = function()
@@ -57,7 +57,7 @@ return
                 -- Which query to use for finding delimiters
                 query = 'rainbow-parens',
                 -- Highlight the entire buffer all at once
-                strategy = require('ts-rainbow').strategy.global,
+                -- strategy = require('ts-rainbow').strategy.global,
             },
             textobjects = {
                 select = {
