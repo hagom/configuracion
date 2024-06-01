@@ -66,7 +66,7 @@ return {
 		vim.keymap.set("n", "gR", function() require("trouble").toggle("lsp_references") end)
 
 		local actions = require("telescope.actions")
-		local trouble = require("trouble.providers.telescope")
+		local trouble = require("trouble.sources.telescope")
 
 		local telescope = require("telescope")
 
