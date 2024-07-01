@@ -77,7 +77,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(adb command-not-found composer compleat cp debian dirhistory docker docker-compose fzf git git-extras github gitignore gh history node ng nmap npm pip postgres python rust sudo systemd tig tmux zoxide zsh-interactive-cd zsh-autosuggestions zsh-syntax-highlighting)
+plugins=(adb command-not-found composer compleat cp debian dirhistory docker docker-compose fzf git git-extras github gitignore gh history node ng nmap npm pip postgres python rust sudo systemd tig tmux zoxide zsh-interactive-cd zsh-autosuggestions zsh-completions zsh-autosuggestions zsh-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -112,7 +112,7 @@ source /usr/share/doc/fzf/examples/key-bindings.zsh
 
 #alias zs="source ~/.zshrc"
 alias sp="speedtest"
-alias actualizar="sudo apt update ; sudo apt upgrade -y ; sudo apt install -f ; sudo apt autoremove -y ; sudo apt autoclean ; sudo apt clean ; pip3 install -U --user --compile --break-system-packages glances noteshrink yt-dlp classifier meson"
+alias actualizar="sudo apt update ; sudo apt upgrade -y ; sudo apt install -f ; sudo apt autoremove -y ; sudo apt autoclean ; sudo apt clean ; pip3 install -U --user --compile --break-system-packages glances noteshrink yt-dlp classifier meson ; sudo flatpak upgrade -y"
 
 # export CCACHE_DIR=/home/hagom/.ccache
 # export CC="ccache gcc"
@@ -146,6 +146,9 @@ export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=10000000
 export SAVEHIST=10000000
 setopt BANG_HIST                 # Treat the '!' character specially during expansion.
+HISTDUP=erase                    # Treat the '!' character specially during expansion.
+setopt appendhistory             # Treat the '!' character specially during expansion.
+setopt sharehistory              # Treat the '!' character specially during expansion.
 setopt EXTENDED_HISTORY          # Write the history file in the ":start:elapsed;command" format.
 setopt INC_APPEND_HISTORY        # Write to the history file immediately, not when the shell exits.
 setopt SHARE_HISTORY             # Share history between all sessions.
@@ -166,7 +169,7 @@ setopt HIST_BEEP                 # Beep when accessing nonexistent history.
 export PATH="$PATH:/opt/mssql-tools/bin"
 
 
-# source /home/hagom/.config/broot/launcher/bash/br
+source /home/hagom/.config/broot/launcher/bash/br
 #source /home/hagom/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 #source /home/hagom/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
@@ -184,3 +187,4 @@ esac
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+export PATH="$HOME/go/bin:$PATH"
