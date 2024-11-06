@@ -1,5 +1,6 @@
 -- Pull in the wezterm API
 local wezterm = require 'wezterm'
+local mux = wezterm.mux
 
 -- This will hold the configuration.
 local config = wezterm.config_builder()
@@ -21,4 +22,22 @@ config.tab_bar_at_bottom = true
 config.use_fancy_tab_bar = false
 config.hide_tab_bar_if_only_one_tab = true
 config.window_background_opacity = 0.91
+config.window_close_confirmation = 'NeverPrompt'
+
+-- fullscreen keymap
+config.keys = {
+    {
+        key = 'n',
+        mods = 'SHIFT|CTRL',
+        action = wezterm.action.ToggleFullScreen,
+    },
+}
+
+-- block of code for fullscreen on startup
+wezterm.on('gui-startup', function(window)
+    local tab, pane, window = mux.spawn_window(cmd or {})
+    local gui_window = window:gui_window();
+    gui_window:maximize()
+end)
+
 return config
