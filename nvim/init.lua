@@ -247,30 +247,30 @@ local servers = {
   -- },
   ruff_lsp = {},
   rust_analyzer = {},
-  tsserver = {
-    javascript = {
-      inlayHints = {
-        includeInlayEnumMemberValueHints = true,
-        includeInlayFunctionLikeReturnTypeHints = true,
-        includeInlayFunctionParameterTypeHints = true,
-        includeInlayParameterNameHints = 'all',
-        includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-        includeInlayPropertyDeclarationTypeHints = true,
-        includeInlayVariableTypeHints = true,
-      },
-    },
-    typescript = {
-      inlayHints = {
-        includeInlayEnumMemberValueHints = true,
-        includeInlayFunctionLikeReturnTypeHints = true,
-        includeInlayFunctionParameterTypeHints = true,
-        includeInlayParameterNameHints = 'all',
-        includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-        includeInlayPropertyDeclarationTypeHints = true,
-        includeInlayVariableTypeHints = true,
-      },
-    },
-  },
+  -- tsserver = {
+  --   javascript = {
+  --     inlayHints = {
+  --       includeInlayEnumMemberValueHints = true,
+  --       includeInlayFunctionLikeReturnTypeHints = true,
+  --       includeInlayFunctionParameterTypeHints = true,
+  --       includeInlayParameterNameHints = 'all',
+  --       includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+  --       includeInlayPropertyDeclarationTypeHints = true,
+  --       includeInlayVariableTypeHints = true,
+  --     },
+  --   },
+  --   typescript = {
+  --     inlayHints = {
+  --       includeInlayEnumMemberValueHints = true,
+  --       includeInlayFunctionLikeReturnTypeHints = true,
+  --       includeInlayFunctionParameterTypeHints = true,
+  --       includeInlayParameterNameHints = 'all',
+  --       includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+  --       includeInlayPropertyDeclarationTypeHints = true,
+  --       includeInlayVariableTypeHints = true,
+  --     },
+  --   },
+  -- },
   lua_ls = {
     Lua = {
       workspace = { checkThirdParty = false },
