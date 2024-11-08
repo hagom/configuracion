@@ -224,10 +224,6 @@ return
         --     capabilities = capabilities
         -- }
 
-        require('lspconfig')['ruff_lsp'].setup {
-            capabilities = capabilities
-        }
-
         require('lspconfig')['vuels'].setup {
             capabilities = capabilities
         }

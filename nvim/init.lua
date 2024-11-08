@@ -152,7 +152,8 @@ vim.keymap.set("n", "<leader>sg", require("telescope.builtin").live_grep, { desc
 vim.keymap.set("n", "<leader>sd", require("telescope.builtin").diagnostics, { desc = "[S]earch [D]iagnostics" })
 vim.keymap.set("n", "<leader>sk", require("telescope.builtin").keymaps, { desc = "[S]earch [K]eymaps" })
 vim.keymap.set("n", "<leader>sc", require("telescope.builtin").commands, { desc = "[S]earch [C]ommands" })
-vim.keymap.set("n", "<leader>ff", require("telescope.builtin").current_buffer_fuzzy_find, { desc = "[F]uzzy [F]ind Current Buffer" })
+vim.keymap.set("n", "<leader>ff", require("telescope.builtin").current_buffer_fuzzy_find,
+  { desc = "[F]uzzy [F]ind Current Buffer" })
 vim.keymap.set("n", "<leader>z=", require("telescope.builtin").spell_suggest, { desc = "Spell Suggestions" })
 
 -- Diagnostic keymaps
@@ -245,32 +246,32 @@ local servers = {
   --     }
   --   }
   -- },
-  ruff_lsp = {},
+  ruff = {},
   rust_analyzer = {},
-  -- tsserver = {
-  --   javascript = {
-  --     inlayHints = {
-  --       includeInlayEnumMemberValueHints = true,
-  --       includeInlayFunctionLikeReturnTypeHints = true,
-  --       includeInlayFunctionParameterTypeHints = true,
-  --       includeInlayParameterNameHints = 'all',
-  --       includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-  --       includeInlayPropertyDeclarationTypeHints = true,
-  --       includeInlayVariableTypeHints = true,
-  --     },
-  --   },
-  --   typescript = {
-  --     inlayHints = {
-  --       includeInlayEnumMemberValueHints = true,
-  --       includeInlayFunctionLikeReturnTypeHints = true,
-  --       includeInlayFunctionParameterTypeHints = true,
-  --       includeInlayParameterNameHints = 'all',
-  --       includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-  --       includeInlayPropertyDeclarationTypeHints = true,
-  --       includeInlayVariableTypeHints = true,
-  --     },
-  --   },
-  -- },
+  ts_ls = {
+    javascript = {
+      inlayHints = {
+        includeInlayEnumMemberValueHints = true,
+        includeInlayFunctionLikeReturnTypeHints = true,
+        includeInlayFunctionParameterTypeHints = true,
+        includeInlayParameterNameHints = 'all',
+        includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+        includeInlayPropertyDeclarationTypeHints = true,
+        includeInlayVariableTypeHints = true,
+      },
+    },
+  typescript = {
+    inlayHints = {
+      includeInlayEnumMemberValueHints = true,
+      includeInlayFunctionLikeReturnTypeHints = true,
+      includeInlayFunctionParameterTypeHints = true,
+      includeInlayParameterNameHints = 'all',
+      includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+      includeInlayPropertyDeclarationTypeHints = true,
+      includeInlayVariableTypeHints = true,
+    },
+  },
+  },
   lua_ls = {
     Lua = {
       workspace = { checkThirdParty = false },
