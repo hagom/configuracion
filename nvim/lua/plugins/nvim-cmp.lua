@@ -259,9 +259,5 @@ return
         require('lspconfig')['phpactor'].setup {
             capabilities = capabilities
         }
-
-        require('lspconfig')['ruff'].setup {
-            capabilities = capabilities
-        }
     end
 }
