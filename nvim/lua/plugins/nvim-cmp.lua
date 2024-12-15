@@ -212,9 +212,9 @@ return
             capabilities = capabilities
         }
 
-        require('lspconfig')['clangd'].setup {
-            capabilities = capabilities
-        }
+        -- require('lspconfig')['clangd'].setup {
+        --     capabilities = capabilities
+        -- }
 
         require('lspconfig')['jsonls'].setup {
             capabilities = capabilities
@@ -257,6 +257,10 @@ return
         }
 
         require('lspconfig')['phpactor'].setup {
+            capabilities = capabilities
+        }
+
+        require('lspconfig')['ruff'].setup {
             capabilities = capabilities
         }
     end
