@@ -318,6 +318,6 @@ if vim.lsp.inlay_hint then
     function()
       vim.lsp.inlay_hint(0, nil)
     end,
-    { desc = "Toogle Inlay Hints" }
+    { desc = "Tooggle Inlay Hints" }
   )
 end
