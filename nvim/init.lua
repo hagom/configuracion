@@ -234,7 +234,6 @@ local servers = {
     }
   },
   bashls = {},
-  clangd = {},
   cssmodules_ls = {},
   gopls = {},
   -- pyright = {
@@ -246,7 +245,6 @@ local servers = {
   --     }
   --   }
   -- },
-  ruff = {},
   rust_analyzer = {},
   ts_ls = {
     javascript = {
