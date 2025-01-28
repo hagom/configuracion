@@ -1,9 +1,8 @@
-
 return {
   {
     "mfussenegger/nvim-dap",
     dependencies = {
-	  "nvim-neotest/nvim-nio",
+      "nvim-neotest/nvim-nio",
       "rcarriga/nvim-dap-ui",
       "mfussenegger/nvim-dap-python",
       "theHamsta/nvim-dap-virtual-text",
@@ -51,37 +50,37 @@ return {
       -- Toggle breakpoint
       vim.keymap.set("n", "<leader>db", function()
         dap.toggle_breakpoint()
-      end, opts)
+      end, {desc = "[D]ap [B]reakpoint"})
 
       -- Continue / Start
       vim.keymap.set("n", "<leader>dc", function()
         dap.continue()
-      end, opts)
+      end, {desc = "[D]ap [C]ontinue"})
 
       -- Step Over
       vim.keymap.set("n", "<leader>do", function()
         dap.step_over()
-      end, opts)
+      end, { desc = "[D]ap Step [O]ver"})
 
       -- Step Into
       vim.keymap.set("n", "<leader>di", function()
         dap.step_into()
-      end, opts)
+      end, {desc = "[D]ap Step [I]nto "})
 
       -- Step Out
       vim.keymap.set("n", "<leader>dO", function()
         dap.step_out()
-      end, opts)
-			
+      end, {desc = " [D]ap Step [O]ut "})
+
       -- Keymap to terminate debugging
-	  vim.keymap.set("n", "<leader>dq", function()
-	      require("dap").terminate()
-      end, opts)
+      vim.keymap.set("n", "<leader>dq", function()
+        require("dap").terminate()
+      end, {desc = "[D]ap [Q]uit"})
 
       -- Toggle DAP UI
       vim.keymap.set("n", "<leader>du", function()
         dapui.toggle()
-      end, opts)
+      end, {desc = "[D]ap Toggle [U]I"})
     end,
   },
 }
