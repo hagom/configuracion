@@ -9,6 +9,7 @@ return
 		require('mini.bracketed').setup()
 		require('mini.comment').setup()
 		require('mini.icons').setup()
+		require('mini.pairs').setup()
 		require('mini.cursorword').setup()
 		require('mini.surround').setup()
 		MiniIcons.mock_nvim_web_devicons()
