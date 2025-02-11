@@ -1,5 +1,6 @@
 return {
 	"mhartington/formatter.nvim",
+	enabled = false,
 	keys = {
 		{ "<leader>f<cr>", "<cmd>Format<cr>", desc = "Formatter" },
 	},

@@ -18,6 +18,7 @@
   "cmp-tabnine": { "branch": "main", "commit": "c0167cdc86c15e782c5461ee62aebee89231c2ed" },
   "cmp_luasnip": { "branch": "master", "commit": "98d9cb5c2c38532bd9bdb481067b20fea8f32e90" },
   "codeium.nvim": { "branch": "main", "commit": "ebed4f7cc8a18184d8332d421ca10bed5f7d59a1" },
+  "conform.nvim": { "branch": "master", "commit": "363243c03102a531a8203311d4f2ae704c620d9b" },
   "dial.nvim": { "branch": "master", "commit": "34bbd9c387c358190e61ce71017faad3dffa7a74" },
   "editorconfig-vim": { "branch": "master", "commit": "91bd0b0a2c6a72a110ab9feae335e1224480c233" },
   "emmet-vim": { "branch": "master", "commit": "6c511a8d7d2863066f32e25543e2bb99d505172c" },
