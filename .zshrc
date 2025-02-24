@@ -159,7 +159,7 @@ setopt HIST_BEEP                 # Beep when accessing nonexistent history.
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 # [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-eval "$(oh-my-posh init zsh --config $HOME/.config/ohmyposh/quick-term.omp.json)"
+eval "$(oh-my-posh init zsh --config $HOME/.cache/oh-my-posh/themes/quick-term.omp.json)"
 
 export PATH="$PATH:/opt/mssql-tools/bin"
 
