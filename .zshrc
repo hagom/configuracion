@@ -70,7 +70,7 @@ ZSH_THEME=""
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(command-not-found compleat cp debian dirhistory docker docker-compose fzf git git-extras  gitignore history node ng nmap npm pip postgres python rust sudo systemd tig tmux zoxide zsh-interactive-cd zsh-autosuggestions zsh-completions zsh-autosuggestions zsh-syntax-highlighting )
+plugins=(command-not-found compleat cp debian dirhistory docker docker-compose fzf git git-extras  gitignore history node ng nmap npm pip postgres python rust sudo systemd tig tmux zoxide zsh-interactive-cd zsh-autosuggestions zsh-completions zsh-syntax-highlighting )
 
 source $ZSH/oh-my-zsh.sh
 
