@@ -23,21 +23,13 @@ ensure_tool() {
 usage() {
   echo -e "${BLUE}Uso:${NC} $0 [-c|-d] [-n <nombre>] [-u] <formato> <archivos...>"
   echo -e "Opciones:"
-  echo -e "  ${GREEN}-c${NC} : Comprimir"
+  echo -e "  ${GREEN}-c${NC} : Comprimir (Máximo uso de CPU/RAM)"
   echo -e "  ${GREEN}-d${NC} : Descomprimir"
-  echo -e "  ${GREEN}-n${NC} : Nombre personalizado (Opcional, por defecto usa el nombre del original)"
-  echo -e "  ${GREEN}-u${NC} : Unificar todos los inputs en un solo archivo"
-  echo -e "Formatos: ${YELLOW}gz, xz, bz2, zip, 7z${NC}"
+  echo -e "  ${GREEN}-n${NC} : Nombre personalizado (Opcional)"
+  echo -e "  ${GREEN}-u${NC} : Unificar todos los archivos en uno solo"
   exit 1
 }
 
-# --- Variables de control ---
-MODE=""
-UNIFY=false
-CUSTOM_NAME=""
-FORMAT=""
-
-# --- Procesar Banderas ---
 while getopts "cdun:" opt; do
   case $opt in
   c) MODE="compress" ;;
@@ -53,30 +45,22 @@ FORMAT=$1
 shift
 INPUTS=("$@")
 
-# Validaciones de argumentos
-if [[ -z "$MODE" ]] || [[ -z "$FORMAT" ]] || [[ ${#INPUTS[@]} -eq 0 ]]; then
-  usage
-fi
+if [[ -z "$MODE" ]] || [[ -z "$FORMAT" ]] || [[ ${#INPUTS[@]} -eq 0 ]]; then usage; fi
 
-# --- Función para generar nombre único (Autoincremento) ---
+# --- Lógica de nombre único ---
 get_unique_name() {
   local base_name=$1
   local ext=$2
   local final_name="${base_name}.${ext}"
   local counter=1
-
   if [[ -e "$final_name" ]]; then
-    echo -e "${YELLOW}Advertencia: El archivo '$final_name' ya existe.${NC}"
-    while [[ -e "${base_name}_${counter}.${ext}" ]]; do
-      ((counter++))
-    done
+    while [[ -e "${base_name}_${counter}.${ext}" ]]; do ((counter++)); done
     final_name="${base_name}_${counter}.${ext}"
-    echo -e "${BLUE}Se usará el nombre: ${GREEN}$final_name${NC}"
   fi
   echo "$final_name"
 }
 
-# --- LÓGICA DE COMPRESIÓN ---
+# --- LÓGICA DE COMPRESIÓN AGRESIVA ---
 do_compress() {
   local ext=""
   case $FORMAT in
@@ -106,49 +90,44 @@ do_compress() {
     ;;
   esac
 
-  # LÓGICA DE NOMBRE AUTOMÁTICO:
-  # Si CUSTOM_NAME está vacío, toma el nombre del primer input eliminando barras diagonales.
-  if [[ -z "$CUSTOM_NAME" ]]; then
-    CUSTOM_NAME="${INPUTS[0]%/}"
-  fi
+  if [[ -z "$CUSTOM_NAME" ]]; then CUSTOM_NAME="${INPUTS[0]%/}"; fi
+  local FINAL_FILE=$(get_unique_name "$CUSTOM_NAME" "$ext")
 
-  local FINAL_FILE
-  FINAL_FILE=$(get_unique_name "$CUSTOM_NAME" "$ext")
-
-  # Tamaño original
-  local TOTAL_BYTES=0
-  for item in "${INPUTS[@]}"; do
-    [ -e "$item" ] && TOTAL_BYTES=$((TOTAL_BYTES + $(du -sb "$item" | cut -f1)))
-  done
-  local ORIG_HUMAN=$(numfmt --to=iec-i --suffix=B $TOTAL_BYTES)
-
-  echo -e "${BLUE}Modo: Compresión Máxima (${YELLOW}$FORMAT${BLUE})${NC}"
+  echo -e "${BLUE}Iniciando Compresión ULTRA (Máxima RAM/CPU)...${NC}"
 
   case $FORMAT in
-  gz) tar -cvf - "${INPUTS[@]}" | pigz -9 >"$FINAL_FILE" ;;
-  xz) tar -cvf - "${INPUTS[@]}" | xz -9e -T0 >"$FINAL_FILE" ;;
-  bz2) tar -I lbzip2 -cvf "$FINAL_FILE" "${INPUTS[@]}" ;;
-  zip) zip -9 -r "$FINAL_FILE" "${INPUTS[@]}" ;;
-  7z) 7z a -mx=9 -ms=on "$FINAL_FILE" "${INPUTS[@]}" ;;
+  gz)
+    # pigz -9 usa el máximo nivel. Usa todos los hilos por defecto.
+    tar -cvf - "${INPUTS[@]}" | pigz -9 >"$FINAL_FILE"
+    ;;
+  xz)
+    # -9e: Extreme. -T0: Todos los hilos. --memlimit: 80% de la RAM total.
+    tar -cvf - "${INPUTS[@]}" | xz -9e -T0 --memory=80% >"$FINAL_FILE"
+    ;;
+  bz2)
+    # lbzip2 es paralelo y usa el máximo con -9.
+    tar -I 'lbzip2 -9' -cvf "$FINAL_FILE" "${INPUTS[@]}"
+    ;;
+  zip)
+    # zip no es tan eficiente en memoria, pero forzamos nivel 9.
+    zip -9 -r "$FINAL_FILE" "${INPUTS[@]}"
+    ;;
+  7z)
+    # -mx9: Ultra. -md=128m: Diccionario grande (usa mucha RAM). -ms=on: Sólido.
+    7z a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" "${INPUTS[@]}"
+    ;;
   esac
 
   if [[ $? -eq 0 ]]; then
-    echo -e "\n${GREEN}=======================================${NC}"
-    echo -e "${BLUE}Archivo creado:${NC} ${YELLOW}$FINAL_FILE${NC}"
-    echo -e "${BLUE}Tamaño Original:${NC} ${RED}$ORIG_HUMAN${NC}"
-    echo -e "${BLUE}Tamaño Final:${NC}    ${GREEN}$(du -sh "$FINAL_FILE" | cut -f1)${NC}"
-    echo -e "${GREEN}=======================================${NC}"
+    echo -e "\n${GREEN}✔ Archivo creado con éxito: $FINAL_FILE${NC}"
+    echo -e "${BLUE}Tamaño final: ${GREEN}$(du -sh "$FINAL_FILE" | cut -f1)${NC}"
   fi
 }
 
 # --- LÓGICA DE DESCOMPRESIÓN ---
 do_decompress() {
   for file in "${INPUTS[@]}"; do
-    if [ ! -f "$file" ]; then
-      echo -e "${RED}Error: $file no existe.${NC}"
-      continue
-    fi
-    echo -e "${BLUE}Extrayendo $file...${NC}"
+    [ ! -f "$file" ] && continue
     case $FORMAT in
     gz)
       ensure_tool "pigz" "pigz"
@@ -174,8 +153,4 @@ do_decompress() {
   done
 }
 
-if [[ "$MODE" == "compress" ]]; then
-  do_compress
-else
-  do_decompress
-fi
+if [[ "$MODE" == "compress" ]]; then do_compress; else do_decompress; fi
