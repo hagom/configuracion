@@ -25,6 +25,7 @@ list_compressors() {
   echo -e "${BLUE}Compresores por ratio de eficiencia (Mayor a Menor):${NC}"
   echo -e "1. ${GREEN}7z${NC}  - Ultra (LZMA2). Máxima reducción."
   echo -e "2. ${GREEN}xz${NC}  - Excelente (LZMA). Estándar Linux."
+  echo -e "3. ${GREEN}bz3${NC} - Muy Alto (Bzip3). Eficiente texto/código."
   echo -e "3. ${GREEN}bz2${NC} - Alto (Bzip2). Ideal para texto."
   echo -e "4. ${GREEN}gz${NC}  - Medio (Gzip). Rápido y compatible."
   echo -e "5. ${GREEN}zip${NC} - Básico. Compatibilidad universal."
@@ -108,7 +109,12 @@ do_compress() {
     ;;
   bz2)
     ext="tar.bz2"
+
     ensure_tool "lbzip2" "lbzip2"
+    ;;
+  bz3)
+    ext="tar.bz3"
+    ensure_tool "bzip3" "bzip3"
     ;;
   zip)
     ext="zip"
@@ -133,6 +139,7 @@ do_compress() {
     gz) tar -cvf - "${INPUTS[@]}" | pigz -9 >"$FINAL_FILE" ;;
     xz) tar -cvf - "${INPUTS[@]}" | xz -9e -T0 --memory="${mem_mb}MiB" >"$FINAL_FILE" ;;
     bz2) tar -I 'lbzip2 -9' -cvf "$FINAL_FILE" "${INPUTS[@]}" ;;
+    bz3) tar -I 'bzip3' -cvf "$FINAL_FILE" "${INPUTS[@]}" ;;
     zip) zip -9 -r "$FINAL_FILE" "${INPUTS[@]}" ;;
     7z) 7z a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" "${INPUTS[@]}" ;;
     esac then
@@ -175,6 +182,10 @@ do_decompress() {
     bz2)
       ensure_tool "lbzip2" "lbzip2"
       tar -I lbzip2 -xvf "$file"
+      ;;
+    bz3)
+      ensure_tool "bzip3" "bzip3"
+      tar -I bzip3 -xvf "$file"
       ;;
     zip)
       ensure_tool "unzip" "unzip"
