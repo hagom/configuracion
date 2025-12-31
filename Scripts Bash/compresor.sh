@@ -136,12 +136,21 @@ do_compress() {
     zip) zip -9 -r "$FINAL_FILE" "${INPUTS[@]}" ;;
     7z) 7z a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" "${INPUTS[@]}" ;;
     esac then
-    local FINAL_SIZE
+    local FINAL_SIZE FINAL_BYTES PERCENTAGE
     FINAL_SIZE=$(du -sh "$FINAL_FILE" | cut -f1)
+    FINAL_BYTES=$(du -sb "$FINAL_FILE" | cut -f1)
+    
+    if [ "$TOTAL_ORIG_BYTES" -gt 0 ]; then
+        PERCENTAGE=$(awk "BEGIN {printf \"%.2f\", (($TOTAL_ORIG_BYTES - $FINAL_BYTES) / $TOTAL_ORIG_BYTES) * 100}")
+    else
+        PERCENTAGE="0.00"
+    fi
+
     echo -e "\n${GREEN}=======================================${NC}"
-    echo -e "${BLUE}Archivo creado:${NC} ${YELLOW}$FINAL_FILE${NC}"
-    echo -e "${BLUE}Tamaño Original:${NC} ${RED}$ORIG_HUMAN${NC}"
-    echo -e "${BLUE}Tamaño Final:${NC}    ${GREEN}$FINAL_SIZE${NC}"
+    echo -e "${BLUE}Archivo creado:${NC}    ${YELLOW}$FINAL_FILE${NC}"
+    echo -e "${BLUE}Tamaño Original:${NC}   ${RED}$ORIG_HUMAN${NC}"
+    echo -e "${BLUE}Tamaño Final:${NC}      ${GREEN}$FINAL_SIZE${NC}"
+    echo -e "${BLUE}Tasa de Compresión:${NC} ${GREEN}${PERCENTAGE}%${NC}"
     echo -e "${GREEN}=======================================${NC}"
   else
     echo -e "${RED}Error: La compresión falló.${NC}"
