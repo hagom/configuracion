@@ -7,81 +7,107 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# --- Función para auto-instalar herramientas ---
+# --- Función para auto-instalar herramientas (Estilo SC2181 corregido) ---
 ensure_tool() {
   local tool=$1
   local package=$2
   if ! command -v "$tool" &>/dev/null; then
     echo -e "${YELLOW}Herramienta '$tool' no encontrada. Instalando $package...${NC}"
-    sudo apt update -y && sudo apt install -y "$package"
-    [ $? -ne 0 ] && echo -e "${RED}Error al instalar $package.${NC}" && exit 1
+    # Evaluamos el comando directamente en el if para cumplir con ShellCheck
+    if ! sudo apt update -y || ! sudo apt install -y "$package"; then
+      echo -e "${RED}Error crítico: No se pudo instalar $package.${NC}"
+      exit 1
+    fi
+    echo -e "${GREEN}Instalación de $package completada.${NC}"
   fi
 }
 
-# --- Ayuda ---
 usage() {
-  echo -e "${BLUE}Uso:${NC} $0 <formato> <archivo1> <archivo2> <carpeta1> ..."
+  echo -e "${BLUE}Uso:${NC} $0 <formato> <archivo1> <archivo2> ..."
   echo -e "Formatos: ${GREEN}gz, xz, bz2, zip, 7z${NC}"
-  echo -e "Ejemplo: $0 7z documento.pdf fotos/ musica.mp3"
   exit 1
 }
 
-# Verificar que haya al menos formato y un archivo
 if [ $# -lt 2 ]; then usage; fi
 
-# El primer argumento es el formato, el resto son los archivos
 FORMAT=$1
-shift         # Elimina el primer argumento de la lista para quedarnos solo con los archivos
-INPUTS=("$@") # El resto de argumentos se guardan en un array
+shift
+INPUTS=("$@")
 
-# Nombre del archivo de salida basado en el primer elemento o fecha
-OUTPUT_NAME="batch_archive_$(date +%Y%m%d_%H%M%S)"
+# Nombre de salida basado en el primer elemento
+FIRST_ELEMENT="${INPUTS[0]%/}"
+OUTPUT_NAME="$FIRST_ELEMENT"
 
-# --- Validar que los archivos existan ---
+# --- Cálculo de Tamaño Original ---
+TOTAL_ORIG_BYTES=0
 for item in "${INPUTS[@]}"; do
-  if [ ! -e "$item" ]; then
-    echo -e "${RED}Error: El elemento '$item' no existe. Saltando...${NC}"
+  if [ -e "$item" ]; then
+    SIZE=$(du -sb "$item" | cut -f1)
+    TOTAL_ORIG_BYTES=$((TOTAL_ORIG_BYTES + SIZE))
+  else
+    echo -e "${RED}Salteando: '$item' no existe.${NC}"
   fi
 done
 
-echo -e "${BLUE}Preparando compresión masiva en formato: ${YELLOW}$FORMAT${NC}"
+# Convertir a formato legible
+ORIG_SIZE_HUMAN=$(numfmt --to=iec-i --suffix=B $TOTAL_ORIG_BYTES)
 
-# --- Proceso de Compresión ---
+echo -e "${BLUE}Comprimiendo en formato: ${YELLOW}$FORMAT${NC}"
+
+# --- Proceso de Compresión (Evaluación directa de salida) ---
+compress_success=false
+
 case $FORMAT in
 gz)
   ensure_tool "pigz" "pigz"
-  tar -cvf - "${INPUTS[@]}" | pigz -9 >"${OUTPUT_NAME}.tar.gz"
+  if tar -cvf - "${INPUTS[@]}" | pigz -9 >"${OUTPUT_NAME}.tar.gz"; then
+    FINAL_FILE="${OUTPUT_NAME}.tar.gz"
+    compress_success=true
+  fi
   ;;
 xz)
   ensure_tool "xz" "xz-utils"
-  tar -cvf - "${INPUTS[@]}" | xz -9e -T0 >"${OUTPUT_NAME}.tar.xz"
+  if tar -cvf - "${INPUTS[@]}" | xz -9e -T0 >"${OUTPUT_NAME}.tar.xz"; then
+    FINAL_FILE="${OUTPUT_NAME}.tar.xz"
+    compress_success=true
+  fi
   ;;
 bz2)
   ensure_tool "lbzip2" "lbzip2"
-  tar -I lbzip2 -cvf "${OUTPUT_NAME}.tar.bz2" "${INPUTS[@]}"
+  if tar -I lbzip2 -cvf "${OUTPUT_NAME}.tar.bz2" "${INPUTS[@]}"; then
+    FINAL_FILE="${OUTPUT_NAME}.tar.bz2"
+    compress_success=true
+  fi
   ;;
 zip)
   ensure_tool "zip" "zip"
-  zip -9 -r "${OUTPUT_NAME}.zip" "${INPUTS[@]}"
+  if zip -9 -r "${OUTPUT_NAME}.zip" "${INPUTS[@]}"; then
+    FINAL_FILE="${OUTPUT_NAME}.zip"
+    compress_success=true
+  fi
   ;;
 7z)
   ensure_tool "7z" "p7zip-full"
-  7z a -mx=9 -ms=on "${OUTPUT_NAME}.7z" "${INPUTS[@]}"
+  if 7z a -mx=9 -ms=on "${OUTPUT_NAME}.7z" "${INPUTS[@]}"; then
+    FINAL_FILE="${OUTPUT_NAME}.7z"
+    compress_success=true
+  fi
   ;;
 *)
-  echo -e "${RED}Formato no válido.${NC}"
+  echo -e "${RED}Formato no reconocido.${NC}"
   usage
   ;;
 esac
 
-# --- Reporte de resultados ---
-if [ $? -eq 0 ]; then
-  FINAL_SIZE=$(du -sh "${OUTPUT_NAME}.${FORMAT}" | cut -f1)
-  echo -e "${GREEN}---------------------------------------"
-  echo -e "¡Compresión masiva completada!"
-  echo -e "Archivo creado: ${YELLOW}${OUTPUT_NAME}.${FORMAT}${NC}"
-  echo -e "Tamaño final: ${YELLOW}$FINAL_SIZE${NC}"
-  echo -e "${GREEN}---------------------------------------${NC}"
+# --- Reporte Final ---
+if [ "$compress_success" = true ]; then
+  FINAL_SIZE_HUMAN=$(du -sh "$FINAL_FILE" | cut -f1)
+  echo -e "\n${GREEN}=======================================${NC}"
+  echo -e "${BLUE}Archivo:${NC} ${YELLOW}$FINAL_FILE${NC}"
+  echo -e "${BLUE}Original:${NC} ${RED}$ORIG_SIZE_HUMAN${NC}"
+  echo -e "${BLUE}Final:${NC}    ${GREEN}$FINAL_SIZE_HUMAN${NC}"
+  echo -e "${GREEN}=======================================${NC}"
 else
-  echo -e "${RED}Hubo un error en el proceso de encolado/compresión.${NC}"
+  echo -e "${RED}Error durante el proceso de compresión.${NC}"
+  exit 1
 fi
