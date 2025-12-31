@@ -13,6 +13,7 @@ ensure_tool() {
   local package=$2
   if ! command -v "$tool" &>/dev/null; then
     echo -e "${YELLOW}Instalando dependencia faltante: $package...${NC}"
+    # Evaluación directa de comandos (Corrige SC2181)
     if ! sudo apt update -y || ! sudo apt install -y "$package"; then
       echo -e "${RED}Error crítico: No se pudo instalar $package.${NC}"
       exit 1
@@ -22,14 +23,16 @@ ensure_tool() {
 
 usage() {
   echo -e "${BLUE}Uso:${NC} $0 [-c|-d] [-n <nombre>] [-u] <formato> <archivos...>"
-  echo -e "Opciones:"
-  echo -e "  ${GREEN}-c${NC} : Comprimir (Máximo uso de CPU/RAM)"
-  echo -e "  ${GREEN}-d${NC} : Descomprimir"
-  echo -e "  ${GREEN}-n${NC} : Nombre personalizado (Opcional)"
-  echo -e "  ${GREEN}-u${NC} : Unificar todos los archivos en uno solo"
+  echo -e "Opciones: ${GREEN}-c${NC} Comprimir | ${GREEN}-d${NC} Descomprimir | ${GREEN}-u${NC} Unificar"
   exit 1
 }
 
+# --- Variables ---
+MODE=""
+UNIFY=false
+CUSTOM_NAME=""
+
+# --- Procesar Banderas ---
 while getopts "cdun:" opt; do
   case $opt in
   c) MODE="compress" ;;
@@ -47,22 +50,28 @@ INPUTS=("$@")
 
 if [[ -z "$MODE" ]] || [[ -z "$FORMAT" ]] || [[ ${#INPUTS[@]} -eq 0 ]]; then usage; fi
 
-# --- Lógica de nombre único ---
+# --- Función para nombre único ---
 get_unique_name() {
   local base_name=$1
   local ext=$2
-  local final_name="${base_name}.${ext}"
+  local final_name
   local counter=1
+
+  final_name="${base_name}.${ext}"
+
   if [[ -e "$final_name" ]]; then
-    while [[ -e "${base_name}_${counter}.${ext}" ]]; do ((counter++)); done
+    echo -e "${YELLOW}Aviso: '$final_name' ya existe, buscando nombre libre...${NC}"
+    while [[ -e "${base_name}_${counter}.${ext}" ]]; do
+      ((counter++))
+    done
     final_name="${base_name}_${counter}.${ext}"
   fi
   echo "$final_name"
 }
 
-# --- LÓGICA DE COMPRESIÓN AGRESIVA ---
+# --- LÓGICA DE COMPRESIÓN ---
 do_compress() {
-  local ext=""
+  local ext
   case $FORMAT in
   gz)
     ext="tar.gz"
@@ -90,44 +99,37 @@ do_compress() {
     ;;
   esac
 
-  if [[ -z "$CUSTOM_NAME" ]]; then CUSTOM_NAME="${INPUTS[0]%/}"; fi
-  local FINAL_FILE=$(get_unique_name "$CUSTOM_NAME" "$ext")
+  [[ -z "$CUSTOM_NAME" ]] && CUSTOM_NAME="${INPUTS[0]%/}"
 
-  echo -e "${BLUE}Iniciando Compresión ULTRA (Máxima RAM/CPU)...${NC}"
+  # Separación de declaración y asignación (Corrige SC2155)
+  local FINAL_FILE
+  FINAL_FILE=$(get_unique_name "$CUSTOM_NAME" "$ext")
 
-  case $FORMAT in
-  gz)
-    # pigz -9 usa el máximo nivel. Usa todos los hilos por defecto.
-    tar -cvf - "${INPUTS[@]}" | pigz -9 >"$FINAL_FILE"
-    ;;
-  xz)
-    # -9e: Extreme. -T0: Todos los hilos. --memlimit: 80% de la RAM total.
-    tar -cvf - "${INPUTS[@]}" | xz -9e -T0 --memory=80% >"$FINAL_FILE"
-    ;;
-  bz2)
-    # lbzip2 es paralelo y usa el máximo con -9.
-    tar -I 'lbzip2 -9' -cvf "$FINAL_FILE" "${INPUTS[@]}"
-    ;;
-  zip)
-    # zip no es tan eficiente en memoria, pero forzamos nivel 9.
-    zip -9 -r "$FINAL_FILE" "${INPUTS[@]}"
-    ;;
-  7z)
-    # -mx9: Ultra. -md=128m: Diccionario grande (usa mucha RAM). -ms=on: Sólido.
-    7z a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" "${INPUTS[@]}"
-    ;;
-  esac
+  echo -e "${BLUE}Comprimiendo (50% RAM | Unificar: $UNIFY)...${NC}"
 
-  if [[ $? -eq 0 ]]; then
-    echo -e "\n${GREEN}✔ Archivo creado con éxito: $FINAL_FILE${NC}"
-    echo -e "${BLUE}Tamaño final: ${GREEN}$(du -sh "$FINAL_FILE" | cut -f1)${NC}"
+  # Evaluación directa del resultado del case/comando (Corrige SC2181)
+  if case $FORMAT in
+    gz) tar -cvf - "${INPUTS[@]}" | pigz -9 >"$FINAL_FILE" ;;
+    xz) tar -cvf - "${INPUTS[@]}" | xz -9e -T0 --memory=50% >"$FINAL_FILE" ;;
+    bz2) tar -I 'lbzip2 -9' -cvf "$FINAL_FILE" "${INPUTS[@]}" ;;
+    zip) zip -9 -r "$FINAL_FILE" "${INPUTS[@]}" ;;
+    7z) 7z a -mx=9 -md=64m -ms=on -mmt=on "$FINAL_FILE" "${INPUTS[@]}" ;;
+    esac then
+    echo -e "\n${GREEN}=======================================${NC}"
+    echo -e "${BLUE}Archivo:${NC} ${YELLOW}$FINAL_FILE${NC}"
+    echo -e "${BLUE}Tamaño:${NC}  ${GREEN}$(du -sh "$FINAL_FILE" | cut -f1)${NC}"
+    echo -e "${GREEN}=======================================${NC}"
+  else
+    echo -e "${RED}Error: La compresión falló.${NC}"
+    exit 1
   fi
 }
 
 # --- LÓGICA DE DESCOMPRESIÓN ---
 do_decompress() {
   for file in "${INPUTS[@]}"; do
-    [ ! -f "$file" ] && continue
+    [[ ! -f "$file" ]] && continue
+    echo -e "${BLUE}Extrayendo $file...${NC}"
     case $FORMAT in
     gz)
       ensure_tool "pigz" "pigz"
