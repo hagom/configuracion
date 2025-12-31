@@ -7,13 +7,12 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# --- Función para auto-instalar herramientas (SC2181 Corregido) ---
+# --- Función para auto-instalar herramientas ---
 ensure_tool() {
   local tool=$1
   local package=$2
   if ! command -v "$tool" &>/dev/null; then
     echo -e "${YELLOW}Instalando dependencia: $package...${NC}"
-    # Se evalúa el comando directamente en el if
     if ! sudo apt update -y || ! sudo apt install -y "$package"; then
       echo -e "${RED}Error: No se pudo instalar $package.${NC}"
       exit 1
@@ -21,30 +20,29 @@ ensure_tool() {
   fi
 }
 
-# --- Función para listar compresores ordenados (-l) ---
+# --- Función para listar compresores (-l) ---
 list_compressors() {
   echo -e "${BLUE}Compresores por ratio de eficiencia (Mayor a Menor):${NC}"
-  echo -e "1. ${GREEN}7z${NC}  - Ultra (LZMA2). Ideal para backups masivos."
-  echo -e "2. ${GREEN}xz${NC}  - Excelente (LZMA). Estándar en kernels Linux."
-  echo -e "3. ${GREEN}bz2${NC} - Alto (Bzip2). Muy eficiente en archivos de texto."
-  echo -e "4. ${GREEN}gz${NC}  - Medio (Gzip). El mejor balance velocidad/tamaño."
+  echo -e "1. ${GREEN}7z${NC}  - Ultra (LZMA2). Máxima reducción."
+  echo -e "2. ${GREEN}xz${NC}  - Excelente (LZMA). Estándar Linux."
+  echo -e "3. ${GREEN}bz2${NC} - Alto (Bzip2). Ideal para texto."
+  echo -e "4. ${GREEN}gz${NC}  - Medio (Gzip). Rápido y compatible."
   echo -e "5. ${GREEN}zip${NC} - Básico. Compatibilidad universal."
   exit 0
 }
 
-# --- Mensaje de Uso (Corregido con -l) ---
 usage() {
   echo -e "${BLUE}Uso:${NC} $0 [-c|-d|-l] [-n nombre] [-u] <formato> <archivos...>"
   echo -e "Opciones:"
-  echo -e "  ${GREEN}-c${NC} : Comprimir (Máxima potencia)"
+  echo -e "  ${GREEN}-c${NC} : Comprimir (Uso: 70% RAM / 100% CPU)"
   echo -e "  ${GREEN}-d${NC} : Descomprimir"
   echo -e "  ${GREEN}-l${NC} : Listar compresores por eficiencia"
-  echo -e "  ${GREEN}-n${NC} : Nombre personalizado (Opcional)"
-  echo -e "  ${GREEN}-u${NC} : Unificar archivos en un solo contenedor"
+  echo -e "  ${GREEN}-n${NC} : Nombre personalizado"
+  echo -e "  ${GREEN}-u${NC} : Unificar archivos (Activo: $UNIFY)"
   exit 1
 }
 
-# --- Variables (SC2034 Corregido: se usan en el reporte final) ---
+# --- Variables ---
 MODE=""
 UNIFY="No"
 CUSTOM_NAME=""
@@ -68,35 +66,36 @@ INPUTS=("$@")
 
 if [[ -z "$MODE" ]] || [[ -z "$FORMAT" ]] || [[ ${#INPUTS[@]} -eq 0 ]]; then usage; fi
 
-# --- Cálculo de Memoria Dinámica (70% de la disponible) ---
+# --- Cálculo de RAM y Tamaño Original ---
 get_mem_limit() {
   local free_mem
-  # SC2155 Corregido: declaración y asignación separadas
   free_mem=$(free -m | awk '/^Mem:/{print $7}')
   echo $((free_mem * 70 / 100))
 }
 
-# --- Generar nombre único ---
 get_unique_name() {
-  local base_name=$1
-  local ext=$2
-  local final_name
-  local counter=1
-
+  local base_name=$1 ext=$2 counter=1 final_name
   final_name="${base_name}.${ext}"
   if [[ -e "$final_name" ]]; then
-    echo -e "${YELLOW}Aviso: '$final_name' ya existe.${NC}"
     while [[ -e "${base_name}_${counter}.${ext}" ]]; do ((counter++)); done
     final_name="${base_name}_${counter}.${ext}"
-    echo -e "${BLUE}Nuevo nombre: ${GREEN}$final_name${NC}"
   fi
   echo "$final_name"
 }
 
-# --- LÓGICA DE COMPRESIÓN (SC2181 y SC2155 Corregidos) ---
+# --- LÓGICA DE COMPRESIÓN ---
 do_compress() {
-  local ext mem_mb FINAL_FILE
+  local ext mem_mb FINAL_FILE TOTAL_ORIG_BYTES=0 ORIG_HUMAN
   mem_mb=$(get_mem_limit)
+
+  # 1. Calcular tamaño total de todos los inputs (Archivos o Carpetas)
+  for item in "${INPUTS[@]}"; do
+    if [[ -e "$item" ]]; then
+      # du -sb obtiene el tamaño aparente en bytes
+      TOTAL_ORIG_BYTES=$((TOTAL_ORIG_BYTES + $(du -sb "$item" | cut -f1)))
+    fi
+  done
+  ORIG_HUMAN=$(numfmt --to=iec-i --suffix=B "$TOTAL_ORIG_BYTES")
 
   case $FORMAT in
   gz)
@@ -128,9 +127,8 @@ do_compress() {
   [[ -z "$CUSTOM_NAME" ]] && CUSTOM_NAME="${INPUTS[0]%/}"
   FINAL_FILE=$(get_unique_name "$CUSTOM_NAME" "$ext")
 
-  echo -e "${BLUE}Iniciando: RAM=${mem_mb}MB | Unificar=${UNIFY} | CPU=MAX${NC}"
+  echo -e "${BLUE}Analizando: ${YELLOW}$ORIG_HUMAN${BLUE} de datos originales...${NC}"
 
-  # Evaluación directa del comando (SC2181)
   if case $FORMAT in
     gz) tar -cvf - "${INPUTS[@]}" | pigz -9 >"$FINAL_FILE" ;;
     xz) tar -cvf - "${INPUTS[@]}" | xz -9e -T0 --memory="${mem_mb}MiB" >"$FINAL_FILE" ;;
@@ -138,10 +136,15 @@ do_compress() {
     zip) zip -9 -r "$FINAL_FILE" "${INPUTS[@]}" ;;
     7z) 7z a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" "${INPUTS[@]}" ;;
     esac then
-    echo -e "\n${GREEN}✔ Éxito: $FINAL_FILE${NC}"
-    echo -e "${BLUE}Tamaño final: ${GREEN}$(du -sh "$FINAL_FILE" | cut -f1)${NC}"
+    local FINAL_SIZE
+    FINAL_SIZE=$(du -sh "$FINAL_FILE" | cut -f1)
+    echo -e "\n${GREEN}=======================================${NC}"
+    echo -e "${BLUE}Archivo creado:${NC} ${YELLOW}$FINAL_FILE${NC}"
+    echo -e "${BLUE}Tamaño Original:${NC} ${RED}$ORIG_HUMAN${NC}"
+    echo -e "${BLUE}Tamaño Final:${NC}    ${GREEN}$FINAL_SIZE${NC}"
+    echo -e "${GREEN}=======================================${NC}"
   else
-    echo -e "${RED}Error: Falló la compresión.${NC}"
+    echo -e "${RED}Error: La compresión falló.${NC}"
     exit 1
   fi
 }
@@ -176,9 +179,4 @@ do_decompress() {
   done
 }
 
-# Ejecución
-if [[ "$MODE" == "compress" ]]; then
-  do_compress
-else
-  do_decompress
-fi
+if [[ "$MODE" == "compress" ]]; then do_compress; else do_decompress; fi
