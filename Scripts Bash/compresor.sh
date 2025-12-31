@@ -21,76 +21,84 @@ ensure_tool() {
 }
 
 usage() {
-  echo -e "${BLUE}Uso:${NC} $0 [-c|-d] <formato> <archivo1> <archivo2> ..."
+  echo -e "${BLUE}Uso:${NC} $0 [-c|-d] [-n <nombre>] [-u] <formato> <archivos...>"
   echo -e "Opciones:"
   echo -e "  ${GREEN}-c${NC} : Comprimir"
   echo -e "  ${GREEN}-d${NC} : Descomprimir"
+  echo -e "  ${GREEN}-n${NC} : Nombre personalizado (Opcional, por defecto usa el nombre del original)"
+  echo -e "  ${GREEN}-u${NC} : Unificar todos los inputs en un solo archivo"
   echo -e "Formatos: ${YELLOW}gz, xz, bz2, zip, 7z${NC}"
-  echo -e "\nEjemplo compresión: $0 -c 7z carpeta/ archivo.txt"
-  echo -e "Ejemplo descompresión: $0 -d xz archivo.tar.xz"
   exit 1
 }
 
 # --- Variables de control ---
 MODE=""
+UNIFY=false
+CUSTOM_NAME=""
 FORMAT=""
 
 # --- Procesar Banderas ---
-while getopts "cd" opt; do
+while getopts "cdun:" opt; do
   case $opt in
   c) MODE="compress" ;;
   d) MODE="decompress" ;;
+  u) UNIFY=true ;;
+  n) CUSTOM_NAME="$OPTARG" ;;
   *) usage ;;
   esac
 done
 
 shift $((OPTIND - 1))
-
 FORMAT=$1
 shift
 INPUTS=("$@")
 
+# Validaciones de argumentos
 if [[ -z "$MODE" ]] || [[ -z "$FORMAT" ]] || [[ ${#INPUTS[@]} -eq 0 ]]; then
   usage
 fi
 
+# --- Función para generar nombre único (Autoincremento) ---
+get_unique_name() {
+  local base_name=$1
+  local ext=$2
+  local final_name="${base_name}.${ext}"
+  local counter=1
+
+  if [[ -e "$final_name" ]]; then
+    echo -e "${YELLOW}Advertencia: El archivo '$final_name' ya existe.${NC}"
+    while [[ -e "${base_name}_${counter}.${ext}" ]]; do
+      ((counter++))
+    done
+    final_name="${base_name}_${counter}.${ext}"
+    echo -e "${BLUE}Se usará el nombre: ${GREEN}$final_name${NC}"
+  fi
+  echo "$final_name"
+}
+
 # --- LÓGICA DE COMPRESIÓN ---
 do_compress() {
-  local FIRST_ELEMENT="${INPUTS[0]%/}"
-  local OUTPUT_NAME="$FIRST_ELEMENT"
-  local TOTAL_ORIG_BYTES=0
-
-  # Calcular tamaño original
-  for item in "${INPUTS[@]}"; do
-    if [ -e "$item" ]; then
-      SIZE=$(du -sb "$item" | cut -f1)
-      TOTAL_ORIG_BYTES=$((TOTAL_ORIG_BYTES + SIZE))
-    fi
-  done
-
-  local ORIG_HUMAN=$(numfmt --to=iec-i --suffix=B $TOTAL_ORIG_BYTES)
-  echo -e "${BLUE}Modo: Compresión Máxima (${YELLOW}$FORMAT${BLUE})${NC}"
-
+  local ext=""
   case $FORMAT in
   gz)
+    ext="tar.gz"
     ensure_tool "pigz" "pigz"
-    tar -cvf - "${INPUTS[@]}" | pigz -9 >"${OUTPUT_NAME}.tar.gz" && FINAL="${OUTPUT_NAME}.tar.gz"
     ;;
   xz)
+    ext="tar.xz"
     ensure_tool "xz" "xz-utils"
-    tar -cvf - "${INPUTS[@]}" | xz -9e -T0 >"${OUTPUT_NAME}.tar.xz" && FINAL="${OUTPUT_NAME}.tar.xz"
     ;;
   bz2)
+    ext="tar.bz2"
     ensure_tool "lbzip2" "lbzip2"
-    tar -I lbzip2 -cvf "${OUTPUT_NAME}.tar.bz2" "${INPUTS[@]}" && FINAL="${OUTPUT_NAME}.tar.bz2"
     ;;
   zip)
+    ext="zip"
     ensure_tool "zip" "zip"
-    zip -9 -r "${OUTPUT_NAME}.zip" "${INPUTS[@]}" && FINAL="${OUTPUT_NAME}.zip"
     ;;
   7z)
+    ext="7z"
     ensure_tool "7z" "p7zip-full"
-    7z a -mx=9 -ms=on "${OUTPUT_NAME}.7z" "${INPUTS[@]}" && FINAL="${OUTPUT_NAME}.7z"
     ;;
   *)
     echo -e "${RED}Formato no válido${NC}"
@@ -98,21 +106,49 @@ do_compress() {
     ;;
   esac
 
-  if [ -f "$FINAL" ]; then
-    echo -e "\n${GREEN}✔ Éxito${NC}"
-    echo -e "${BLUE}Original: ${RED}$ORIG_HUMAN${NC} | Comprimido: ${GREEN}$(du -sh "$FINAL" | cut -f1)${NC}"
+  # LÓGICA DE NOMBRE AUTOMÁTICO:
+  # Si CUSTOM_NAME está vacío, toma el nombre del primer input eliminando barras diagonales.
+  if [[ -z "$CUSTOM_NAME" ]]; then
+    CUSTOM_NAME="${INPUTS[0]%/}"
+  fi
+
+  local FINAL_FILE
+  FINAL_FILE=$(get_unique_name "$CUSTOM_NAME" "$ext")
+
+  # Tamaño original
+  local TOTAL_BYTES=0
+  for item in "${INPUTS[@]}"; do
+    [ -e "$item" ] && TOTAL_BYTES=$((TOTAL_BYTES + $(du -sb "$item" | cut -f1)))
+  done
+  local ORIG_HUMAN=$(numfmt --to=iec-i --suffix=B $TOTAL_BYTES)
+
+  echo -e "${BLUE}Modo: Compresión Máxima (${YELLOW}$FORMAT${BLUE})${NC}"
+
+  case $FORMAT in
+  gz) tar -cvf - "${INPUTS[@]}" | pigz -9 >"$FINAL_FILE" ;;
+  xz) tar -cvf - "${INPUTS[@]}" | xz -9e -T0 >"$FINAL_FILE" ;;
+  bz2) tar -I lbzip2 -cvf "$FINAL_FILE" "${INPUTS[@]}" ;;
+  zip) zip -9 -r "$FINAL_FILE" "${INPUTS[@]}" ;;
+  7z) 7z a -mx=9 -ms=on "$FINAL_FILE" "${INPUTS[@]}" ;;
+  esac
+
+  if [[ $? -eq 0 ]]; then
+    echo -e "\n${GREEN}=======================================${NC}"
+    echo -e "${BLUE}Archivo creado:${NC} ${YELLOW}$FINAL_FILE${NC}"
+    echo -e "${BLUE}Tamaño Original:${NC} ${RED}$ORIG_HUMAN${NC}"
+    echo -e "${BLUE}Tamaño Final:${NC}    ${GREEN}$(du -sh "$FINAL_FILE" | cut -f1)${NC}"
+    echo -e "${GREEN}=======================================${NC}"
   fi
 }
 
 # --- LÓGICA DE DESCOMPRESIÓN ---
 do_decompress() {
-  echo -e "${BLUE}Modo: Descompresión (${YELLOW}$FORMAT${BLUE})${NC}"
   for file in "${INPUTS[@]}"; do
     if [ ! -f "$file" ]; then
-      echo -e "${RED}Archivo no encontrado: $file${NC}"
+      echo -e "${RED}Error: $file no existe.${NC}"
       continue
     fi
-
+    echo -e "${BLUE}Extrayendo $file...${NC}"
     case $FORMAT in
     gz)
       ensure_tool "pigz" "pigz"
@@ -138,8 +174,7 @@ do_decompress() {
   done
 }
 
-# --- Ejecución ---
-if [ "$MODE" == "compress" ]; then
+if [[ "$MODE" == "compress" ]]; then
   do_compress
 else
   do_decompress
