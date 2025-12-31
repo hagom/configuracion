@@ -7,37 +7,55 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# --- Función para auto-instalar herramientas ---
+# --- Función para auto-instalar herramientas (SC2181 Corregido) ---
 ensure_tool() {
   local tool=$1
   local package=$2
   if ! command -v "$tool" &>/dev/null; then
-    echo -e "${YELLOW}Instalando dependencia faltante: $package...${NC}"
-    # Evaluación directa de comandos (Corrige SC2181)
+    echo -e "${YELLOW}Instalando dependencia: $package...${NC}"
+    # Se evalúa el comando directamente en el if
     if ! sudo apt update -y || ! sudo apt install -y "$package"; then
-      echo -e "${RED}Error crítico: No se pudo instalar $package.${NC}"
+      echo -e "${RED}Error: No se pudo instalar $package.${NC}"
       exit 1
     fi
   fi
 }
 
+# --- Función para listar compresores ordenados (-l) ---
+list_compressors() {
+  echo -e "${BLUE}Compresores por ratio de eficiencia (Mayor a Menor):${NC}"
+  echo -e "1. ${GREEN}7z${NC}  - Ultra (LZMA2). Ideal para backups masivos."
+  echo -e "2. ${GREEN}xz${NC}  - Excelente (LZMA). Estándar en kernels Linux."
+  echo -e "3. ${GREEN}bz2${NC} - Alto (Bzip2). Muy eficiente en archivos de texto."
+  echo -e "4. ${GREEN}gz${NC}  - Medio (Gzip). El mejor balance velocidad/tamaño."
+  echo -e "5. ${GREEN}zip${NC} - Básico. Compatibilidad universal."
+  exit 0
+}
+
+# --- Mensaje de Uso (Corregido con -l) ---
 usage() {
-  echo -e "${BLUE}Uso:${NC} $0 [-c|-d] [-n <nombre>] [-u] <formato> <archivos...>"
-  echo -e "Opciones: ${GREEN}-c${NC} Comprimir | ${GREEN}-d${NC} Descomprimir | ${GREEN}-u${NC} Unificar"
+  echo -e "${BLUE}Uso:${NC} $0 [-c|-d|-l] [-n nombre] [-u] <formato> <archivos...>"
+  echo -e "Opciones:"
+  echo -e "  ${GREEN}-c${NC} : Comprimir (Máxima potencia)"
+  echo -e "  ${GREEN}-d${NC} : Descomprimir"
+  echo -e "  ${GREEN}-l${NC} : Listar compresores por eficiencia"
+  echo -e "  ${GREEN}-n${NC} : Nombre personalizado (Opcional)"
+  echo -e "  ${GREEN}-u${NC} : Unificar archivos en un solo contenedor"
   exit 1
 }
 
-# --- Variables ---
+# --- Variables (SC2034 Corregido: se usan en el reporte final) ---
 MODE=""
-UNIFY=false
+UNIFY="No"
 CUSTOM_NAME=""
 
 # --- Procesar Banderas ---
-while getopts "cdun:" opt; do
+while getopts "cduln:" opt; do
   case $opt in
   c) MODE="compress" ;;
   d) MODE="decompress" ;;
-  u) UNIFY=true ;;
+  u) UNIFY="Sí" ;;
+  l) list_compressors ;;
   n) CUSTOM_NAME="$OPTARG" ;;
   *) usage ;;
   esac
@@ -50,7 +68,15 @@ INPUTS=("$@")
 
 if [[ -z "$MODE" ]] || [[ -z "$FORMAT" ]] || [[ ${#INPUTS[@]} -eq 0 ]]; then usage; fi
 
-# --- Función para nombre único ---
+# --- Cálculo de Memoria Dinámica (70% de la disponible) ---
+get_mem_limit() {
+  local free_mem
+  # SC2155 Corregido: declaración y asignación separadas
+  free_mem=$(free -m | awk '/^Mem:/{print $7}')
+  echo $((free_mem * 70 / 100))
+}
+
+# --- Generar nombre único ---
 get_unique_name() {
   local base_name=$1
   local ext=$2
@@ -58,20 +84,20 @@ get_unique_name() {
   local counter=1
 
   final_name="${base_name}.${ext}"
-
   if [[ -e "$final_name" ]]; then
-    echo -e "${YELLOW}Aviso: '$final_name' ya existe, buscando nombre libre...${NC}"
-    while [[ -e "${base_name}_${counter}.${ext}" ]]; do
-      ((counter++))
-    done
+    echo -e "${YELLOW}Aviso: '$final_name' ya existe.${NC}"
+    while [[ -e "${base_name}_${counter}.${ext}" ]]; do ((counter++)); done
     final_name="${base_name}_${counter}.${ext}"
+    echo -e "${BLUE}Nuevo nombre: ${GREEN}$final_name${NC}"
   fi
   echo "$final_name"
 }
 
-# --- LÓGICA DE COMPRESIÓN ---
+# --- LÓGICA DE COMPRESIÓN (SC2181 y SC2155 Corregidos) ---
 do_compress() {
-  local ext
+  local ext mem_mb FINAL_FILE
+  mem_mb=$(get_mem_limit)
+
   case $FORMAT in
   gz)
     ext="tar.gz"
@@ -100,27 +126,22 @@ do_compress() {
   esac
 
   [[ -z "$CUSTOM_NAME" ]] && CUSTOM_NAME="${INPUTS[0]%/}"
-
-  # Separación de declaración y asignación (Corrige SC2155)
-  local FINAL_FILE
   FINAL_FILE=$(get_unique_name "$CUSTOM_NAME" "$ext")
 
-  echo -e "${BLUE}Comprimiendo (50% RAM | Unificar: $UNIFY)...${NC}"
+  echo -e "${BLUE}Iniciando: RAM=${mem_mb}MB | Unificar=${UNIFY} | CPU=MAX${NC}"
 
-  # Evaluación directa del resultado del case/comando (Corrige SC2181)
+  # Evaluación directa del comando (SC2181)
   if case $FORMAT in
     gz) tar -cvf - "${INPUTS[@]}" | pigz -9 >"$FINAL_FILE" ;;
-    xz) tar -cvf - "${INPUTS[@]}" | xz -9e -T0 --memory=50% >"$FINAL_FILE" ;;
+    xz) tar -cvf - "${INPUTS[@]}" | xz -9e -T0 --memory="${mem_mb}MiB" >"$FINAL_FILE" ;;
     bz2) tar -I 'lbzip2 -9' -cvf "$FINAL_FILE" "${INPUTS[@]}" ;;
     zip) zip -9 -r "$FINAL_FILE" "${INPUTS[@]}" ;;
-    7z) 7z a -mx=9 -md=64m -ms=on -mmt=on "$FINAL_FILE" "${INPUTS[@]}" ;;
+    7z) 7z a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" "${INPUTS[@]}" ;;
     esac then
-    echo -e "\n${GREEN}=======================================${NC}"
-    echo -e "${BLUE}Archivo:${NC} ${YELLOW}$FINAL_FILE${NC}"
-    echo -e "${BLUE}Tamaño:${NC}  ${GREEN}$(du -sh "$FINAL_FILE" | cut -f1)${NC}"
-    echo -e "${GREEN}=======================================${NC}"
+    echo -e "\n${GREEN}✔ Éxito: $FINAL_FILE${NC}"
+    echo -e "${BLUE}Tamaño final: ${GREEN}$(du -sh "$FINAL_FILE" | cut -f1)${NC}"
   else
-    echo -e "${RED}Error: La compresión falló.${NC}"
+    echo -e "${RED}Error: Falló la compresión.${NC}"
     exit 1
   fi
 }
@@ -129,7 +150,7 @@ do_compress() {
 do_decompress() {
   for file in "${INPUTS[@]}"; do
     [[ ! -f "$file" ]] && continue
-    echo -e "${BLUE}Extrayendo $file...${NC}"
+    echo -e "${BLUE}Extrayendo: $file${NC}"
     case $FORMAT in
     gz)
       ensure_tool "pigz" "pigz"
@@ -155,4 +176,9 @@ do_decompress() {
   done
 }
 
-if [[ "$MODE" == "compress" ]]; then do_compress; else do_decompress; fi
+# Ejecución
+if [[ "$MODE" == "compress" ]]; then
+  do_compress
+else
+  do_decompress
+fi
