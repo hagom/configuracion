@@ -1,0 +1,21 @@
+# Datos de Pihole
+pihole/etc-pihole/
+pihole/etc-dnsmasq.d/
+
+# Datos de Uptime Kuma
+uptime-kuma/uptime-kuma-data/
+
+# Datos de Convertx
+convertx/data/
+
+# Datos de Heimdall
+heimdall/config/
+
+# Datos de Portainer
+portainer/portainer_data/
+
+# Reglas generales para carpetas de datos comunes
+*/data/
+*/config/
+*.db
+*.log
