@@ -1,0 +1,10 @@
+services:
+  binfmt:
+    image: tonistiigi/binfmt
+    container_name: binfmt_emulator
+    # El modo privilegiado es OBLIGATORIO para modificar el kernel
+    privileged: true
+    # Esto asegura que se ejecute al arrancar el sistema
+    restart: always
+    # "install" registra los binarios de QEMU en el kernel
+    command: --install all

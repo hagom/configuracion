@@ -1,0 +1,15 @@
+services:
+  autoheal:
+    image: willfarrell/autoheal:latest
+    container_name: autoheal
+    restart: always
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all  # Monitorea todos los contenedores con healthcheck
+      - AUTOHEAL_INTERVAL=60          # Verifica cada 60 segundos
+      - AUTOHEAL_START_PERIOD=300     # Espera 5 minutos antes de empezar a monitorear
+      - AUTOHEAL_DEFAULT_STOP_TIMEOUT=10  # Timeout para detener contenedores
+      - DOCKER_SOCK=/var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # Para ver los logs de autoheal:
+    # docker logs autoheal
