@@ -1,5 +1,41 @@
-# More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
 services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    restart: always
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./uptime-kuma-data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock # Opcional: para monitorear otros contenedores Docker
+    security_opt:
+      - no-new-privileges:true
+
+  heimdall:
+    image: lscr.io/linuxserver/heimdall:latest
+    container_name: heimdall
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - ALLOW_INTERNAL_REQUESTS=false #optional
+    volumes:
+      - /path/to/heimdall/config:/config
+    ports:
+      - 81:81
+      - 444:444
+    restart: unless-stopped
+
+  binfmt:
+    image: tonistiigi/binfmt
+    container_name: binfmt_emulator
+    # El modo privilegiado es OBLIGATORIO para modificar el kernel
+    privileged: true
+    # Esto asegura que se ejecute al arrancar el sistema
+    restart: always
+    # "install" registra los binarios de QEMU en el kernel
+    command: --install all
+
   pihole:
     container_name: pihole
     image: pihole/pihole:latest
@@ -38,6 +74,7 @@ services:
     #      - /location/of/customFiles:/customFiles/
     environment:
       - DOCKER_ENABLE_SECURITY=false
+    restart: unless-stopped
 
   convertx:
     image: ghcr.io/c4illin/convertx
