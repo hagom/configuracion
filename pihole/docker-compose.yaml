@@ -2,20 +2,20 @@ services:
   pihole:
     container_name: pihole
     image: pihole/pihole:latest
-    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "67:67/udp" # Only required if you are using Pi-hole as your DHCP server
-      - "80:80/tcp"
+    network_mode: "host"
+    # IMPORTANTE: En modo host, Pi-hole usará el DNS del sistema operativo para arrancar.
+    # Asegúrate de que tu Raspberry Pi tenga la hora correcta antes de iniciar.
     environment:
-      TZ: "America/Caracas"
-      # WEBPASSWORD: 'set a secure password here or it will be random'
-    # Volumes store your data between container upgrades
+      - TZ=America/Caracas
+      - FTLCONF_LOCAL_IPV4=192.168.1.120
+      - DNSMASQ_LISTENING=all
+      - MAXCONNV=1000000
+      - PIHOLE_DNS_=127.0.0.1#5335 # Apunta directamente a Unbound en el host
     volumes:
       - ./etc-pihole:/etc/pihole
       - ./etc-dnsmasq.d:/etc/dnsmasq.d
-    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
     cap_add:
-      - NET_ADMIN # Required if you are using Pi-hole as your DHCP server, else not needed
+      - SYS_NICE
+      - SYS_TIME
+      - NET_ADMIN
     restart: unless-stopped
