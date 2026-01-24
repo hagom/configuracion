@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    environment:
+      # Aquí usamos la variable definida en el .env
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    # Opcional: Descomenta si quieres conectar DBeaver desde fuera
+    # ports:
+    #   - "${DB_PORT_EXTERNAL}:5432"
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      # Usamos el puerto libre (8081) definido en el .env
+      - "${ADMINER_PORT_EXTERNAL}:8080"
