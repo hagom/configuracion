@@ -9,4 +9,10 @@ services:
     #      - /location/of/customFiles:/customFiles/
     environment:
       - DOCKER_ENABLE_SECURITY=false
+    labels:
+      - "homepage.group=Herramientas"
+      - "homepage.name=Stirling-PDF"
+      - "homepage.icon=stirling-pdf.png"
+      - "homepage.href=http://192.168.1.120:8080"
+      - "homepage.description=Editor PDF"
     restart: unless-stopped

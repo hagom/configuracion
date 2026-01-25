@@ -12,4 +12,10 @@ services:
     ports:
       - 81:80
       - 444:443
+    labels:
+      - "homepage.group=Servicios"
+      - "homepage.name=Heimdall"
+      - "homepage.icon=heimdall.png"
+      - "homepage.href=http://192.168.1.120:81"
+      - "homepage.description=Dashboard alternativo"
     restart: unless-stopped

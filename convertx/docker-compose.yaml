@@ -10,3 +10,9 @@ services:
       # - HTTP_ALLOWED=true # uncomment this if accessing it over a non-https connection
     volumes:
       - ./data:/app/data
+    labels:
+      - "homepage.group=Herramientas"
+      - "homepage.name=ConvertX"
+      - "homepage.icon=convertx.png"
+      - "homepage.href=http://192.168.1.120:3000"
+      - "homepage.description=Conversor de archivos"

@@ -9,6 +9,12 @@ services:
     ports:
       - 9443:9443
       - 8000:8000 # Remove if you do not intend to use Edge Agents
+    labels:
+      - "homepage.group=Gestión"
+      - "homepage.name=Portainer"
+      - "homepage.icon=portainer.png"
+      - "homepage.href=https://192.168.1.120:9443"
+      - "homepage.description=Docker Management"
 
 volumes:
   portainer_data:

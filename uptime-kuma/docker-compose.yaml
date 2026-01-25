@@ -10,3 +10,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock # Opcional: para monitorear otros contenedores Docker
     security_opt:
       - no-new-privileges:true
+    labels:
+      - "homepage.group=Servicios"
+      - "homepage.name=Uptime Kuma"
+      - "homepage.icon=uptime-kuma.png"
+      - "homepage.href=http://192.168.1.120:3001"
+      - "homepage.description=Monitoreo"
