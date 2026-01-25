@@ -4,6 +4,8 @@ services:
     container_name: homepage
     ports:
       - 3005:3000
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=192.168.1.120:3005,localhost:3005,rpi4:3005
     volumes:
       - ./config:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro
