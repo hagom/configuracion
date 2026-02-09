@@ -1,17 +1,19 @@
 #!/bin/bash
 
 # ==============================================================================
-# SCRIPT DE COMPRESIÓN/DESCOMPRESIÓN INTELIGENTE
+# SCRIPT DE COMPRESIÓN/DESCOMPRESIÓN INTELIGENTE (MULTIPROCESO)
 # ==============================================================================
 # Autor: Gemini (Asistente AI)
 # Descripción:
 #   Herramienta unificada para gestionar archivos comprimidos en Linux.
 #   - Gestiona dependencias automáticamente.
-#   - Optimiza el uso de RAM y CPU (Multihilo en pigz/xz/7z).
+#   - Optimiza el uso de RAM y CPU (Multihilo en TODOS los formatos posibles).
 #   - Descompresión inteligente: detecta extensiones automáticamente.
 #   - Modo seguro: Opción de borrar originales solo tras éxito.
 #
-# Formatos soportados: 7z, xz, gz (tar.gz), zip, bz2 (tar.bz2), bz3 (tar.bz3)
+# Formatos soportados (compresión paralela):
+#   gz (pigz), xz (xz -T0), bz2 (lbzip2/pbzip2), bz3 (bzip3),
+#   lz (plzip), zst (zstd -T0), lrz (lrzip), 7z (7z multi-thread), zip
 # ==============================================================================
 
 # --- Colores ---
@@ -20,6 +22,9 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
+
+# --- Número de CPUs para herramientas que lo necesitan ---
+NCPU=$(nproc)
 
 # --- Función para auto-instalar herramientas ---
 ensure_tool() {
@@ -37,13 +42,24 @@ ensure_tool() {
 
 # --- Función para listar compresores (-l) ---
 list_compressors() {
-  echo -e "${BLUE}=== Tabla de Eficiencia de Compresores ===${NC}"
-  echo -e "1. ${GREEN}7z${NC}  : ${YELLOW}Ultra${NC} (LZMA2). Máxima reducción, mayor uso de CPU/RAM."
-  echo -e "2. ${GREEN}xz${NC}  : ${YELLOW}Excelente${NC} (LZMA). Estándar moderno en Linux."
-  echo -e "3. ${GREEN}bz3${NC} : ${YELLOW}Muy Alto${NC} (Bzip3). Muy eficiente para texto y código."
-  echo -e "4. ${GREEN}bz2${NC} : ${YELLOW}Alto${NC} (Bzip2). Clásico, buena relación peso/tiempo."
-  echo -e "5. ${GREEN}gz${NC}  : ${YELLOW}Medio${NC} (Gzip). El más rápido y compatible."
-  echo -e "6. ${GREEN}zip${NC} : ${YELLOW}Básico${NC}. Compatibilidad universal (Windows/Mac/Linux)."
+  echo -e "${BLUE}=== Tabla de Eficiencia de Compresores (Todos Multiproceso) ===${NC}"
+  echo -e ""
+  echo -e "${YELLOW}--- Alta Compresión (Mayor tiempo) ---${NC}"
+  echo -e "1. ${GREEN}lrz${NC} : ${YELLOW}Máxima${NC} (LRZIP). Ideal para archivos ENORMES (>1GB). Usa lzma+rzip."
+  echo -e "2. ${GREEN}7z${NC}  : ${YELLOW}Ultra${NC} (LZMA2). Excelente ratio, alto uso de CPU/RAM."
+  echo -e "3. ${GREEN}xz${NC}  : ${YELLOW}Excelente${NC} (LZMA). Estándar moderno en Linux."
+  echo -e "4. ${GREEN}lz${NC}  : ${YELLOW}Excelente${NC} (LZIP/plzip). Similar a xz, enfocado en integridad."
+  echo -e ""
+  echo -e "${YELLOW}--- Compresión Balanceada ---${NC}"
+  echo -e "5. ${GREEN}zst${NC} : ${YELLOW}Muy Rápido${NC} (Zstandard). Mejor balance velocidad/ratio moderno."
+  echo -e "6. ${GREEN}bz3${NC} : ${YELLOW}Muy Alto${NC} (Bzip3). Eficiente para texto y código."
+  echo -e "7. ${GREEN}bz2${NC} : ${YELLOW}Alto${NC} (lbzip2). Clásico, buena relación peso/tiempo."
+  echo -e ""
+  echo -e "${YELLOW}--- Alta Velocidad ---${NC}"
+  echo -e "8. ${GREEN}gz${NC}  : ${YELLOW}Rápido${NC} (pigz). El más compatible y rápido."
+  echo -e "9. ${GREEN}zip${NC} : ${YELLOW}Básico${NC}. Compatibilidad universal (Windows/Mac/Linux)."
+  echo -e ""
+  echo -e "${BLUE}Nota:${NC} Todos los formatos usan multiprocesamiento automático."
   exit 0
 }
 
@@ -55,14 +71,17 @@ usage() {
   echo -e ""
   echo -e "${YELLOW}MODO COMPRESIÓN:${NC}"
   echo -e "  $0 -c <formato> [opciones] <archivos/carpetas...>"
-  echo -e "  ${BLUE}Ejemplo:${NC} $0 -c 7z -n backup_fotos ./mis_fotos"
+  echo -e "  ${BLUE}Ejemplo:${NC} $0 -c zst -n backup_fotos ./mis_fotos"
   echo -e ""
   echo -e "${YELLOW}MODO DESCOMPRESIÓN:${NC}"
   echo -e "  $0 -d [opciones] <archivos...>"
-  echo -e "  ${BLUE}Ejemplo:${NC} $0 -d -r archivo1.zip archivo2.tar.gz"
+  echo -e "  ${BLUE}Ejemplo:${NC} $0 -d -r archivo1.zst archivo2.tar.gz"
+  echo -e ""
+  echo -e "${YELLOW}FORMATOS SOPORTADOS:${NC}"
+  echo -e "  ${GREEN}gz${NC}, ${GREEN}xz${NC}, ${GREEN}bz2${NC}, ${GREEN}bz3${NC}, ${GREEN}zst${NC}, ${GREEN}lz${NC}, ${GREEN}lrz${NC}, ${GREEN}7z${NC}, ${GREEN}zip${NC}"
   echo -e ""
   echo -e "${YELLOW}OPCIONES DISPONIBLES:${NC}"
-  echo -e "  ${GREEN}-c${NC}       : Comprimir. (Formatos: 7z, xz, gz, zip, bz2, bz3)"
+  echo -e "  ${GREEN}-c${NC}       : Comprimir."
   echo -e "  ${GREEN}-d${NC}       : Descomprimir. (Detecta formato automáticamente)"
   echo -e "  ${GREEN}-r${NC}       : ${RED}Borrar original${NC} al finalizar (Solo si no hubo errores)."
   echo -e "  ${GREEN}-n nombre${NC}: Asignar nombre personalizado al archivo de salida."
@@ -97,7 +116,7 @@ shift $((OPTIND - 1))
 if [[ "$MODE" == "decompress" ]]; then
   # En modo descompresión, ignoramos el formato si el usuario lo escribió por costumbre
   case "$1" in
-  gz | xz | bz2 | bz3 | zip | 7z) shift ;;
+  gz | xz | bz2 | bz3 | zip | 7z | zst | lz | lrz) shift ;;
   esac
   FORMAT="auto"
   INPUTS=("$@")
@@ -134,7 +153,7 @@ get_unique_name() {
 }
 
 # ==============================================================================
-# LÓGICA DE COMPRESIÓN
+# LÓGICA DE COMPRESIÓN (MULTIPROCESO)
 # ==============================================================================
 do_compress() {
   local ext mem_mb FINAL_FILE TOTAL_ORIG_BYTES=0 ORIG_HUMAN
@@ -169,13 +188,25 @@ do_compress() {
     ext="tar.bz3"
     ensure_tool "bzip3" "bzip3"
     ;;
+  zst)
+    ext="tar.zst"
+    ensure_tool "zstd" "zstd"
+    ;;
+  lz)
+    ext="tar.lz"
+    ensure_tool "plzip" "plzip"
+    ;;
+  lrz)
+    ext="tar.lrz"
+    ensure_tool "lrzip" "lrzip"
+    ;;
   zip)
     ext="zip"
     ensure_tool "zip" "zip"
     ;;
   7z)
     ext="7z"
-    ensure_tool "7z" "p7zip-full"
+    ensure_tool "7zz" "7zip"
     ;;
   *)
     echo -e "${RED}[Error] Formato '$FORMAT' no válido.${NC}"
@@ -187,17 +218,29 @@ do_compress() {
   [[ -z "$CUSTOM_NAME" ]] && CUSTOM_NAME="${INPUTS[0]%/}"
   FINAL_FILE=$(get_unique_name "$CUSTOM_NAME" "$ext")
 
-  echo -e "${BLUE}[Info] Comprimiendo ${YELLOW}$ORIG_HUMAN${BLUE} de datos en formato ${GREEN}$FORMAT${BLUE}...${NC}"
+  echo -e "${BLUE}[Info] Comprimiendo ${YELLOW}$ORIG_HUMAN${BLUE} de datos en formato ${GREEN}$FORMAT${BLUE} (${NCPU} hilos)...${NC}"
 
-  # Ejecución de compresión
+  # Ejecución de compresión (TODAS CON MULTIPROCESO)
   local CMD_SUCCESS=false
   if case $FORMAT in
+    # pigz: usa todos los hilos por defecto
     gz) tar -cvf - "${INPUTS[@]}" | pigz -9 >"$FINAL_FILE" ;;
+    # xz: -T0 usa todos los núcleos
     xz) tar -cvf - "${INPUTS[@]}" | xz -9e -T0 --memory="${mem_mb}MiB" >"$FINAL_FILE" ;;
+    # lbzip2: usa todos los hilos por defecto
     bz2) tar -I 'lbzip2 -9' -cvf "$FINAL_FILE" "${INPUTS[@]}" ;;
-    bz3) tar -I 'bzip3' -cvf "$FINAL_FILE" "${INPUTS[@]}" ;;
+    # bzip3: usa -j para especificar hilos
+    bz3) tar -I "bzip3 -j $NCPU" -cvf "$FINAL_FILE" "${INPUTS[@]}" ;;
+    # zstd: -T0 usa todos los núcleos, nivel 19 para máxima compresión
+    zst) tar -cvf - "${INPUTS[@]}" | zstd -19 -T0 -o "$FINAL_FILE" ;;
+    # plzip: usa --threads para especificar hilos
+    lz) tar -cvf - "${INPUTS[@]}" | plzip -9 --threads="$NCPU" >"$FINAL_FILE" ;;
+    # lrzip: usa -p para hilos, -L 9 para nivel máximo, -z para lzma
+    lrz) tar -cvf - "${INPUTS[@]}" | lrzip -L 9 -z -p "$NCPU" -o "$FINAL_FILE" ;;
+    # zip: -9 máxima compresión (no tiene multiproceso nativo, pero es muy rápido)
     zip) zip -9 -r "$FINAL_FILE" "${INPUTS[@]}" ;;
-    7z) 7z a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" "${INPUTS[@]}" ;;
+    # 7z: -mmt=on usa todos los hilos
+    7z) 7zz a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" "${INPUTS[@]}" ;;
     esac then
     CMD_SUCCESS=true
   fi
@@ -218,7 +261,16 @@ do_compress() {
     echo -e "${BLUE}Tamaño Original:${NC}   ${RED}$ORIG_HUMAN${NC}"
     echo -e "${BLUE}Tamaño Final:${NC}      ${GREEN}$FINAL_SIZE${NC}"
     echo -e "${BLUE}Ahorro de espacio:${NC} ${GREEN}${PERCENTAGE}%${NC}"
+    echo -e "${BLUE}Hilos utilizados:${NC}  ${GREEN}${NCPU}${NC}"
     echo -e "${GREEN}===========================${NC}"
+
+    # Borrar originales si se activó -r
+    if [[ "$DELETE_ORIG" == "Sí" ]]; then
+      for item in "${INPUTS[@]}"; do
+        rm -rf "$item"
+        echo -e "${YELLOW}[Info] Original eliminado: $item${NC}"
+      done
+    fi
   else
     echo -e "${RED}[Fatal] La compresión falló. Verifica espacio en disco o permisos.${NC}"
     rm -f "$FINAL_FILE" 2>/dev/null
@@ -227,7 +279,7 @@ do_compress() {
 }
 
 # ==============================================================================
-# LÓGICA DE DESCOMPRESIÓN
+# LÓGICA DE DESCOMPRESIÓN (MULTIPROCESO)
 # ==============================================================================
 do_decompress() {
   for file in "${INPUTS[@]}"; do
@@ -236,7 +288,7 @@ do_decompress() {
       continue
     fi
 
-    echo -e "${BLUE}[Procesando] Archivo: ${YELLOW}$file${NC}"
+    echo -e "${BLUE}[Procesando] Archivo: ${YELLOW}$file${BLUE} (${NCPU} hilos)${NC}"
     local SUCCESS=0
 
     # Detección de formato insensible a mayúsculas
@@ -248,17 +300,73 @@ do_decompress() {
       ;;
     *.tar.xz | *.txz)
       ensure_tool "xz" "xz-utils"
-      tar -xJvf "$file"
+      # xz -T0 para descompresión multihilo
+      xz -dc -T0 "$file" | tar -xvf -
       SUCCESS=$?
       ;;
     *.tar.bz2 | *.tbz2)
       ensure_tool "lbzip2" "lbzip2"
-      tar -I lbzip2 -xvf "$file"
+      # lbzip2 usa todos los hilos por defecto
+      lbzip2 -dc "$file" | tar -xvf -
       SUCCESS=$?
       ;;
     *.tar.bz3)
       ensure_tool "bzip3" "bzip3"
-      tar -I bzip3 -xvf "$file"
+      bzip3 -dc -j "$NCPU" "$file" | tar -xvf -
+      SUCCESS=$?
+      ;;
+    *.tar.zst | *.tzst)
+      ensure_tool "zstd" "zstd"
+      # zstd -T0 para usar todos los hilos
+      zstd -dc -T0 "$file" | tar -xvf -
+      SUCCESS=$?
+      ;;
+    *.tar.lz | *.tlz)
+      ensure_tool "plzip" "plzip"
+      # plzip usa todos los hilos por defecto
+      plzip -dc --threads="$NCPU" "$file" | tar -xvf -
+      SUCCESS=$?
+      ;;
+    *.tar.lrz)
+      ensure_tool "lrzip" "lrzip"
+      # lrzip -d para descomprimir, -p para hilos
+      lrzip -d -p "$NCPU" -o - "$file" | tar -xvf -
+      SUCCESS=$?
+      ;;
+    *.lrz)
+      # Archivo lrz sin tar
+      ensure_tool "lrzip" "lrzip"
+      lrzip -d -p "$NCPU" "$file"
+      SUCCESS=$?
+      ;;
+    *.zst)
+      # Archivo zst sin tar
+      ensure_tool "zstd" "zstd"
+      zstd -d -T0 "$file"
+      SUCCESS=$?
+      ;;
+    *.xz)
+      # Archivo xz sin tar
+      ensure_tool "xz" "xz-utils"
+      xz -d -T0 -k "$file"
+      SUCCESS=$?
+      ;;
+    *.gz)
+      # Archivo gz sin tar
+      ensure_tool "pigz" "pigz"
+      pigz -dk "$file"
+      SUCCESS=$?
+      ;;
+    *.bz2)
+      # Archivo bz2 sin tar
+      ensure_tool "lbzip2" "lbzip2"
+      lbzip2 -dk "$file"
+      SUCCESS=$?
+      ;;
+    *.lz)
+      # Archivo lz sin tar
+      ensure_tool "plzip" "plzip"
+      plzip -dk --threads="$NCPU" "$file"
       SUCCESS=$?
       ;;
     *.zip)
@@ -267,8 +375,9 @@ do_decompress() {
       SUCCESS=$?
       ;;
     *.7z)
-      ensure_tool "7z" "p7zip-full"
-      7z x "$file"
+      ensure_tool "7zz" "7zip"
+      # 7z usa multiproceso automáticamente
+      7zz x "$file"
       SUCCESS=$?
       ;;
     *)
