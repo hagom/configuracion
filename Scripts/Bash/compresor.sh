@@ -1,4 +1,5 @@
 #!/bin/bash
+set -o pipefail
 
 # ==============================================================================
 # SCRIPT DE COMPRESIÓN/DESCOMPRESIÓN INTELIGENTE (MULTIPROCESO)
@@ -98,7 +99,7 @@ CUSTOM_NAME=""
 DELETE_ORIG="No"
 
 # --- Procesamiento de Argumentos (Getopts) ---
-while getopts "cdulrn:" opt; do
+while getopts ":cdulrn:" opt; do
   case $opt in
   c) MODE="compress" ;;
   d) MODE="decompress" ;;
@@ -144,6 +145,10 @@ get_mem_limit() {
 # Genera nombres únicos (ej: archivo_1.zip) si el destino ya existe
 get_unique_name() {
   local base_name=$1 ext=$2 counter=1 final_name
+  # Evitar doble extensión si el nombre ya termina con la extensión esperada
+  if [[ "$base_name" == *."$ext" ]]; then
+    base_name="${base_name%.$ext}"
+  fi
   final_name="${base_name}.${ext}"
   if [[ -e "$final_name" ]]; then
     while [[ -e "${base_name}_${counter}.${ext}" ]]; do ((counter++)); done
@@ -221,12 +226,11 @@ do_compress() {
   echo -e "${BLUE}[Info] Comprimiendo ${YELLOW}$ORIG_HUMAN${BLUE} de datos en formato ${GREEN}$FORMAT${BLUE} (${NCPU} hilos)...${NC}"
 
   # Ejecución de compresión (TODAS CON MULTIPROCESO)
-  local CMD_SUCCESS=false
-  if case $FORMAT in
+  case $FORMAT in
     # pigz: usa todos los hilos por defecto
-    gz) tar -cvf - "${INPUTS[@]}" | pigz -9 >"$FINAL_FILE" ;;
+    gz)  tar -cvf - "${INPUTS[@]}" | pigz -9 >"$FINAL_FILE" ;;
     # xz: -T0 usa todos los núcleos
-    xz) tar -cvf - "${INPUTS[@]}" | xz -9e -T0 --memory="${mem_mb}MiB" >"$FINAL_FILE" ;;
+    xz)  tar -cvf - "${INPUTS[@]}" | xz -9e -T0 --memory="${mem_mb}MiB" >"$FINAL_FILE" ;;
     # lbzip2: usa todos los hilos por defecto
     bz2) tar -I 'lbzip2 -9' -cvf "$FINAL_FILE" "${INPUTS[@]}" ;;
     # bzip3: usa -j para especificar hilos
@@ -234,18 +238,17 @@ do_compress() {
     # zstd: -T0 usa todos los núcleos, nivel 19 para máxima compresión
     zst) tar -cvf - "${INPUTS[@]}" | zstd -19 -T0 -o "$FINAL_FILE" ;;
     # plzip: usa --threads para especificar hilos
-    lz) tar -cvf - "${INPUTS[@]}" | plzip -9 --threads="$NCPU" >"$FINAL_FILE" ;;
+    lz)  tar -cvf - "${INPUTS[@]}" | plzip -9 --threads="$NCPU" >"$FINAL_FILE" ;;
     # lrzip: usa -p para hilos, -L 9 para nivel máximo, -z para lzma
     lrz) tar -cvf - "${INPUTS[@]}" | lrzip -L 9 -z -p "$NCPU" -o "$FINAL_FILE" ;;
     # zip: -9 máxima compresión (no tiene multiproceso nativo, pero es muy rápido)
     zip) zip -9 -r "$FINAL_FILE" "${INPUTS[@]}" ;;
     # 7z: -mmt=on usa todos los hilos
-    7z) 7zz a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" "${INPUTS[@]}" ;;
-    esac then
-    CMD_SUCCESS=true
-  fi
+    7z)  7zz a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" "${INPUTS[@]}" ;;
+  esac
+  local CMD_EXIT=$?
 
-  if [ "$CMD_SUCCESS" = true ]; then
+  if [ $CMD_EXIT -eq 0 ]; then
     local FINAL_SIZE FINAL_BYTES PERCENTAGE
     FINAL_SIZE=$(du -sh "$FINAL_FILE" | cut -f1)
     FINAL_BYTES=$(du -sb "$FINAL_FILE" | cut -f1)
