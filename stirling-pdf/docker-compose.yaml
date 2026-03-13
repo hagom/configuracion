@@ -2,7 +2,7 @@ services:
   stirling-pdf:
     image: frooodle/s-pdf:latest
     ports:
-      - "8080:8080"
+      - "8085:8080"
     volumes:
       - /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata #Required for extra OCR languages
       - /location/of/extraConfigs:/configs
@@ -13,6 +13,6 @@ services:
       - "homepage.group=Herramientas"
       - "homepage.name=Stirling-PDF"
       - "homepage.icon=stirling-pdf.png"
-      - "homepage.href=http://192.168.1.120:8080"
+      - "homepage.href=http://192.168.1.120:8085"
       - "homepage.description=Editor PDF"
     restart: unless-stopped
