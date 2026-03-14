@@ -12,7 +12,7 @@ services:
       - MAXCONNV=1000000
       - PIHOLE_DNS_=127.0.0.1#5335 # Apunta directamente a Unbound en el host
       - FTLCONF_misc_etc_dnsmasq_d=true
-      - FTLCONF_dns_dnsmasq_dns_forward_max=100000
+      - FTLCONF_dns_dnsmasq_dns_forward_max=500
     volumes:
       - ./etc-pihole:/etc/pihole
       - ./etc-dnsmasq.d:/etc/dnsmasq.d
