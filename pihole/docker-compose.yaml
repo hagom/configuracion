@@ -10,9 +10,15 @@ services:
       - FTLCONF_LOCAL_IPV4=192.168.1.120
       - DNSMASQ_LISTENING=all
       - MAXCONNV=1000000
-      - PIHOLE_DNS_=127.0.0.1#5335 # Apunta directamente a Unbound en el host
+      - PIHOLE_DNS_=127.0.0.1#5335
       - FTLCONF_misc_etc_dnsmasq_d=true
-      - FTLCONF_dns_dnsmasq_dns_forward_max=500
+      - FTLCONF_dns_dnsmasq_dns_forward_max=1500
+      - FTLCONF_DATABASE_SIZE=10000
+      - FTLCONF_dns_cacheSIZE=10000
+      - FTLCONF_LOGGING_LOG_QUERIES=false
+      - FTLCONF_DEBUG_TCP=false
+      - FTLCONF_DEBUG_UDP=false
+      - FTLCONF_webserver_api_PORT=0
     volumes:
       - ./etc-pihole:/etc/pihole
       - ./etc-dnsmasq.d:/etc/dnsmasq.d
