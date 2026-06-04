@@ -19,3 +19,4 @@ portainer/portainer_data/
 */config/
 *.db
 *.log
+/jellyfin
