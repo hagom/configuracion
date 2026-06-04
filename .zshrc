@@ -70,7 +70,7 @@ ZSH_THEME=""
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(command-not-found compleat cp debian dirhistory docker docker-compose fzf git git-extras  gitignore history node ng nmap npm pip postgres python rust sudo systemd tig tmux zoxide zsh-interactive-cd zsh-autosuggestions zsh-completions zsh-autosuggestions zsh-syntax-highlighting )
+plugins=(command-not-found compleat cp debian dirhistory docker docker-compose gcloud git git-extras  gitignore history node ng nmap npm pip postgres python rust sudo systemd tig tmux zoxide zsh-interactive-cd zsh-autosuggestions zsh-completions zsh-syntax-highlighting )
 
 source $ZSH/oh-my-zsh.sh
 
@@ -101,19 +101,30 @@ export EDITOR='nvim'
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-source /usr/share/doc/fzf/examples/key-bindings.zsh
+source <(fzf --zsh)
 
 #alias zs="source ~/.zshrc"
 alias sp="speedtest"
 alias actualizar="sudo apt update ; sudo apt upgrade -y ; sudo apt install -f ; sudo apt autoremove -y ; sudo apt autoclean ; sudo apt clean ; pip3 install -U --user --compile --break-system-packages glances noteshrink yt-dlp classifier meson ; sudo flatpak upgrade -y"
 
-# export CCACHE_DIR=/home/hagom/.ccache
-# export CC="ccache gcc"
-# export CXX="ccache g++"
-# export RUSTC_WRAPPER=/home/hagom/.cargo/sccache
-export PATH=/usr/lib/ccache:$PATH
-# export CCACHE_PREFIX=distcc
-export PAGER="most"
+# sccache - compilación C/C++ y Rust
+export SCCACHE_DIR="/baul/sccache"              # Directorio donde sccache almacena los objetos compilados en cache
+export SCCACHE_CACHE_SIZE="20G"                 # Tamaño maximo del cache (20 GiB)
+export CC="sccache gcc"                         # Wrapper para compilacion C (cachea via sccache)
+export CXX="sccache g++"                        # Wrapper para compilacion C++ (cachea via sccache)
+export RUSTC_WRAPPER="$(which sccache)"          # Wrapper para compilacion Rust via cargo (cachea via sccache)
+export PAGER="less"
+export MANPAGER="less -R"
+export GROFF_NO_SGR=1
+export LESS_TERMCAP_mb=$'\E[1;31m'      # Inicio parpadeo (rojo)
+export LESS_TERMCAP_md=$'\E[1;36m'      # Inicio negrita (cian)
+export LESS_TERMCAP_me=$'\E[0m'         # Fin de modo
+export LESS_TERMCAP_so=$'\E[01;33m'     # Inicio modo destacado (amarillo)
+export LESS_TERMCAP_se=$'\E[0m'         # Fin modo destacado
+export LESS_TERMCAP_us=$'\E[1;32m'      # Inicio subrayado (verde)
+export LESS_TERMCAP_ue=$'\E[0m'         # Fin subrayado
+
+
 export PATH=/home/hagom/.local/bin:$PATH
 export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
 export PATH="$PATH:$HOME/flutter/bin"
@@ -160,7 +171,7 @@ setopt HIST_BEEP                 # Beep when accessing nonexistent history.
 # [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 eval "$(oh-my-posh init zsh --config $HOME/.cache/oh-my-posh/themes/quick-term.omp.json)"
-
+eval "$(atuin init zsh)"
 export PATH="$PATH:/opt/mssql-tools/bin"
 
 #source /home/hagom/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
@@ -169,8 +180,8 @@ export PATH="$PATH:/opt/mssql-tools/bin"
 # pnpm
 export PNPM_HOME="/home/hagom/.local/share/pnpm"
 case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
 esac
 # pnpm end
 
@@ -181,3 +192,31 @@ esac
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 export PATH="$HOME/go/bin:$PATH"
+
+[[ -s "/etc/grc.zsh" ]] && source /etc/grc.zsh
+
+# opencode
+export PATH=/home/hagom/.opencode/bin:$PATH
+
+export PATH=/usr/lib/:$PATH
+export PATH="$HOME/.local/share/yabridge:$PATH"
+
+# Added by GitButler installer
+eval "$(but completions zsh)"
+
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
+export WINENTSYNC=1
+fpath=(~/.zsh/completions $fpath)
+autoload -U compinit && compinit
+
+[[ "$TERM_PROGRAM" == "kiro" ]] && . "$(kiro --locate-shell-integration-path zsh)"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/home/hagom/.lmstudio/bin"
+# End of LM Studio CLI section
+
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/hagom/.local/bin:$PATH"
+
