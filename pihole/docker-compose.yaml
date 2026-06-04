@@ -18,6 +18,7 @@ services:
       - FTLCONF_LOGGING_LOG_QUERIES=false
       - FTLCONF_DEBUG_TCP=false
       - FTLCONF_DEBUG_UDP=false
+      - FTLCONF_webserver_port=81o,444os,[::]:81o,[::]:444os
     volumes:
       - ./etc-pihole:/etc/pihole
       - ./etc-dnsmasq.d:/etc/dnsmasq.d
@@ -30,6 +31,7 @@ services:
       - "homepage.group=Seguridad"
       - "homepage.name=Pi-hole"
       - "homepage.icon=pi-hole.png"
-      - "homepage.href=http://192.168.1.120/admin"
+      - "homepage.href=http://192.168.1.120:81/admin"
+      - "homepage.href=https://192.168.1.120:444/admin"
       - "homepage.description=DNS Sinkhole"
     restart: unless-stopped
