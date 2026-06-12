@@ -53,6 +53,9 @@ SEVENZ_BIN=""
 BZIP2_BIN=""
 CLEANUP_FILE=""
 PV_AVAILABLE="No"
+SCRIPT_SRC=""
+DEST=""
+DIR=""
 
 # ==============================================================================
 # FUNCIONES AUXILIARES
@@ -499,6 +502,8 @@ usage() {
     printf "  ${GREEN}--exclude PAT${NC}: Excluir patrones (ej: --exclude=.git --exclude=*.log)\n"
     printf "  ${GREEN}--split TAM${NC}  : Dividir en volúmenes (ej: --split=100M, --split=1G)\n"
     printf "  ${GREEN}-i${NC}          : Comprimir cada archivo por separado en vez de agruparlos\n"
+    printf "  ${GREEN}--install${NC}    : Copiar script a /usr/local/bin/compresor\n"
+    printf "  ${GREEN}--uninstall${NC}  : Eliminar /usr/local/bin/compresor\n"
     printf "\n"
     exit 0
 }
@@ -845,7 +850,7 @@ detect_7z_bin
 detect_bzip2_bin
 detect_pkg_manager
 
-PARSED_ARGS=$(getopt -o 'c:dhrn:lti' -l 'help,dry-run,exclude:,split:,test,individual' -- "$@") || { usage; exit 1; }
+PARSED_ARGS=$(getopt -o 'c:dhrn:lti' -l 'help,dry-run,exclude:,split:,test,individual,install,uninstall' -- "$@") || { usage; exit 1; }
 eval set -- "$PARSED_ARGS"
 
 while true; do
@@ -892,6 +897,32 @@ while true; do
         -i|--individual)
             INDIVIDUAL="Sí"
             shift
+            ;;
+        --install)
+            SCRIPT_SRC=$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || printf '%s' "$0")
+            DEST="/usr/local/bin/compresor"
+            DIR=$(dirname "$DEST")
+            if [[ -w "$DIR" ]]; then
+                install -m 755 "$SCRIPT_SRC" "$DEST"
+            else
+                sudo install -m 755 "$SCRIPT_SRC" "$DEST"
+            fi
+            printf "${GREEN}[OK] Script instalado en %s${NC}\n" "$DEST"
+            exit 0
+            ;;
+        --uninstall)
+            DEST="/usr/local/bin/compresor"
+            if [[ -f "$DEST" ]]; then
+                if [[ -w "$(dirname "$DEST")" ]]; then
+                    rm -f "$DEST"
+                else
+                    sudo rm -f "$DEST"
+                fi
+                printf "${GREEN}[OK] Eliminado: %s${NC}\n" "$DEST"
+            else
+                printf "${YELLOW}[Info] No existe: %s${NC}\n" "$DEST"
+            fi
+            exit 0
             ;;
         --)
             shift
