@@ -44,6 +44,7 @@ DELETE_ORIG="No"
 DRY_RUN="No"
 TEST_MODE="No"
 SPLIT_SIZE=""
+INDIVIDUAL=""
 LOG_FILE=""
 PKG_MANAGER=""
 PKG_UPDATE=""
@@ -475,7 +476,8 @@ usage() {
     printf "\n"
     printf "${YELLOW}MODO COMPRESIÓN:${NC}\n"
     printf "  %s -c <formato> [opciones] <archivos/carpetas...>\n" "$0"
-    printf "  ${BLUE}Ejemplo:${NC} %s -c zst -n backup_fotos ./mis_fotos\n" "$0"
+    printf "  ${BLUE}Ejemplo (agrupar):${NC} %s -c zst -n backup_fotos ./mis_fotos\n" "$0"
+    printf "  ${BLUE}Ejemplo (individual):${NC} %s -c gz -i file1.txt file2.txt\n" "$0"
     printf "\n"
     printf "${YELLOW}MODO DESCOMPRESIÓN:${NC}\n"
     printf "  %s -d [opciones] <archivos...>\n" "$0"
@@ -496,14 +498,18 @@ usage() {
     printf "  ${GREEN}--dry-run${NC}   : Previsualizar sin ejecutar\n"
     printf "  ${GREEN}--exclude PAT${NC}: Excluir patrones (ej: --exclude=.git --exclude=*.log)\n"
     printf "  ${GREEN}--split TAM${NC}  : Dividir en volúmenes (ej: --split=100M, --split=1G)\n"
+    printf "  ${GREEN}-i${NC}          : Comprimir cada archivo por separado en vez de agruparlos\n"
     printf "\n"
     exit 0
 }
 
 # ==============================================================================
-# LÓGICA DE COMPRESIÓN
+# LÓGICA DE COMPRESIÓN — Núcleo (comprime un conjunto de archivos en UN archive)
 # ==============================================================================
-do_compress() {
+_compress_items() {
+    local -a items=("$@")
+    [[ ${#items[@]} -eq 0 ]] && return 1
+
     local ext mem_mb FINAL_FILE TOTAL_ORIG_BYTES=0 ORIG_HUMAN
     mem_mb=$(get_mem_limit)
 
@@ -520,22 +526,27 @@ do_compress() {
         tar)  ext="tar"      ;;
     esac
 
-    [[ -z "$CUSTOM_NAME" ]] && CUSTOM_NAME="${INPUTS[0]%/}"
-    FINAL_FILE=$(get_unique_name "$CUSTOM_NAME" "$ext")
+    local base_name
+    if [[ "$INDIVIDUAL" == "Sí" || -z "$CUSTOM_NAME" ]]; then
+        base_name="${items[0]%/}"
+    else
+        base_name="$CUSTOM_NAME"
+    fi
+    FINAL_FILE=$(get_unique_name "$base_name" "$ext")
 
     if [[ "$DRY_RUN" == "Sí" ]]; then
         printf "${YELLOW}[DRY-RUN] Comando:${NC}\n"
         case $FORMAT in
-            gz)  printf "  tar -cvf - %s | pigz -9 > %s\n" "${INPUTS[*]}" "$FINAL_FILE" ;;
-            xz)  printf "  tar -cvf - %s | xz -9e -T0 --memory=%sMiB > %s\n" "${INPUTS[*]}" "$mem_mb" "$FINAL_FILE" ;;
-            bz2) printf "  tar -cvf - %s | %s -9 > %s\n" "${INPUTS[*]}" "$BZIP2_BIN" "$FINAL_FILE" ;;
-            bz3) printf "  tar -cvf - %s | bzip3 -j %s > %s\n" "${INPUTS[*]}" "$NCPU" "$FINAL_FILE" ;;
-            zst) printf "  tar -cvf - %s | zstd -19 -T0 -o %s\n" "${INPUTS[*]}" "$FINAL_FILE" ;;
-            lz)  printf "  tar -cvf - %s | plzip -9 --threads=%s > %s\n" "${INPUTS[*]}" "$NCPU" "$FINAL_FILE" ;;
-            lrz) printf "  tar -cvf - %s | lrzip -L 9 -z -p %s -o %s\n" "${INPUTS[*]}" "$NCPU" "$FINAL_FILE" ;;
-            zip) printf "  %s a -tzip -mx=9 -mmt=on %s %s\n" "$SEVENZ_BIN" "$FINAL_FILE" "${INPUTS[*]}" ;;
-            7z)  printf "  %s a -mx=9 -md=128m -ms=on -mmt=on %s %s\n" "$SEVENZ_BIN" "$FINAL_FILE" "${INPUTS[*]}" ;;
-            tar) printf "  tar -cvf %s %s\n" "$FINAL_FILE" "${INPUTS[*]}" ;;
+            gz)  printf "  tar -cvf - %s | pigz -9 > %s\n" "${items[*]}" "$FINAL_FILE" ;;
+            xz)  printf "  tar -cvf - %s | xz -9e -T0 --memory=%sMiB > %s\n" "${items[*]}" "$mem_mb" "$FINAL_FILE" ;;
+            bz2) printf "  tar -cvf - %s | %s -9 > %s\n" "${items[*]}" "$BZIP2_BIN" "$FINAL_FILE" ;;
+            bz3) printf "  tar -cvf - %s | bzip3 -j %s > %s\n" "${items[*]}" "$NCPU" "$FINAL_FILE" ;;
+            zst) printf "  tar -cvf - %s | zstd -19 -T0 -o %s\n" "${items[*]}" "$FINAL_FILE" ;;
+            lz)  printf "  tar -cvf - %s | plzip -9 --threads=%s > %s\n" "${items[*]}" "$NCPU" "$FINAL_FILE" ;;
+            lrz) printf "  tar -cvf - %s | lrzip -L 9 -z -p %s -o %s\n" "${items[*]}" "$NCPU" "$FINAL_FILE" ;;
+            zip) printf "  %s a -tzip -mx=9 -mmt=on %s %s\n" "$SEVENZ_BIN" "$FINAL_FILE" "${items[*]}" ;;
+            7z)  printf "  %s a -mx=9 -md=128m -ms=on -mmt=on %s %s\n" "$SEVENZ_BIN" "$FINAL_FILE" "${items[*]}" ;;
+            tar) printf "  tar -cvf %s %s\n" "$FINAL_FILE" "${items[*]}" ;;
         esac
         if [[ -n "$SPLIT_SIZE" ]]; then
             printf "  split -b %s %s %s.part.\n" "$SPLIT_SIZE" "$FINAL_FILE" "$FINAL_FILE"
@@ -544,10 +555,10 @@ do_compress() {
         exit 0
     fi
 
-    for item in "${INPUTS[@]}"; do
+    for item in "${items[@]}"; do
         if [[ ! -e "$item" ]]; then
             printf "${RED}[Error] Archivo/Carpeta no encontrado: %s${NC}\n" "$item" >&2
-            exit 1
+            return 1
         fi
         TOTAL_ORIG_BYTES=$((TOTAL_ORIG_BYTES + $(du -sb -- "$item" | cut -f1)))
     done
@@ -560,13 +571,11 @@ do_compress() {
 
     CLEANUP_FILE="$FINAL_FILE"
 
-    # Construir argumentos --exclude para tar
     local -a tar_exclude
     for pattern in "${EXCLUDE_PATTERNS[@]}"; do
         tar_exclude+=(--exclude="$pattern")
     done
 
-    # Detectar pv para progreso
     local pv_cmd="cat"
     if command -v pv &>/dev/null; then
         pv_cmd="pv -f -s $TOTAL_ORIG_BYTES 2>&1"
@@ -574,34 +583,34 @@ do_compress() {
 
     case $FORMAT in
         gz)
-            tar "${tar_exclude[@]}" -cvf - -- "${INPUTS[@]}" | eval "$pv_cmd" | pigz -9 > "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | pigz -9 > "$FINAL_FILE"
             ;;
         xz)
-            tar "${tar_exclude[@]}" -cvf - -- "${INPUTS[@]}" | eval "$pv_cmd" | xz -9e -T0 --memory="${mem_mb}MiB" > "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | xz -9e -T0 --memory="${mem_mb}MiB" > "$FINAL_FILE"
             ;;
         bz2)
-            tar "${tar_exclude[@]}" -cvf - -- "${INPUTS[@]}" | eval "$pv_cmd" | "$BZIP2_BIN" -9 > "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | "$BZIP2_BIN" -9 > "$FINAL_FILE"
             ;;
         bz3)
-            tar "${tar_exclude[@]}" -cvf - -- "${INPUTS[@]}" | eval "$pv_cmd" | bzip3 -j "$NCPU" > "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | bzip3 -j "$NCPU" > "$FINAL_FILE"
             ;;
         zst)
-            tar "${tar_exclude[@]}" -cvf - -- "${INPUTS[@]}" | eval "$pv_cmd" | zstd -19 -T0 -o "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | zstd -19 -T0 -o "$FINAL_FILE"
             ;;
         lz)
-            tar "${tar_exclude[@]}" -cvf - -- "${INPUTS[@]}" | eval "$pv_cmd" | plzip -9 --threads="$NCPU" > "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | plzip -9 --threads="$NCPU" > "$FINAL_FILE"
             ;;
         lrz)
-            tar "${tar_exclude[@]}" -cvf - -- "${INPUTS[@]}" | eval "$pv_cmd" | lrzip -L 9 -z -p "$NCPU" -o "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | lrzip -L 9 -z -p "$NCPU" -o "$FINAL_FILE"
             ;;
         zip)
-            "$SEVENZ_BIN" a -tzip -mx=9 -mmt=on "$FINAL_FILE" -- "${INPUTS[@]}"
+            "$SEVENZ_BIN" a -tzip -mx=9 -mmt=on "$FINAL_FILE" -- "${items[@]}"
             ;;
         7z)
-            "$SEVENZ_BIN" a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" -- "${INPUTS[@]}"
+            "$SEVENZ_BIN" a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" -- "${items[@]}"
             ;;
         tar)
-            tar "${tar_exclude[@]}" -cvf "$FINAL_FILE" -- "${INPUTS[@]}"
+            tar "${tar_exclude[@]}" -cvf "$FINAL_FILE" -- "${items[@]}"
             ;;
     esac
     local CMD_EXIT=$?
@@ -609,13 +618,11 @@ do_compress() {
     if [[ $CMD_EXIT -eq 0 && -f "$FINAL_FILE" ]]; then
         CLEANUP_FILE=""
 
-        # Split si se solicitó
         if [[ -n "$SPLIT_SIZE" ]]; then
             printf "${BLUE}[Info] Dividiendo archivo en volúmenes de %s...${NC}\n" "$SPLIT_SIZE"
             split -b "$SPLIT_SIZE" -- "$FINAL_FILE" "${FINAL_FILE}.part."
             rm -f -- "$FINAL_FILE"
             printf "${GREEN}[OK] Archivo dividido en %s.part.aa, %s.part.ab, ...${NC}\n" "$FINAL_FILE" "$FINAL_FILE"
-            # Actualizar FINAL_FILE para reporte
             FINAL_FILE="${FINAL_FILE}.part.aa"
         fi
 
@@ -637,20 +644,38 @@ do_compress() {
         printf "${GREEN}===========================${NC}\n"
 
         if [[ "$DELETE_ORIG" == "Sí" ]]; then
-            for item in "${INPUTS[@]}"; do
+            for item in "${items[@]}"; do
                 rm -rf -- "$item"
                 printf "${YELLOW}[Info] Original eliminado: %s${NC}\n" "$item"
             done
         fi
 
-        # Test post-compresión si se solicitó
         if [[ "$TEST_MODE" == "Sí" ]]; then
             do_test_file "$FINAL_FILE"
         fi
+        return 0
     else
         printf "${RED}[Fatal] La compresión falló. Verifica espacio en disco o permisos.${NC}\n" >&2
         rm -f -- "$FINAL_FILE" 2>/dev/null
-        exit 1
+        return 1
+    fi
+}
+
+# ==============================================================================
+# LÓGICA DE COMPRESIÓN — Dispatcher (individual o bundle)
+# ==============================================================================
+do_compress() {
+    if [[ "$INDIVIDUAL" == "Sí" && ${#INPUTS[@]} -gt 1 ]]; then
+        local has_error=0
+        for item in "${INPUTS[@]}"; do
+            printf "${BLUE}══════════════════════════════════════════════${NC}\n"
+            printf "${BLUE}  Archivo: ${YELLOW}%s${NC}\n" "$item"
+            printf "${BLUE}══════════════════════════════════════════════${NC}\n"
+            _compress_items "$item" || has_error=1
+        done
+        exit $has_error
+    else
+        _compress_items "${INPUTS[@]}" || exit 1
     fi
 }
 
@@ -820,7 +845,7 @@ detect_7z_bin
 detect_bzip2_bin
 detect_pkg_manager
 
-PARSED_ARGS=$(getopt -o 'c:dhrn:lt' -l 'help,dry-run,exclude:,split:,test' -- "$@") || { usage; exit 1; }
+PARSED_ARGS=$(getopt -o 'c:dhrn:lti' -l 'help,dry-run,exclude:,split:,test,individual' -- "$@") || { usage; exit 1; }
 eval set -- "$PARSED_ARGS"
 
 while true; do
@@ -863,6 +888,10 @@ while true; do
         --split)
             SPLIT_SIZE="$2"
             shift 2
+            ;;
+        -i|--individual)
+            INDIVIDUAL="Sí"
+            shift
             ;;
         --)
             shift
