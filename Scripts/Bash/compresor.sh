@@ -377,6 +377,103 @@ format_size() {
     fi
 }
 
+# --- Estimar tamaño descomprimido ---
+estimate_uncompressed_size() {
+    local file=$1
+    local lower
+    lower=$(printf '%s' "$file" | tr '[:upper:]' '[:lower:]')
+
+    case "$lower" in
+        *.gz|*.tgz)
+            gzip -l -- "$file" 2>/dev/null | awk 'NR==2 {print $2}'
+            return
+            ;;
+        *.xz|*.txz)
+            xz -l --robot -- "$file" 2>/dev/null | awk -F'\t' '/^file/{print $6}'
+            return
+            ;;
+        *.zst|*.tzst)
+            zstd -l -- "$file" 2>/dev/null | awk '/^[[:space:]]*[0-9]+[[:space:]]/ && !/Frames/{sum+=$5} END{print sum}'
+            return
+            ;;
+        *.zip)
+            unzip -l -- "$file" 2>/dev/null | tail -1 | awk '{print $1}'
+            return
+            ;;
+        *.7z)
+            "$SEVENZ_BIN" l -slt -- "$file" 2>/dev/null | awk '/^Size = / {sum+=$3} END {print int(sum)}'
+            return
+            ;;
+        *.tar)
+            stat -c%s -- "$file" 2>/dev/null
+            return
+            ;;
+        *)
+            stat -c%s -- "$file" 2>/dev/null | awk '{print $1 * 8}'
+            return
+            ;;
+    esac
+}
+
+# --- Verificar espacio disponible antes de descomprimir ---
+check_decompress_space() {
+    local file=$1
+    local compressed_size uncomp_size est_size avail_kb avail_bytes
+
+    compressed_size=$(stat -c%s -- "$file" 2>/dev/null || echo 0)
+    [[ "$compressed_size" -eq 0 ]] && return 0
+
+    uncomp_size=$(estimate_uncompressed_size "$file")
+    est_size=${uncomp_size:-$((compressed_size * 8))}
+
+    avail_kb=$(df --output=avail . 2>/dev/null | awk 'NR==2 {print $1}')
+    avail_bytes=$((avail_kb * 1024))
+
+    if [[ "$est_size" -gt "$avail_bytes" ]]; then
+        printf "${RED}[Sin espacio] %s necesita ~%s, disponible %s. Saltando.${NC}\n" \
+            "$file" "$(format_size "$est_size")" "$(format_size "$avail_bytes")" >&2
+        return 1
+    fi
+    if [[ "$est_size" -gt "$((avail_bytes * 80 / 100))" ]]; then
+        printf "${YELLOW}[Advertencia] %s necesita ~%s, espacio disponible %s (muy justo).${NC}\n" \
+            "$file" "$(format_size "$est_size")" "$(format_size "$avail_bytes")" >&2
+    fi
+    return 0
+}
+
+# --- Test rápido de capa de compresión (pre-descompresión) ---
+_test_compress_layer() {
+    local file=$1
+    local lower
+    lower=$(printf '%s' "$file" | tr '[:upper:]' '[:lower:]')
+
+    printf "${BLUE}[Verificando] %s...${NC} " "$file"
+    local ok=0
+    case "$lower" in
+        *.tar.gz|*.tgz|*.gz)           pigz -t -- "$file" 2>/dev/null                           || ok=$? ;;
+        *.tar.xz|*.txz|*.xz)           xz -t -- "$file" 2>/dev/null                             || ok=$? ;;
+        *.tar.bz2|*.tbz2|*.bz2)        "$BZIP2_BIN" -t -- "$file" 2>/dev/null                   || ok=$? ;;
+        *.tar.bz3)                     bzip3 -t -- "$file" 2>/dev/null                          || ok=$? ;;
+        *.tar.zst|*.tzst|*.zst)         zstd -t -- "$file" 2>/dev/null                            || ok=$? ;;
+        *.tar.lz|*.tlz|*.lz)           plzip -t -- "$file" 2>/dev/null                          || ok=$? ;;
+        *.tar.lrz|*.lrz)               lrzip -t -- "$file" 2>/dev/null                          || ok=$? ;;
+        *.zip)                         unzip -t -- "$file" >/dev/null 2>&1                       || ok=$? ;;
+        *.7z)                          "$SEVENZ_BIN" t -- "$file" >/dev/null 2>&1                || ok=$? ;;
+        *.tar)                         tar -tf "$file" >/dev/null 2>&1                           || ok=$? ;;
+        *)
+            printf "${RED}[Error] Formato desconocido: %s${NC}\n" "$file" >&2
+            return 1
+            ;;
+    esac
+
+    if [[ "$ok" -eq 0 ]]; then
+        printf "${GREEN}[OK]${NC}\n"
+    else
+        printf "${RED}[CORRUPTO] Saltando.${NC}\n" >&2
+    fi
+    return "$ok"
+}
+
 # --- Generar nombre único de archivo ---
 get_unique_name() {
     local base_name=$1 ext=$2 counter=1 final_name
@@ -691,6 +788,16 @@ do_decompress() {
     for file in "${INPUTS[@]}"; do
         if [[ ! -f "$file" ]]; then
             printf "${RED}[Saltando] '%s' no es un archivo válido.${NC}\n" "$file" >&2
+            continue
+        fi
+
+        # Test de integridad previo
+        if ! _test_compress_layer "$file"; then
+            continue
+        fi
+
+        # Verificar espacio disponible
+        if ! check_decompress_space "$file"; then
             continue
         fi
 
