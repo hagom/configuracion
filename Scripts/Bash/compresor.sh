@@ -586,39 +586,39 @@ _compress_items() {
         pv_cmd="pv -f -s $TOTAL_ORIG_BYTES 2>&1"
     fi
 
+    local CMD_EXIT=0
     case $FORMAT in
         gz)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | pigz -9 > "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | pigz -9 > "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         xz)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | xz -9e -T0 --memory="${mem_mb}MiB" > "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | xz -9e -T0 --memory="${mem_mb}MiB" > "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         bz2)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | "$BZIP2_BIN" -9 > "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | "$BZIP2_BIN" -9 > "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         bz3)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | bzip3 -j "$NCPU" > "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | bzip3 -j "$NCPU" > "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         zst)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | zstd -19 -T0 -o "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | zstd -19 -T0 -o "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         lz)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | plzip -9 --threads="$NCPU" > "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | plzip -9 --threads="$NCPU" > "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         lrz)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | lrzip -L 9 -z -p "$NCPU" -o "$FINAL_FILE"
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | lrzip -L 9 -z -p "$NCPU" -o "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         zip)
-            "$SEVENZ_BIN" a -tzip -mx=9 -mmt=on "$FINAL_FILE" -- "${items[@]}"
+            "$SEVENZ_BIN" a -tzip -mx=9 -mmt=on "$FINAL_FILE" -- "${items[@]}" || CMD_EXIT=$?
             ;;
         7z)
-            "$SEVENZ_BIN" a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" -- "${items[@]}"
+            "$SEVENZ_BIN" a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" -- "${items[@]}" || CMD_EXIT=$?
             ;;
         tar)
-            tar "${tar_exclude[@]}" -cvf "$FINAL_FILE" -- "${items[@]}"
+            tar "${tar_exclude[@]}" -cvf "$FINAL_FILE" -- "${items[@]}" || CMD_EXIT=$?
             ;;
     esac
-    local CMD_EXIT=$?
 
     if [[ $CMD_EXIT -eq 0 && -f "$FINAL_FILE" ]]; then
         CLEANUP_FILE=""
@@ -702,69 +702,52 @@ do_decompress() {
 
         case "$lower" in
             *.tar.gz|*.tgz)
-                pigz -dc "$file" | tar -xvf -
-                SUCCESS=$?
+                pigz -dc -- "$file" | tar -xvf - || SUCCESS=$?
                 ;;
             *.tar.xz|*.txz)
-                xz -dc -T0 -- "$file" | tar -xvf -
-                SUCCESS=$?
+                xz -dc -T0 -- "$file" | tar -xvf - || SUCCESS=$?
                 ;;
             *.tar.bz2|*.tbz2)
-                "$BZIP2_BIN" -dc -- "$file" | tar -xvf -
-                SUCCESS=$?
+                "$BZIP2_BIN" -dc -- "$file" | tar -xvf - || SUCCESS=$?
                 ;;
             *.tar.bz3)
-                bzip3 -dc -j "$NCPU" -- "$file" | tar -xvf -
-                SUCCESS=$?
+                bzip3 -dc -j "$NCPU" -- "$file" | tar -xvf - || SUCCESS=$?
                 ;;
             *.tar.zst|*.tzst)
-                zstd -dc -T0 -- "$file" | tar -xvf -
-                SUCCESS=$?
+                zstd -dc -T0 -- "$file" | tar -xvf - || SUCCESS=$?
                 ;;
             *.tar.lz|*.tlz)
-                plzip -dc --threads="$NCPU" -- "$file" | tar -xvf -
-                SUCCESS=$?
+                plzip -dc --threads="$NCPU" -- "$file" | tar -xvf - || SUCCESS=$?
                 ;;
             *.tar.lrz)
-                lrzip -d -p "$NCPU" -o - -- "$file" 2>/dev/null | tar -xvf -
-                SUCCESS=$?
+                lrzip -d -p "$NCPU" -o - -- "$file" | tar -xvf - || SUCCESS=$?
                 ;;
             *.lrz)
-                # .lrz sin tar: conservar original con -k
-                lrzip -d -k -p "$NCPU" -- "$file"
-                SUCCESS=$?
+                lrzip -d -k -p "$NCPU" -- "$file" || SUCCESS=$?
                 ;;
             *.zst)
-                zstd -d -T0 -- "$file"
-                SUCCESS=$?
+                zstd -d -T0 -- "$file" || SUCCESS=$?
                 ;;
             *.xz)
-                xz -d -T0 -k -- "$file"
-                SUCCESS=$?
+                xz -d -T0 -k -- "$file" || SUCCESS=$?
                 ;;
             *.gz)
-                pigz -dk -- "$file"
-                SUCCESS=$?
+                pigz -dk -- "$file" || SUCCESS=$?
                 ;;
             *.bz2)
-                "$BZIP2_BIN" -dk -- "$file"
-                SUCCESS=$?
+                "$BZIP2_BIN" -dk -- "$file" || SUCCESS=$?
                 ;;
             *.lz)
-                plzip -dk --threads="$NCPU" -- "$file"
-                SUCCESS=$?
+                plzip -dk --threads="$NCPU" -- "$file" || SUCCESS=$?
                 ;;
             *.zip)
-                unzip -- "$file"
-                SUCCESS=$?
+                unzip -- "$file" || SUCCESS=$?
                 ;;
             *.7z)
-                "$SEVENZ_BIN" x -- "$file"
-                SUCCESS=$?
+                "$SEVENZ_BIN" x -- "$file" || SUCCESS=$?
                 ;;
             *.tar)
-                tar -xvf "$file"
-                SUCCESS=$?
+                tar -xvf "$file" || SUCCESS=$?
                 ;;
             *)
                 printf "${RED}[Error] Formato desconocido o no soportado para: %s${NC}\n" "$file" >&2
@@ -799,22 +782,22 @@ do_test_file() {
 
     local SUCCESS=0
     case "$lower" in
-        *.tar.gz|*.tgz)       pigz -t "$file" 2>/dev/null && tar -tzf "$file" >/dev/null 2>&1  ; SUCCESS=$? ;;
-        *.tar.xz|*.txz)       xz -t "$file" 2>/dev/null   ; SUCCESS=$? ;;
-        *.tar.bz2|*.tbz2)     "$BZIP2_BIN" -t "$file" 2>/dev/null  ; SUCCESS=$? ;;
-        *.tar.bz3)            bzip3 -t "$file" 2>/dev/null  ; SUCCESS=$? ;;
-        *.tar.zst|*.tzst)     zstd -t "$file" 2>/dev/null   ; SUCCESS=$? ;;
-        *.tar.lz|*.tlz)       plzip -t "$file" 2>/dev/null  ; SUCCESS=$? ;;
-        *.tar.lrz)            lrzip -t "$file" 2>/dev/null  ; SUCCESS=$? ;;
-        *.lrz)                lrzip -t "$file" 2>/dev/null  ; SUCCESS=$? ;;
-        *.zst)                zstd -t "$file" 2>/dev/null   ; SUCCESS=$? ;;
-        *.xz)                 xz -t "$file" 2>/dev/null     ; SUCCESS=$? ;;
-        *.gz)                 pigz -t "$file" 2>/dev/null   ; SUCCESS=$? ;;
-        *.bz2)                "$BZIP2_BIN" -t "$file" 2>/dev/null  ; SUCCESS=$? ;;
-        *.lz)                 plzip -t "$file" 2>/dev/null  ; SUCCESS=$? ;;
-        *.zip)                unzip -t "$file" >/dev/null 2>&1     ; SUCCESS=$? ;;
+        *.tar.gz|*.tgz)       pigz -t "$file" 2>/dev/null && pigz -dc "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
+        *.tar.xz|*.txz)       xz -t "$file" 2>/dev/null   && xz -dc "$file" 2>/dev/null   | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
+        *.tar.bz2|*.tbz2)     "$BZIP2_BIN" -t "$file" 2>/dev/null && "$BZIP2_BIN" -dc "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
+        *.tar.bz3)            bzip3 -t "$file" 2>/dev/null && bzip3 -dc "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
+        *.tar.zst|*.tzst)     zstd -t "$file" 2>/dev/null   && zstd -dc "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
+        *.tar.lz|*.tlz)       plzip -t "$file" 2>/dev/null  && plzip -dc "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
+        *.tar.lrz)            lrzip -t "$file" 2>/dev/null  && lrzip -d -o - "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
+        *.lrz)                lrzip -t "$file" 2>/dev/null  || SUCCESS=$? ;;
+        *.zst)                zstd -t "$file" 2>/dev/null   || SUCCESS=$? ;;
+        *.xz)                 xz -t "$file" 2>/dev/null     || SUCCESS=$? ;;
+        *.gz)                 pigz -t "$file" 2>/dev/null   || SUCCESS=$? ;;
+        *.bz2)                "$BZIP2_BIN" -t "$file" 2>/dev/null  || SUCCESS=$? ;;
+        *.lz)                 plzip -t "$file" 2>/dev/null  || SUCCESS=$? ;;
+        *.zip)                unzip -t "$file" >/dev/null 2>&1     || SUCCESS=$? ;;
         *.7z)                 "$SEVENZ_BIN" t "$file" >/dev/null 2>&1 ; SUCCESS=$? ;;
-        *.tar)                tar -tf "$file" >/dev/null 2>&1      ; SUCCESS=$? ;;
+        *.tar)                tar -tf "$file" >/dev/null 2>&1      || SUCCESS=$? ;;
         *)
             printf "${RED}[Error] Formato desconocido: %s${NC}\n" "$file" >&2
             return 1
