@@ -389,11 +389,11 @@ estimate_uncompressed_size() {
             return
             ;;
         *.xz|*.txz)
-            xz -l --robot -- "$file" 2>/dev/null | awk -F'\t' '/^file/{print $6}'
+            xz -l --robot -- "$file" 2>/dev/null | awk -F'\t' '/^file/ && $5 ~ /^[0-9]+$/{print $5}'
             return
             ;;
         *.zst|*.tzst)
-            zstd -l -- "$file" 2>/dev/null | awk '/^[[:space:]]*[0-9]+[[:space:]]/ && !/Frames/{sum+=$5} END{print sum}'
+            zstd -l -- "$file" 2>/dev/null | awk '/^[[:space:]]*[0-9]+[[:space:]]/ && !/Frames/ && $5 ~ /^[0-9]+$/{sum+=$5} END{if(sum>0) print sum}'
             return
             ;;
         *.zip)
@@ -404,12 +404,28 @@ estimate_uncompressed_size() {
             "$SEVENZ_BIN" l -slt -- "$file" 2>/dev/null | awk '/^Size = / {sum+=$3} END {print int(sum)}'
             return
             ;;
+        *.lrz)
+            lrzip -i -- "$file" 2>/dev/null | awk '/Decompressed file size/{print $NF}'
+            return
+            ;;
         *.tar)
             stat -c%s -- "$file" 2>/dev/null
             return
             ;;
+        *.bz2|*.tbz2)
+            stat -c%s -- "$file" 2>/dev/null | awk '{print $1 * 6}'
+            return
+            ;;
+        *.bz3)
+            stat -c%s -- "$file" 2>/dev/null | awk '{print $1 * 6}'
+            return
+            ;;
+        *.lz|*.tlz)
+            stat -c%s -- "$file" 2>/dev/null | awk '{print $1 * 6}'
+            return
+            ;;
         *)
-            stat -c%s -- "$file" 2>/dev/null | awk '{print $1 * 8}'
+            stat -c%s -- "$file" 2>/dev/null | awk '{print $1 * 4}'
             return
             ;;
     esac
@@ -424,7 +440,7 @@ check_decompress_space() {
     [[ "$compressed_size" -eq 0 ]] && return 0
 
     uncomp_size=$(estimate_uncompressed_size "$file")
-    est_size=${uncomp_size:-$((compressed_size * 8))}
+    est_size=${uncomp_size:-$((compressed_size * 4))}
 
     avail_kb=$(df --output=avail . 2>/dev/null | awk 'NR==2 {print $1}')
     avail_bytes=$((avail_kb * 1024))
@@ -785,6 +801,41 @@ do_compress() {
 # LÓGICA DE DESCOMPRESIÓN
 # ==============================================================================
 do_decompress() {
+    # Verificación de espacio TOTAL antes de empezar
+    local total_compressed=0 total_needed=0 avail_kb avail_bytes
+    for f in "${INPUTS[@]}"; do
+        [[ ! -f "$f" ]] && continue
+        local c_size u_size
+        c_size=$(stat -c%s -- "$f" 2>/dev/null || echo 0)
+        u_size=$(estimate_uncompressed_size "$f")
+        u_size=${u_size:-$((c_size * 4))}
+        total_compressed=$((total_compressed + c_size))
+        total_needed=$((total_needed + u_size))
+    done
+
+    avail_kb=$(df --output=avail . 2>/dev/null | awk 'NR==2 {print $1}')
+    avail_bytes=$((avail_kb * 1024))
+
+    printf "${BLUE}══════════════════════════════════════════════${NC}\n"
+    printf "${BLUE}  Verificación de espacio para descompresión${NC}\n"
+    printf "${BLUE}══════════════════════════════════════════════${NC}\n"
+    printf "${BLUE}Archivos a procesar:${NC}  %s\n" "${#INPUTS[@]}"
+    printf "${BLUE}Tamaño comprimido:${NC}   %s\n" "$(format_size "$total_compressed")"
+    printf "${BLUE}Tamaño final est.:${NC}   %s\n" "$(format_size "$total_needed")"
+    printf "${BLUE}Espacio disponible:${NC}  %s\n" "$(format_size "$avail_bytes")"
+
+    if [[ $total_needed -gt $avail_bytes ]]; then
+        printf "${RED}[Error] Espacio insuficiente. Necesitas ~%s, hay %s. Abortando.${NC}\n" \
+            "$(format_size "$total_needed")" "$(format_size "$avail_bytes")" >&2
+        exit 1
+    fi
+    if [[ $total_needed -gt $((avail_bytes * 80 / 100)) ]]; then
+        printf "${YELLOW}[Advertencia] Espacio muy justo: %s disponible para ~%s necesarios.${NC}\n" \
+            "$(format_size "$avail_bytes")" "$(format_size "$total_needed")" >&2
+    fi
+    printf "${GREEN}[OK] Espacio suficiente.${NC}\n"
+    printf '%s\n' "------------------------------------------------------"
+
     for file in "${INPUTS[@]}"; do
         if [[ ! -f "$file" ]]; then
             printf "${RED}[Saltando] '%s' no es un archivo válido.${NC}\n" "$file" >&2
@@ -796,7 +847,7 @@ do_decompress() {
             continue
         fi
 
-        # Verificar espacio disponible
+        # Verificar espacio disponible por archivo (red de seguridad)
         if ! check_decompress_space "$file"; then
             continue
         fi
