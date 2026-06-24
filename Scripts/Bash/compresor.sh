@@ -17,21 +17,11 @@ MAX_LOGS=10
 NCPU=$(nproc 2>/dev/null || echo 1)
 
 # --- Colores ---
-if [[ -t 1 ]] && command -v tput &>/dev/null; then
-    GREEN=$(tput setaf 2)
-    RED=$(tput setaf 1)
-    YELLOW=$(tput setaf 3)
-    BLUE=$(tput setaf 4)
-    BOLD=$(tput bold)
-    NC=$(tput sgr0)
-else
-    GREEN='\033[0;32m'
-    RED='\033[0;31m'
-    YELLOW='\033[1;33m'
-    BLUE='\033[0;34m'
-    BOLD=''
-    NC='\033[0m'
-fi
+readonly GREEN='\033[0;32m' RED='\033[0;31m' YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m' BOLD='\033[1m' NC='\033[0m'
+
+# --- Helper: convertir a minúsculas ---
+_lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 
 # --- Variables globales ---
 MISSING_DEPS=()
@@ -52,10 +42,6 @@ PKG_INSTALL=""
 SEVENZ_BIN=""
 BZIP2_BIN=""
 CLEANUP_FILE=""
-PV_AVAILABLE="No"
-SCRIPT_SRC=""
-DEST=""
-DIR=""
 
 # ==============================================================================
 # FUNCIONES AUXILIARES
@@ -93,125 +79,15 @@ detect_pkg_manager() {
 # --- Mapear herramienta a paquete según gestor ---
 tool_to_package() {
     local tool=$1
-    case "${PKG_MANAGER}" in
-        apt)
-            case "$tool" in
-                pigz)    echo "pigz" ;;
-                xz)      echo "xz-utils" ;;
-                lbzip2)  echo "lbzip2" ;;
-                pbzip2)  echo "pbzip2" ;;
-                bzip3)   echo "bzip3" ;;
-                zstd)    echo "zstd" ;;
-                plzip)   echo "plzip" ;;
-                lrzip)   echo "lrzip" ;;
-                zip)     echo "zip" ;;
-                unzip)   echo "unzip" ;;
-                pv)      echo "pv" ;;
-                tar)     echo "tar" ;;
-                7z)      echo "p7zip-full" ;;
-                *)       echo "$tool" ;;
-            esac
-            ;;
-        dnf|yum)
-            case "$tool" in
-                pigz)    echo "pigz" ;;
-                xz)      echo "xz" ;;
-                lbzip2)  echo "lbzip2" ;;
-                pbzip2)  echo "pbzip2" ;;
-                bzip3)   echo "bzip3" ;;
-                zstd)    echo "zstd" ;;
-                plzip)   echo "plzip" ;;
-                lrzip)   echo "lrzip" ;;
-                zip)     echo "zip" ;;
-                unzip)   echo "unzip" ;;
-                pv)      echo "pv" ;;
-                tar)     echo "tar" ;;
-                7z)      echo "p7zip" ;;
-                *)       echo "$tool" ;;
-            esac
-            ;;
-        pacman)
-            case "$tool" in
-                pigz)    echo "pigz" ;;
-                xz)      echo "xz" ;;
-                lbzip2)  echo "lbzip2" ;;
-                pbzip2)  echo "pbzip2" ;;
-                bzip3)   echo "bzip3" ;;
-                zstd)    echo "zstd" ;;
-                plzip)   echo "plzip" ;;
-                lrzip)   echo "lrzip" ;;
-                zip)     echo "zip" ;;
-                unzip)   echo "unzip" ;;
-                pv)      echo "pv" ;;
-                tar)     echo "tar" ;;
-                7z)      echo "7zip" ;;
-                *)       echo "$tool" ;;
-            esac
-            ;;
-        zypper)
-            case "$tool" in
-                pigz)    echo "pigz" ;;
-                xz)      echo "xz" ;;
-                lbzip2)  echo "lbzip2" ;;
-                pbzip2)  echo "pbzip2" ;;
-                bzip3)   echo "bzip3" ;;
-                zstd)    echo "zstd" ;;
-                plzip)   echo "plzip" ;;
-                lrzip)   echo "lrzip" ;;
-                zip)     echo "zip" ;;
-                unzip)   echo "unzip" ;;
-                pv)      echo "pv" ;;
-                tar)     echo "tar" ;;
-                7z)      echo "p7zip" ;;
-                *)       echo "$tool" ;;
-            esac
-            ;;
-        apk)
-            case "$tool" in
-                pigz)    echo "pigz" ;;
-                xz)      echo "xz" ;;
-                lbzip2)  echo "lbzip2" ;;
-                pbzip2)  echo "pbzip2" ;;
-                bzip3)   echo "bzip3" ;;
-                zstd)    echo "zstd" ;;
-                plzip)   echo "plzip" ;;
-                lrzip)   echo "lrzip" ;;
-                zip)     echo "zip" ;;
-                unzip)   echo "unzip" ;;
-                pv)      echo "pv" ;;
-                tar)     echo "tar" ;;
-                7z)      echo "p7zip" ;;
-                *)       echo "$tool" ;;
-            esac
-            ;;
-        *)
-            echo "$tool"
-            ;;
+    # Default: mismo nombre del tool (funciona en pacman, apk, dnf, yum)
+    # Excepciones por distro
+    case "${PKG_MANAGER}:${tool}" in
+        apt:xz)     echo "xz-utils"   ;;
+        apt:7z)     echo "p7zip-full" ;;
+        dnf:7z|yum:7z|zypper:7z|apk:7z) echo "p7zip" ;;
+        pacman:7z)  echo "7zip"       ;;
+        *)          echo "$tool"      ;;
     esac
-}
-
-# --- Detectar binario de 7z ---
-detect_7z_bin() {
-    if command -v 7zz &>/dev/null; then
-        SEVENZ_BIN="7zz"
-    elif command -v 7z &>/dev/null; then
-        SEVENZ_BIN="7z"
-    elif command -v 7za &>/dev/null; then
-        SEVENZ_BIN="7za"
-    else
-        SEVENZ_BIN="7z"
-    fi
-}
-
-# --- Detectar binario de bzip2 paralelo ---
-detect_bzip2_bin() {
-    if command -v lbzip2 &>/dev/null; then
-        BZIP2_BIN="lbzip2"
-    elif command -v pbzip2 &>/dev/null; then
-        BZIP2_BIN="pbzip2"
-    else
-        BZIP2_BIN="lbzip2"
-    fi
 }
 
 # --- Verificar sudo ---
@@ -268,22 +144,20 @@ install_missing_deps() {
         exit 1
     fi
 
-    local -a install_cmd
+    local -a install_cmd update_cmd
     if [[ "$(id -u)" -eq 0 ]]; then
         IFS=' ' read -ra install_cmd <<< "$PKG_INSTALL"
+        IFS=' ' read -ra update_cmd <<< "$PKG_UPDATE"
     else
         install_cmd=(sudo)
         IFS=' ' read -ra tmp <<< "$PKG_INSTALL"
         install_cmd+=("${tmp[@]}")
+        update_cmd=(sudo bash -c "$PKG_UPDATE")
     fi
 
     if ! "${install_cmd[@]}" "${MISSING_DEPS[@]}"; then
         printf "${YELLOW}[Sistema] Reintentando tras actualizar repositorios...${NC}\n"
-        if [[ "$(id -u)" -eq 0 ]]; then
-            eval "$PKG_UPDATE"
-        else
-            sudo bash -c "$PKG_UPDATE"
-        fi
+        "${update_cmd[@]}"
         "${install_cmd[@]}" "${MISSING_DEPS[@]}"
     fi
 
@@ -309,9 +183,9 @@ register_compress_tools() {
 # --- Registrar herramientas según extensión de archivo ---
 register_decompress_tool() {
     local file=$1
-    local lower
-    lower=$(printf '%s' "$file" | tr '[:upper:]' '[:lower:]')
-    case "$lower" in
+    local f_lower
+    f_lower=$(_lower "$file")
+    case "$f_lower" in
         *.tar.gz|*.tgz)       ensure_tool pigz ;;
         *.tar.xz|*.txz)       ensure_tool xz ;;
         *.tar.bz2|*.tbz2)     ensure_tool "$BZIP2_BIN" "$BZIP2_BIN" pbzip2 ;;
@@ -329,11 +203,6 @@ register_decompress_tool() {
         *.7z)                 ensure_tool 7z "$SEVENZ_BIN" ;;
         *.tar)                ensure_tool tar ;;
     esac
-}
-
-# --- Registrar herramientas para test ---
-register_test_tool() {
-    register_decompress_tool "$1"
 }
 
 # --- Obtener límite de memoria (70% de RAM disponible) ---
@@ -380,10 +249,10 @@ format_size() {
 # --- Estimar tamaño descomprimido ---
 estimate_uncompressed_size() {
     local file=$1
-    local lower
-    lower=$(printf '%s' "$file" | tr '[:upper:]' '[:lower:]')
+    local f_lower
+    f_lower=$(_lower "$file")
 
-    case "$lower" in
+    case "$f_lower" in
         *.gz|*.tgz)
             gzip -l -- "$file" 2>/dev/null | awk 'NR==2 {print $2}'
             return
@@ -412,15 +281,7 @@ estimate_uncompressed_size() {
             stat -c%s -- "$file" 2>/dev/null
             return
             ;;
-        *.bz2|*.tbz2)
-            stat -c%s -- "$file" 2>/dev/null | awk '{print $1 * 6}'
-            return
-            ;;
-        *.bz3)
-            stat -c%s -- "$file" 2>/dev/null | awk '{print $1 * 6}'
-            return
-            ;;
-        *.lz|*.tlz)
+        *.bz2|*.tbz2|*.bz3|*.lz|*.tlz)
             stat -c%s -- "$file" 2>/dev/null | awk '{print $1 * 6}'
             return
             ;;
@@ -431,19 +292,25 @@ estimate_uncompressed_size() {
     esac
 }
 
+# --- Obtener bytes disponibles en directorio ---
+_get_avail_bytes() {
+    local dir=${1:-.} avail
+    avail=$(df -B1 --output=avail "$dir" 2>/dev/null | awk 'NR==2 {print $1}' | tr -d ' ')
+    [[ -z "$avail" || "$avail" == "avail" ]] && avail=$(df "$dir" 2>/dev/null | awk 'NR>1 {print int($4) * 1024}')
+    echo "${avail:-0}"
+}
+
 # --- Verificar espacio disponible antes de descomprimir ---
 check_decompress_space() {
     local file=$1
-    local compressed_size uncomp_size est_size avail_kb avail_bytes
+    local compressed_size uncomp_size est_size avail_bytes
 
     compressed_size=$(stat -c%s -- "$file" 2>/dev/null || echo 0)
     [[ "$compressed_size" -eq 0 ]] && return 0
 
     uncomp_size=$(estimate_uncompressed_size "$file")
     est_size=${uncomp_size:-$((compressed_size * 4))}
-
-    avail_kb=$(df --output=avail . 2>/dev/null | awk 'NR==2 {print $1}')
-    avail_bytes=$((avail_kb * 1024))
+    avail_bytes=$(_get_avail_bytes ".")
 
     if [[ "$est_size" -gt "$avail_bytes" ]]; then
         printf "${RED}[Sin espacio] %s necesita ~%s, disponible %s. Saltando.${NC}\n" \
@@ -457,37 +324,37 @@ check_decompress_space() {
     return 0
 }
 
-# --- Test rápido de capa de compresión (pre-descompresión) ---
+# --- Test rápido de capa de compresión (interno, sin output) ---
+_test_compression_layer() {
+    local file=$1
+    local f_lower
+    f_lower=$(_lower "$file")
+    case "$f_lower" in
+        *.tar.gz|*.tgz|*.gz)           pigz -t -- "$file" 2>/dev/null ;;
+        *.tar.xz|*.txz|*.xz)           xz -t -- "$file" 2>/dev/null ;;
+        *.tar.bz2|*.tbz2|*.bz2)        "$BZIP2_BIN" -t -- "$file" 2>/dev/null ;;
+        *.tar.bz3)                     bzip3 -t -- "$file" 2>/dev/null ;;
+        *.tar.zst|*.tzst|*.zst)         zstd -t -- "$file" 2>/dev/null ;;
+        *.tar.lz|*.tlz|*.lz)           plzip -t -- "$file" 2>/dev/null ;;
+        *.tar.lrz|*.lrz)               lrzip -t -- "$file" 2>/dev/null ;;
+        *.zip)                         unzip -t -- "$file" >/dev/null 2>&1 ;;
+        *.7z)                          "$SEVENZ_BIN" t -- "$file" >/dev/null 2>&1 ;;
+        *.tar)                         tar -tf "$file" >/dev/null 2>&1 ;;
+        *)                             return 1 ;;
+    esac
+}
+
+# --- Test de compresión pre-descompresión (con output) ---
 _test_compress_layer() {
     local file=$1
-    local lower
-    lower=$(printf '%s' "$file" | tr '[:upper:]' '[:lower:]')
-
     printf "${BLUE}[Verificando] %s...${NC} " "$file"
-    local ok=0
-    case "$lower" in
-        *.tar.gz|*.tgz|*.gz)           pigz -t -- "$file" 2>/dev/null                           || ok=$? ;;
-        *.tar.xz|*.txz|*.xz)           xz -t -- "$file" 2>/dev/null                             || ok=$? ;;
-        *.tar.bz2|*.tbz2|*.bz2)        "$BZIP2_BIN" -t -- "$file" 2>/dev/null                   || ok=$? ;;
-        *.tar.bz3)                     bzip3 -t -- "$file" 2>/dev/null                          || ok=$? ;;
-        *.tar.zst|*.tzst|*.zst)         zstd -t -- "$file" 2>/dev/null                            || ok=$? ;;
-        *.tar.lz|*.tlz|*.lz)           plzip -t -- "$file" 2>/dev/null                          || ok=$? ;;
-        *.tar.lrz|*.lrz)               lrzip -t -- "$file" 2>/dev/null                          || ok=$? ;;
-        *.zip)                         unzip -t -- "$file" >/dev/null 2>&1                       || ok=$? ;;
-        *.7z)                          "$SEVENZ_BIN" t -- "$file" >/dev/null 2>&1                || ok=$? ;;
-        *.tar)                         tar -tf "$file" >/dev/null 2>&1                           || ok=$? ;;
-        *)
-            printf "${RED}[Error] Formato desconocido: %s${NC}\n" "$file" >&2
-            return 1
-            ;;
-    esac
-
-    if [[ "$ok" -eq 0 ]]; then
+    if _test_compression_layer "$file"; then
         printf "${GREEN}[OK]${NC}\n"
+        return 0
     else
         printf "${RED}[CORRUPTO] Saltando.${NC}\n" >&2
+        return 1
     fi
-    return "$ok"
 }
 
 # --- Generar nombre único de archivo ---
@@ -501,7 +368,7 @@ get_unique_name() {
     final_name="${base_name}.${ext}"
     if [[ -e "$final_name" ]]; then
         while [[ -e "${base_name}_${counter}.${ext}" ]]; do
-            ((counter++))
+            counter=$((counter + 1))
         done
         final_name="${base_name}_${counter}.${ext}"
     fi
@@ -510,20 +377,8 @@ get_unique_name() {
 
 # --- Verificar espacio en disco ---
 check_disk_space() {
-    local needed=$1
-    local dir=$2
-    local available
-
-    if command -v df &>/dev/null; then
-        available=$(df -B1 --output=avail "$dir" 2>/dev/null | tail -1 | tr -d ' ')
-    fi
-    if [[ -z "$available" || "$available" == "avail" ]]; then
-        available=$(df "$dir" 2>/dev/null | awk 'NR>1 {print int($4) * 1024}')
-    fi
-    if [[ -z "$available" ]]; then
-        available=0
-    fi
-
+    local needed=$1 dir=$2 available
+    available=$(_get_avail_bytes "$dir")
     if [[ "$available" -lt "$needed" ]]; then
         printf "${RED}[Error] Espacio insuficiente en disco.${NC}\n" >&2
         printf "${YELLOW}  Necesario: %s${NC}\n" "$(format_size "$needed")" >&2
@@ -802,7 +657,7 @@ do_compress() {
 # ==============================================================================
 do_decompress() {
     # Verificación de espacio TOTAL antes de empezar
-    local total_compressed=0 total_needed=0 avail_kb avail_bytes
+    local total_compressed=0 total_needed=0 avail_bytes
     for f in "${INPUTS[@]}"; do
         [[ ! -f "$f" ]] && continue
         local c_size u_size
@@ -813,8 +668,7 @@ do_decompress() {
         total_needed=$((total_needed + u_size))
     done
 
-    avail_kb=$(df --output=avail . 2>/dev/null | awk 'NR==2 {print $1}')
-    avail_bytes=$((avail_kb * 1024))
+    avail_bytes=$(_get_avail_bytes ".")
 
     printf "${BLUE}══════════════════════════════════════════════${NC}\n"
     printf "${BLUE}  Verificación de espacio para descompresión${NC}\n"
@@ -855,10 +709,10 @@ do_decompress() {
         printf "${BLUE}[Procesando] Archivo: ${YELLOW}%s${BLUE} (%s hilos)${NC}\n" "$file" "$NCPU"
 
         local SUCCESS=0
-        local lower
-        lower=$(printf '%s' "$file" | tr '[:upper:]' '[:lower:]')
+        local f_lower
+        f_lower=$(_lower "$file")
 
-        case "$lower" in
+        case "$f_lower" in
             *.tar.gz|*.tgz)
                 pigz -dc -- "$file" | tar -xvf - || SUCCESS=$?
                 ;;
@@ -899,7 +753,7 @@ do_decompress() {
                 plzip -dk --threads="$NCPU" -- "$file" || SUCCESS=$?
                 ;;
             *.zip)
-                unzip -- "$file" || SUCCESS=$?
+                unzip -o -- "$file" || SUCCESS=$?
                 ;;
             *.7z)
                 "$SEVENZ_BIN" x -- "$file" || SUCCESS=$?
@@ -932,42 +786,31 @@ do_decompress() {
 # LÓGICA DE TEST DE INTEGRIDAD
 # ==============================================================================
 do_test_file() {
-    local file=$1
-    local lower
-    lower=$(printf '%s' "$file" | tr '[:upper:]' '[:lower:]')
+    local file=$1 f_lower
+    f_lower=$(_lower "$file")
 
     printf "${BLUE}[Test] Verificando integridad: ${YELLOW}%s${NC}... " "$file"
 
-    local SUCCESS=0
-    case "$lower" in
-        *.tar.gz|*.tgz)       pigz -t "$file" 2>/dev/null && pigz -dc "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
-        *.tar.xz|*.txz)       xz -t "$file" 2>/dev/null   && xz -dc "$file" 2>/dev/null   | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
-        *.tar.bz2|*.tbz2)     "$BZIP2_BIN" -t "$file" 2>/dev/null && "$BZIP2_BIN" -dc "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
-        *.tar.bz3)            bzip3 -t "$file" 2>/dev/null && bzip3 -dc "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
-        *.tar.zst|*.tzst)     zstd -t "$file" 2>/dev/null   && zstd -dc "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
-        *.tar.lz|*.tlz)       plzip -t "$file" 2>/dev/null  && plzip -dc "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
-        *.tar.lrz)            lrzip -t "$file" 2>/dev/null  && lrzip -d -o - "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || SUCCESS=$? ;;
-        *.lrz)                lrzip -t "$file" 2>/dev/null  || SUCCESS=$? ;;
-        *.zst)                zstd -t "$file" 2>/dev/null   || SUCCESS=$? ;;
-        *.xz)                 xz -t "$file" 2>/dev/null     || SUCCESS=$? ;;
-        *.gz)                 pigz -t "$file" 2>/dev/null   || SUCCESS=$? ;;
-        *.bz2)                "$BZIP2_BIN" -t "$file" 2>/dev/null  || SUCCESS=$? ;;
-        *.lz)                 plzip -t "$file" 2>/dev/null  || SUCCESS=$? ;;
-        *.zip)                unzip -t "$file" >/dev/null 2>&1     || SUCCESS=$? ;;
-        *.7z)                 "$SEVENZ_BIN" t "$file" >/dev/null 2>&1 ; SUCCESS=$? ;;
-        *.tar)                tar -tf "$file" >/dev/null 2>&1      || SUCCESS=$? ;;
-        *)
-            printf "${RED}[Error] Formato desconocido: %s${NC}\n" "$file" >&2
-            return 1
-            ;;
+    # Test capa de compresión
+    if ! _test_compression_layer "$file"; then
+        printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"
+        return 1
+    fi
+
+    # Para .tar.*: test extra de integridad del tar via pipe-through
+    case "$f_lower" in
+        *.tar.gz|*.tgz)       pigz -dc -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
+        *.tar.xz|*.txz)       xz -dc -T0 -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
+        *.tar.bz2|*.tbz2)     "$BZIP2_BIN" -dc -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
+        *.tar.bz3)            bzip3 -dc -j "$NCPU" -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
+        *.tar.zst|*.tzst)     zstd -dc -T0 -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
+        *.tar.lz|*.tlz)       plzip -dc --threads="$NCPU" -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
+        *.tar.lrz)            lrzip -d -p "$NCPU" -o - -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
+        *.tar)                tar -tf "$file" >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
     esac
 
-    if [[ $SUCCESS -eq 0 ]]; then
-        printf "${GREEN}[OK]${NC}\n"
-    else
-        printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"
-    fi
-    return $SUCCESS
+    printf "${GREEN}[OK]${NC}\n"
+    return 0
 }
 
 do_test() {
@@ -987,8 +830,15 @@ do_test() {
 # PROCESAMIENTO DE ARGUMENTOS
 # ==============================================================================
 # Detectar binarios antes de parsear argumentos
-detect_7z_bin
-detect_bzip2_bin
+if command -v 7zz &>/dev/null; then SEVENZ_BIN="7zz"
+elif command -v 7z &>/dev/null; then SEVENZ_BIN="7z"
+elif command -v 7za &>/dev/null; then SEVENZ_BIN="7za"
+else SEVENZ_BIN="7z"; fi
+
+if command -v lbzip2 &>/dev/null; then BZIP2_BIN="lbzip2"
+elif command -v pbzip2 &>/dev/null; then BZIP2_BIN="pbzip2"
+else BZIP2_BIN="lbzip2"; fi
+
 detect_pkg_manager
 
 PARSED_ARGS=$(getopt -o 'c:dhrn:lti' -l 'help,dry-run,exclude:,split:,test,individual,install,uninstall' -- "$@") || { usage; exit 1; }
@@ -1111,17 +961,8 @@ if [[ "$MODE" == "compress" ]]; then
     register_compress_tools
 else
     for file in "${INPUTS[@]}"; do
-        if [[ "$MODE" == "decompress" ]]; then
-            register_decompress_tool "$file"
-        else
-            register_test_tool "$file"
-        fi
+        register_decompress_tool "$file"
     done
-fi
-
-# Añadir pv si está disponible (opcional, no obligatorio)
-if command -v pv &>/dev/null; then
-    PV_AVAILABLE="Sí"
 fi
 
 install_missing_deps
