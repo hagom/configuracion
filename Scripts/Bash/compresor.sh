@@ -473,7 +473,6 @@ usage() {
     printf "  ${GREEN}--install${NC}    : Copiar script a /usr/local/bin/compresor\n"
     printf "  ${GREEN}--uninstall${NC}  : Eliminar /usr/local/bin/compresor\n"
     printf "\n"
-    exit 0
 }
 
 # ==============================================================================
@@ -871,7 +870,7 @@ while true; do
             list_compressors
             ;;
         -h|--help)
-            usage
+            usage; exit 0
             ;;
         --dry-run)
             DRY_RUN="Sí"
@@ -920,7 +919,7 @@ while true; do
             break
             ;;
         *)
-            usage
+            usage; exit 1
             ;;
     esac
 done
@@ -937,23 +936,23 @@ done
 # --- Validaciones ---
 if [[ -z "$MODE" ]]; then
     printf "${RED}[Error] Debes especificar un modo de operación (-c, -d, -t).${NC}\n" >&2
-    usage
+    usage; exit 1
 fi
 
 if [[ "$MODE" == "compress" ]]; then
     if [[ -z "$FORMAT" ]]; then
         printf "${RED}[Error] Falta el formato de compresión.${NC}\n" >&2
-        usage
+        usage; exit 1
     fi
     if [[ ${#INPUTS[@]} -eq 0 ]]; then
         printf "${RED}[Error] No se especificaron archivos/carpetas para comprimir.${NC}\n" >&2
-        usage
+        usage; exit 1
     fi
 fi
 
 if [[ "$MODE" != "compress" && ${#INPUTS[@]} -eq 0 ]]; then
     printf "${RED}[Error] No se especificaron archivos para procesar.${NC}\n" >&2
-    usage
+    usage; exit 1
 fi
 
 # --- Registrar y instalar dependencias ---
