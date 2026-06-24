@@ -14,7 +14,18 @@ set -euo pipefail
 # --- Configuración ---
 LOG_DIR="/var/log/compresor"
 MAX_LOGS=10
-NCPU=$(nproc 2>/dev/null || echo 1)
+if ! NCPU=$(getconf _NPROCESSORS_ONLN 2>/dev/null) || [[ "$NCPU" -lt 1 ]]; then
+    if [[ -r /sys/fs/cgroup/cpu.max ]]; then
+        read -r c _ < /sys/fs/cgroup/cpu.max
+        [[ "$c" != "max" ]] && NCPU=$c
+    fi
+fi
+if [[ -z "$NCPU" || "$NCPU" -lt 1 ]] && [[ -r /sys/fs/cgroup/cpu/cpu.cfs_quota_us ]]; then
+    q=$(</sys/fs/cgroup/cpu/cpu.cfs_quota_us)
+    p=$(</sys/fs/cgroup/cpu/cpu.cfs_period_us)
+    [[ "$q" -gt 0 ]] && NCPU=$(( (q + p - 1) / p ))
+fi
+: "${NCPU:=1}"
 
 # --- Colores ---
 readonly GREEN='\033[0;32m' RED='\033[0;31m' YELLOW='\033[1;33m'
@@ -23,6 +34,36 @@ readonly BLUE='\033[0;34m' BOLD='\033[1m' NC='\033[0m'
 # --- Helper: convertir a minúsculas ---
 _lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 
+# --- Helper: pv si disponible, sino cat ---
+_pv_pipe() { if command -v pv &>/dev/null; then pv -f -s "$1"; else cat; fi; }
+
+# --- Info de formato: herramienta y flags ---
+# Salida: tool|pipe_flags|direct_flags|is_tar|test_flag
+_get_format_info() {
+    local file=$1 ext
+    ext=$(_lower "$file")
+    case "$ext" in
+        *.tar.gz|*.tgz)       echo "pigz|-dc|-dk|1|-t" ;;
+        *.tar.xz|*.txz)       echo "xz|-dc -T0|-d -T0 -k|1|-t" ;;
+        *.tar.bz2|*.tbz2)     echo "$BZIP2_BIN|-dc|-dk|1|-t" ;;
+        *.tar.bz3)            echo "bzip3|-dc -j $NCPU|-d -j $NCPU|1|-t" ;;
+        *.tar.zst|*.tzst)     echo "zstd|-dc -T0|-d -T0|1|-t" ;;
+        *.tar.lz|*.tlz)       echo "plzip|-dc --threads=$NCPU|-dk --threads=$NCPU|1|-t" ;;
+        *.tar.lrz)            echo "lrzip|-d -p $NCPU -o -|-d -k -p $NCPU|1|-t" ;;
+        *.lrz)                echo "lrzip|-d -p $NCPU -o -|-d -k -p $NCPU|0|-t" ;;
+        *.zst)                echo "zstd|-dc -T0|-d -T0|0|-t" ;;
+        *.xz)                 echo "xz|-dc -T0|-d -T0 -k|0|-t" ;;
+        *.gz)                 echo "pigz|-dc|-dk|0|-t" ;;
+        *.bz2)                echo "$BZIP2_BIN|-dc|-dk|0|-t" ;;
+        *.bz3)                echo "bzip3|-dc -j $NCPU|-d -j $NCPU|0|-t" ;;
+        *.lz)                 echo "plzip|-dc --threads=$NCPU|-dk --threads=$NCPU|0|-t" ;;
+        *.zip)                echo "unzip|-o|-o|0|-t" ;;
+        *.7z)                 echo "$SEVENZ_BIN|x|x|0|t" ;;
+        *.tar)                echo "tar|-xf|-xf|0|-tf" ;;
+        *)                    return 1 ;;
+    esac
+}
+
 # --- Variables globales ---
 MISSING_DEPS=()
 EXCLUDE_PATTERNS=()
@@ -30,9 +71,8 @@ INPUTS=()
 MODE=""
 FORMAT=""
 CUSTOM_NAME=""
-DELETE_ORIG="No"
-DRY_RUN="No"
-TEST_MODE="No"
+DELETE_ORIG=0
+DRY_RUN=0
 SPLIT_SIZE=""
 INDIVIDUAL=""
 LOG_FILE=""
@@ -182,27 +222,10 @@ register_compress_tools() {
 
 # --- Registrar herramientas según extensión de archivo ---
 register_decompress_tool() {
-    local file=$1
-    local f_lower
-    f_lower=$(_lower "$file")
-    case "$f_lower" in
-        *.tar.gz|*.tgz)       ensure_tool pigz ;;
-        *.tar.xz|*.txz)       ensure_tool xz ;;
-        *.tar.bz2|*.tbz2)     ensure_tool "$BZIP2_BIN" "$BZIP2_BIN" pbzip2 ;;
-        *.tar.bz3)            ensure_tool bzip3 ;;
-        *.tar.zst|*.tzst)     ensure_tool zstd ;;
-        *.tar.lz|*.tlz)       ensure_tool plzip ;;
-        *.tar.lrz)            ensure_tool lrzip ;;
-        *.lrz)                ensure_tool lrzip ;;
-        *.zst)                ensure_tool zstd ;;
-        *.xz)                 ensure_tool xz ;;
-        *.gz)                 ensure_tool pigz ;;
-        *.bz2)                ensure_tool "$BZIP2_BIN" "$BZIP2_BIN" pbzip2 ;;
-        *.lz)                 ensure_tool plzip ;;
-        *.zip)                ensure_tool unzip ;;
-        *.7z)                 ensure_tool 7z "$SEVENZ_BIN" ;;
-        *.tar)                ensure_tool tar ;;
-    esac
+    local file=$1 info
+    info=$(_get_format_info "$file") || return 0
+    IFS='|' read -r tool _ _ _ _ <<< "$info"
+    ensure_tool "$tool"
 }
 
 # --- Obtener límite de memoria (70% de RAM disponible) ---
@@ -243,6 +266,16 @@ format_size() {
             unit=$((unit + 1))
         done
         echo "${size} ${units[$unit]}"
+    fi
+}
+
+# --- Calcular porcentaje de ahorro ---
+_calc_pct() {
+    local orig=$1 final=$2
+    if [[ "$orig" -gt 0 && -n "$final" && "$final" -gt 0 ]]; then
+        awk -v orig="$orig" -v final="$final" 'BEGIN {printf "%.2f", (orig - final) / orig * 100}'
+    else
+        printf "0.00"
     fi
 }
 
@@ -326,22 +359,14 @@ check_decompress_space() {
 
 # --- Test rápido de capa de compresión (interno, sin output) ---
 _test_compression_layer() {
-    local file=$1
-    local f_lower
-    f_lower=$(_lower "$file")
-    case "$f_lower" in
-        *.tar.gz|*.tgz|*.gz)           pigz -t -- "$file" 2>/dev/null ;;
-        *.tar.xz|*.txz|*.xz)           xz -t -- "$file" 2>/dev/null ;;
-        *.tar.bz2|*.tbz2|*.bz2)        "$BZIP2_BIN" -t -- "$file" 2>/dev/null ;;
-        *.tar.bz3)                     bzip3 -t -- "$file" 2>/dev/null ;;
-        *.tar.zst|*.tzst|*.zst)         zstd -t -- "$file" 2>/dev/null ;;
-        *.tar.lz|*.tlz|*.lz)           plzip -t -- "$file" 2>/dev/null ;;
-        *.tar.lrz|*.lrz)               lrzip -t -- "$file" 2>/dev/null ;;
-        *.zip)                         unzip -t -- "$file" >/dev/null 2>&1 ;;
-        *.7z)                          "$SEVENZ_BIN" t -- "$file" >/dev/null 2>&1 ;;
-        *.tar)                         tar -tf "$file" >/dev/null 2>&1 ;;
-        *)                             return 1 ;;
-    esac
+    local file=$1 info
+    info=$(_get_format_info "$file") || return 1
+    IFS='|' read -r tool _ _ _ tflag <<< "$info"
+    if [[ "$tool" == "tar" ]]; then
+        $tool $tflag "$file" 2>/dev/null
+    else
+        $tool $tflag -- "$file" 2>/dev/null
+    fi
 }
 
 # --- Test de compresión pre-descompresión (con output) ---
@@ -499,14 +524,14 @@ _compress_items() {
     esac
 
     local base_name
-    if [[ "$INDIVIDUAL" == "Sí" || -z "$CUSTOM_NAME" ]]; then
+    if [[ "$INDIVIDUAL" == 1 || -z "$CUSTOM_NAME" ]]; then
         base_name="${items[0]%/}"
     else
         base_name="$CUSTOM_NAME"
     fi
     FINAL_FILE=$(get_unique_name "$base_name" "$ext")
 
-    if [[ "$DRY_RUN" == "Sí" ]]; then
+    if [[ "$DRY_RUN" == 1 ]]; then
         printf "${YELLOW}[DRY-RUN] Comando:${NC}\n"
         case $FORMAT in
             gz)  printf "  tar -cvf - %s | pigz -9 > %s\n" "${items[*]}" "$FINAL_FILE" ;;
@@ -548,33 +573,28 @@ _compress_items() {
         tar_exclude+=(--exclude="$pattern")
     done
 
-    local pv_cmd="cat"
-    if command -v pv &>/dev/null; then
-        pv_cmd="pv -f -s $TOTAL_ORIG_BYTES 2>&1"
-    fi
-
     local CMD_EXIT=0
     case $FORMAT in
         gz)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | pigz -9 > "$FINAL_FILE" || CMD_EXIT=$?
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | _pv_pipe "$TOTAL_ORIG_BYTES" | pigz -9 > "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         xz)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | xz -9e -T0 --memory="${mem_mb}MiB" > "$FINAL_FILE" || CMD_EXIT=$?
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | _pv_pipe "$TOTAL_ORIG_BYTES" | xz -9e -T0 --memory="${mem_mb}MiB" > "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         bz2)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | "$BZIP2_BIN" -9 > "$FINAL_FILE" || CMD_EXIT=$?
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | _pv_pipe "$TOTAL_ORIG_BYTES" | "$BZIP2_BIN" -9 > "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         bz3)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | bzip3 -j "$NCPU" > "$FINAL_FILE" || CMD_EXIT=$?
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | _pv_pipe "$TOTAL_ORIG_BYTES" | bzip3 -j "$NCPU" > "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         zst)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | zstd -19 -T0 -o "$FINAL_FILE" || CMD_EXIT=$?
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | _pv_pipe "$TOTAL_ORIG_BYTES" | zstd -19 -T0 -o "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         lz)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | plzip -9 --threads="$NCPU" > "$FINAL_FILE" || CMD_EXIT=$?
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | _pv_pipe "$TOTAL_ORIG_BYTES" | plzip -9 --threads="$NCPU" > "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         lrz)
-            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | eval "$pv_cmd" | lrzip -L 9 -z -p "$NCPU" -o "$FINAL_FILE" || CMD_EXIT=$?
+            tar "${tar_exclude[@]}" -cvf - -- "${items[@]}" | _pv_pipe "$TOTAL_ORIG_BYTES" | lrzip -L 9 -z -p "$NCPU" -o "$FINAL_FILE" || CMD_EXIT=$?
             ;;
         zip)
             "$SEVENZ_BIN" a -tzip -mx=9 -mmt=on "$FINAL_FILE" -- "${items[@]}" || CMD_EXIT=$?
@@ -601,11 +621,7 @@ _compress_items() {
         local FINAL_SIZE FINAL_BYTES PERCENTAGE
         FINAL_SIZE=$(du -sh -- "$FINAL_FILE" 2>/dev/null | cut -f1)
         FINAL_BYTES=$(du -sb -- "$FINAL_FILE" 2>/dev/null | cut -f1)
-
-        PERCENTAGE="0.00"
-        if [[ "$TOTAL_ORIG_BYTES" -gt 0 && -n "$FINAL_BYTES" && "$FINAL_BYTES" -gt 0 ]]; then
-            PERCENTAGE=$(awk -v orig="$TOTAL_ORIG_BYTES" -v final="$FINAL_BYTES" 'BEGIN {printf "%.2f", (orig - final) / orig * 100}')
-        fi
+        PERCENTAGE=$(_calc_pct "$TOTAL_ORIG_BYTES" "$FINAL_BYTES")
 
         printf "\n${GREEN}=== Reporte de Compresión ===${NC}\n"
         printf "${BLUE}Archivo Salida:${NC}    ${YELLOW}%s${NC}\n" "$FINAL_FILE"
@@ -615,15 +631,11 @@ _compress_items() {
         printf "${BLUE}Hilos utilizados:${NC}  ${GREEN}%s${NC}\n" "$NCPU"
         printf "${GREEN}===========================${NC}\n"
 
-        if [[ "$DELETE_ORIG" == "Sí" ]]; then
+        if [[ "$DELETE_ORIG" == 1 ]]; then
             for item in "${items[@]}"; do
                 rm -rf -- "$item"
                 printf "${YELLOW}[Info] Original eliminado: %s${NC}\n" "$item"
             done
-        fi
-
-        if [[ "$TEST_MODE" == "Sí" ]]; then
-            do_test_file "$FINAL_FILE"
         fi
         return 0
     else
@@ -637,7 +649,7 @@ _compress_items() {
 # LÓGICA DE COMPRESIÓN — Dispatcher (individual o bundle)
 # ==============================================================================
 do_compress() {
-    if [[ "$INDIVIDUAL" == "Sí" && ${#INPUTS[@]} -gt 1 ]]; then
+    if [[ "$INDIVIDUAL" == 1 && ${#INPUTS[@]} -gt 1 ]]; then
         local has_error=0
         for item in "${INPUTS[@]}"; do
             printf "${BLUE}══════════════════════════════════════════════${NC}\n"
@@ -707,68 +719,22 @@ do_decompress() {
 
         printf "${BLUE}[Procesando] Archivo: ${YELLOW}%s${BLUE} (%s hilos)${NC}\n" "$file" "$NCPU"
 
-        local SUCCESS=0
-        local f_lower
-        f_lower=$(_lower "$file")
-
-        case "$f_lower" in
-            *.tar.gz|*.tgz)
-                pigz -dc -- "$file" | tar -xvf - || SUCCESS=$?
-                ;;
-            *.tar.xz|*.txz)
-                xz -dc -T0 -- "$file" | tar -xvf - || SUCCESS=$?
-                ;;
-            *.tar.bz2|*.tbz2)
-                "$BZIP2_BIN" -dc -- "$file" | tar -xvf - || SUCCESS=$?
-                ;;
-            *.tar.bz3)
-                bzip3 -dc -j "$NCPU" -- "$file" | tar -xvf - || SUCCESS=$?
-                ;;
-            *.tar.zst|*.tzst)
-                zstd -dc -T0 -- "$file" | tar -xvf - || SUCCESS=$?
-                ;;
-            *.tar.lz|*.tlz)
-                plzip -dc --threads="$NCPU" -- "$file" | tar -xvf - || SUCCESS=$?
-                ;;
-            *.tar.lrz)
-                lrzip -d -p "$NCPU" -o - -- "$file" | tar -xvf - || SUCCESS=$?
-                ;;
-            *.lrz)
-                lrzip -d -k -p "$NCPU" -- "$file" || SUCCESS=$?
-                ;;
-            *.zst)
-                zstd -d -T0 -- "$file" || SUCCESS=$?
-                ;;
-            *.xz)
-                xz -d -T0 -k -- "$file" || SUCCESS=$?
-                ;;
-            *.gz)
-                pigz -dk -- "$file" || SUCCESS=$?
-                ;;
-            *.bz2)
-                "$BZIP2_BIN" -dk -- "$file" || SUCCESS=$?
-                ;;
-            *.lz)
-                plzip -dk --threads="$NCPU" -- "$file" || SUCCESS=$?
-                ;;
-            *.zip)
-                unzip -o -- "$file" || SUCCESS=$?
-                ;;
-            *.7z)
-                "$SEVENZ_BIN" x -- "$file" || SUCCESS=$?
-                ;;
-            *.tar)
-                tar -xvf "$file" || SUCCESS=$?
-                ;;
-            *)
-                printf "${RED}[Error] Formato desconocido o no soportado para: %s${NC}\n" "$file" >&2
-                SUCCESS=1
-                ;;
-        esac
+        local SUCCESS=0 info
+        info=$(_get_format_info "$file") || { printf "${RED}[Error] Formato desconocido o no soportado para: %s${NC}\n" "$file" >&2; SUCCESS=1; }
+        if [[ $SUCCESS -eq 0 ]]; then
+            IFS='|' read -r tool pipe_flags direct_flags is_tar _ <<< "$info"
+            if [[ "$is_tar" == 1 ]]; then
+                $tool $pipe_flags -- "$file" | tar -xvf - || SUCCESS=$?
+            elif [[ "$tool" == "tar" ]]; then
+                $tool $direct_flags "$file" || SUCCESS=$?
+            else
+                $tool $direct_flags -- "$file" || SUCCESS=$?
+            fi
+        fi
 
         if [[ $SUCCESS -eq 0 ]]; then
             printf "${GREEN}[Éxito] Archivo descomprimido correctamente.${NC}\n"
-            if [[ "$DELETE_ORIG" == "Sí" ]]; then
+        if [[ "$DELETE_ORIG" == 1 ]]; then
                 rm -f -- "$file"
                 printf "${YELLOW}[Info] Archivo original eliminado (-r activado).${NC}\n"
             else
@@ -785,9 +751,7 @@ do_decompress() {
 # LÓGICA DE TEST DE INTEGRIDAD
 # ==============================================================================
 do_test_file() {
-    local file=$1 f_lower
-    f_lower=$(_lower "$file")
-
+    local file=$1 info
     printf "${BLUE}[Test] Verificando integridad: ${YELLOW}%s${NC}... " "$file"
 
     # Test capa de compresión
@@ -796,17 +760,14 @@ do_test_file() {
         return 1
     fi
 
-    # Para .tar.*: test extra de integridad del tar via pipe-through
-    case "$f_lower" in
-        *.tar.gz|*.tgz)       pigz -dc -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
-        *.tar.xz|*.txz)       xz -dc -T0 -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
-        *.tar.bz2|*.tbz2)     "$BZIP2_BIN" -dc -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
-        *.tar.bz3)            bzip3 -dc -j "$NCPU" -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
-        *.tar.zst|*.tzst)     zstd -dc -T0 -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
-        *.tar.lz|*.tlz)       plzip -dc --threads="$NCPU" -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
-        *.tar.lrz)            lrzip -d -p "$NCPU" -o - -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
-        *.tar)                tar -tf "$file" >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; } ;;
-    esac
+    # Para .tar.* y .tar: test extra de integridad del tar
+    info=$(_get_format_info "$file") || { printf "${GREEN}[OK]${NC}\n"; return 0; }
+    IFS='|' read -r tool pipe_flags _ is_tar _ <<< "$info"
+    if [[ "$is_tar" == 1 ]]; then
+        $tool $pipe_flags -- "$file" 2>/dev/null | tar -t >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; }
+    elif [[ "$tool" == "tar" ]]; then
+        tar -tf "$file" >/dev/null 2>&1 || { printf "${RED}[CORRUPTO O INVÁLIDO]${NC}\n"; return 1; }
+    fi
 
     printf "${GREEN}[OK]${NC}\n"
     return 0
@@ -859,7 +820,7 @@ while true; do
             shift
             ;;
         -r)
-            DELETE_ORIG="Sí"
+            DELETE_ORIG=1
             shift
             ;;
         -n)
@@ -873,7 +834,7 @@ while true; do
             usage; exit 0
             ;;
         --dry-run)
-            DRY_RUN="Sí"
+            DRY_RUN=1
             shift
             ;;
         --exclude)
@@ -885,7 +846,7 @@ while true; do
             shift 2
             ;;
         -i|--individual)
-            INDIVIDUAL="Sí"
+            INDIVIDUAL=1
             shift
             ;;
         --install)

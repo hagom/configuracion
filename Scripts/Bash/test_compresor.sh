@@ -138,6 +138,92 @@ assert_rc "multi decompress file_a" 0 "[[ -f \"$TDIR/multi_d/file_a.txt\" ]]"
 assert_rc "multi decompress file_b" 0 "[[ -f \"$TDIR/multi_d/file_b.txt\" ]]"
 
 # ==============================================================================
+# BZ3 FORMAT
+# ==============================================================================
+printf "${CYAN}%s${RESET}\n" "=== BZ3 FORMAT ==="
+setup
+(cd "$TDIR" && "$SCRIPT" -c bz3 -n test_bz3 file_a.txt file_b.txt) 2>/dev/null
+assert_rc "compress bz3" 0 "[[ -f \"$TDIR/test_bz3.tar.bz3\" ]]"
+ddir="$TDIR/d_bz3"
+mkdir -p "$ddir"
+cp "$TDIR/test_bz3.tar.bz3" "$ddir/"
+(cd "$ddir" && "$SCRIPT" -d test_bz3.tar.bz3) 2>/dev/null
+assert_rc "decompress bz3 file_a" 0 "[[ -f \"$ddir/file_a.txt\" ]]"
+assert_rc "decompress bz3 file_b" 0 "[[ -f \"$ddir/file_b.txt\" ]]"
+
+# ==============================================================================
+# DECOMPRESS STANDALONE (non-tar compressed files)
+# ==============================================================================
+printf "${CYAN}%s${RESET}\n" "=== DECOMPRESS STANDALONE ==="
+# Create standalone .gz, .xz, .zst directly (without tar wrapper)
+setup
+echo "standalone content" > "$TDIR/standalone.txt"
+pigz -9 -k -- "$TDIR/standalone.txt" 2>/dev/null
+ddir="$TDIR/d_std_gz"
+mkdir -p "$ddir"
+cp "$TDIR/standalone.txt.gz" "$ddir/"
+(cd "$ddir" && "$SCRIPT" -d standalone.txt.gz) 2>/dev/null
+assert_rc "decompress standalone gz" 0 "[[ -f \"$ddir/standalone.txt\" ]]"
+
+echo "standalone xz" > "$TDIR/standalone_xz.txt"
+xz -k -- "$TDIR/standalone_xz.txt" 2>/dev/null
+ddir="$TDIR/d_std_xz"
+mkdir -p "$ddir"
+cp "$TDIR/standalone_xz.txt.xz" "$ddir/"
+(cd "$ddir" && "$SCRIPT" -d standalone_xz.txt.xz) 2>/dev/null
+assert_rc "decompress standalone xz" 0 "[[ -f \"$ddir/standalone_xz.txt\" ]]"
+
+# ==============================================================================
+# EXCLUDE
+# ==============================================================================
+printf "${CYAN}%s${RESET}\n" "=== EXCLUDE ==="
+setup
+mkdir -p "$TDIR/excl_dir"
+echo "keep me" > "$TDIR/excl_dir/keep.txt"
+echo "exclude me" > "$TDIR/excl_dir/excl.txt"
+(cd "$TDIR" && "$SCRIPT" -c gz -n test_exclude --exclude=excl.txt excl_dir) 2>/dev/null
+assert_rc "exclude compress ok" 0 "[[ -f \"$TDIR/test_exclude.tar.gz\" ]]"
+ddir="$TDIR/d_exclude"
+mkdir -p "$ddir"
+cp "$TDIR/test_exclude.tar.gz" "$ddir/"
+(cd "$ddir" && "$SCRIPT" -d test_exclude.tar.gz) 2>/dev/null
+assert_rc "exclude keep.txt exists" 0 "[[ -f \"$ddir/excl_dir/keep.txt\" ]]"
+assert_rc "exclude excl.txt absent" 1 "[[ -f \"$ddir/excl_dir/excl.txt\" ]]"
+
+# ==============================================================================
+# SPLIT
+# ==============================================================================
+printf "${CYAN}%s${RESET}\n" "=== SPLIT ==="
+setup
+(cd "$TDIR" && "$SCRIPT" -c gz -n test_split --split=1K file_a.txt file_b.txt) 2>/dev/null
+assert_rc "split creates part.aa" 0 "[[ -f \"$TDIR/test_split.tar.gz.part.aa\" ]]"
+
+# ==============================================================================
+# CORRUPTED TAR INSIDE VALID GZ (pipe-through integrity)
+# ==============================================================================
+printf "${CYAN}%s${RESET}\n" "=== CORRUPTED TAR INSIDE GZ ==="
+setup
+(cd "$TDIR" && "$SCRIPT" -c gz -n test_corrupt file_a.txt) 2>/dev/null
+# gz layer is valid, corrupt the tar inside by truncating
+pigz -dc -- "$TDIR/test_corrupt.tar.gz" 2>/dev/null | head -c 50 | pigz -9 > "$TDIR/corrupt_inside.tar.gz" 2>/dev/null
+assert_rc "corrupt: pigz -t passes" 0 "pigz -t -- \"$TDIR/corrupt_inside.tar.gz\""
+assert_rc "corrupt: pipe test fails" 1 "\"$SCRIPT\" -t \"$TDIR/corrupt_inside.tar.gz\""
+
+# ==============================================================================
+# SPACES IN FILENAME
+# ==============================================================================
+printf "${CYAN}%s${RESET}\n" "=== SPACES IN FILENAME ==="
+setup
+echo "spaces test" > "$TDIR/my file.txt"
+(cd "$TDIR" && "$SCRIPT" -c gz -n test_spaces "my file.txt") 2>/dev/null
+assert_rc "spaces: compress ok" 0 "[[ -f \"$TDIR/test_spaces.tar.gz\" ]]"
+ddir="$TDIR/d_spaces"
+mkdir -p "$ddir"
+cp "$TDIR/test_spaces.tar.gz" "$ddir/"
+(cd "$ddir" && "$SCRIPT" -d test_spaces.tar.gz) 2>/dev/null
+assert_rc "spaces: decompress ok" 0 "[[ -f \"$ddir/my file.txt\" ]]"
+
+# ==============================================================================
 # SUMMARY
 # ==============================================================================
 echo "----------------------------------------"
