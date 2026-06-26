@@ -839,19 +839,23 @@ do_decompress() {
     printf "${GREEN}[OK] Espacio suficiente.${NC}\n"
     printf '%s\n' "------------------------------------------------------"
 
+    local has_error=0
     for file in "${INPUTS[@]}"; do
         if [[ ! -f "$file" ]]; then
             printf "${RED}[Saltando] '%s' no es un archivo válido.${NC}\n" "$file" >&2
+            has_error=1
             continue
         fi
 
         # Test de integridad previo
         if ! _test_compress_layer "$file"; then
+            has_error=1
             continue
         fi
 
         # Verificar espacio disponible por archivo (red de seguridad)
         if ! check_decompress_space "$file"; then
+            has_error=1
             continue
         fi
 
@@ -872,17 +876,19 @@ do_decompress() {
 
         if [[ $SUCCESS -eq 0 ]]; then
             printf "${GREEN}[Éxito] Archivo descomprimido correctamente.${NC}\n"
-        if [[ "$DELETE_ORIG" == 1 ]]; then
+            if [[ "$DELETE_ORIG" == 1 ]]; then
                 rm -f -- "$file"
                 printf "${YELLOW}[Info] Archivo original eliminado (-r activado).${NC}\n"
             else
                 printf "${BLUE}[Info] Archivo original conservado.${NC}\n"
             fi
         else
+            has_error=1
             printf "${RED}[Fallo] Error al descomprimir '%s'. El original NO se ha borrado.${NC}\n" "$file" >&2
         fi
         printf '%s\n' "------------------------------------------------------"
     done
+    exit $has_error
 }
 
 # ==============================================================================
