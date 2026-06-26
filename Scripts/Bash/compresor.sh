@@ -692,7 +692,14 @@ _compress_items() {
     done
     ORIG_HUMAN=$(format_size "$TOTAL_ORIG_BYTES")
 
-    check_disk_space $((TOTAL_ORIG_BYTES * 20 / 100)) "$(dirname "$FINAL_FILE" 2>/dev/null || echo .)" || return 1
+    local disk_needed
+    if [[ "$FORMAT" == "tar" ]]; then
+        disk_needed=$((TOTAL_ORIG_BYTES + TOTAL_ORIG_BYTES / 10))
+    else
+        disk_needed=$((TOTAL_ORIG_BYTES * 20 / 100))
+    fi
+    [[ $disk_needed -lt 1048576 ]] && disk_needed=1048576
+    check_disk_space "$disk_needed" "$(dirname "$FINAL_FILE" 2>/dev/null || echo .)" || return 1
 
     printf "${BLUE}[Info] Comprimiendo ${YELLOW}%s${BLUE} de datos en formato ${GREEN}%s${BLUE} (%s hilos)...${NC}\n" \
         "$ORIG_HUMAN" "$FORMAT" "$NCPU"
