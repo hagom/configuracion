@@ -493,10 +493,10 @@ get_unique_name() {
     echo "$final_name"
 }
 
-# --- check_disk_space: verifica espacio y aborta si insuficiente ---
+# --- check_disk_space: verifica espacio y retorna 1 si insuficiente ---
 # $1: bytes necesarios
 # $2: directorio a verificar
-# Exit 1 si no hay espacio suficiente.
+# Retorna 0 si hay espacio, 1 si no.
 check_disk_space() {
     local needed=$1 dir=$2 available
     available=$(_get_avail_bytes "$dir")
@@ -504,7 +504,7 @@ check_disk_space() {
         printf "${RED}[Error] Espacio insuficiente en disco.${NC}\n" >&2
         printf "${YELLOW}  Necesario: %s${NC}\n" "$(format_size "$needed")" >&2
         printf "${YELLOW}  Disponible: %s${NC}\n" "$(format_size "$available")" >&2
-        exit 1
+        return 1
     fi
 }
 
@@ -692,7 +692,7 @@ _compress_items() {
     done
     ORIG_HUMAN=$(format_size "$TOTAL_ORIG_BYTES")
 
-    check_disk_space $((TOTAL_ORIG_BYTES * 20 / 100)) "$(dirname "$FINAL_FILE" 2>/dev/null || echo .)"
+    check_disk_space $((TOTAL_ORIG_BYTES * 20 / 100)) "$(dirname "$FINAL_FILE" 2>/dev/null || echo .)" || return 1
 
     printf "${BLUE}[Info] Comprimiendo ${YELLOW}%s${BLUE} de datos en formato ${GREEN}%s${BLUE} (%s hilos)...${NC}\n" \
         "$ORIG_HUMAN" "$FORMAT" "$NCPU"
