@@ -748,6 +748,11 @@ _compress_items() {
     if [[ $CMD_EXIT -eq 0 && -f "$FINAL_FILE" ]]; then
         CLEANUP_FILE=""
 
+        local FINAL_SIZE FINAL_BYTES PERCENTAGE REPORT_FILE="$FINAL_FILE"
+        FINAL_SIZE=$(du -sh -- "$FINAL_FILE" 2>/dev/null | cut -f1)
+        FINAL_BYTES=$(du -sb -- "$FINAL_FILE" 2>/dev/null | cut -f1)
+        PERCENTAGE=$(_calc_pct "$TOTAL_ORIG_BYTES" "$FINAL_BYTES")
+
         if [[ -n "$SPLIT_SIZE" ]]; then
             printf "${BLUE}[Info] Dividiendo archivo en volúmenes de %s...${NC}\n" "$SPLIT_SIZE"
             split -b "$SPLIT_SIZE" -- "$FINAL_FILE" "${FINAL_FILE}.part."
@@ -756,11 +761,7 @@ _compress_items() {
             FINAL_FILE="${FINAL_FILE}.part.aa"
         fi
 
-        local FINAL_SIZE FINAL_BYTES PERCENTAGE
-        FINAL_SIZE=$(du -sh -- "$FINAL_FILE" 2>/dev/null | cut -f1)
-        FINAL_BYTES=$(du -sb -- "$FINAL_FILE" 2>/dev/null | cut -f1)
-        PERCENTAGE=$(_calc_pct "$TOTAL_ORIG_BYTES" "$FINAL_BYTES")
-        _print_compress_report "$FINAL_FILE" "$ORIG_HUMAN" "$FINAL_SIZE" "$PERCENTAGE" "$NCPU"
+        _print_compress_report "$REPORT_FILE" "$ORIG_HUMAN" "$FINAL_SIZE" "$PERCENTAGE" "$NCPU"
 
         if [[ "$DELETE_ORIG" == 1 ]]; then
             _delete_originals "${items[@]}"
