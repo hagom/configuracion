@@ -259,7 +259,10 @@ install_missing_deps() {
     if ! "${install_cmd[@]}" "${MISSING_DEPS[@]}"; then
         printf "${YELLOW}[Sistema] Reintentando tras actualizar repositorios...${NC}\n"
         "${update_cmd[@]}"
-        "${install_cmd[@]}" "${MISSING_DEPS[@]}"
+        if ! "${install_cmd[@]}" "${MISSING_DEPS[@]}"; then
+            printf "${RED}[Error] No se pudieron instalar las dependencias.${NC}\n" >&2
+            exit 1
+        fi
     fi
 
     printf "${GREEN}[Sistema] Dependencias instaladas correctamente.${NC}\n"
