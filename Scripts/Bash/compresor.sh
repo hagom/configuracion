@@ -2,16 +2,37 @@
 set -euo pipefail
 
 # ==============================================================================
-# COMPRESOR / DESCOMPRESOR UNIVERSAL (BASH) - v2.0
+# compresor — Compresor / Descompresor universal multiproceso (Bash)
 # ==============================================================================
-# - Multiproceso en todos los formatos
-# - Instalación batch de dependencias multi-distro
-# - Logging a /var/log/compresor/
-# - Modo test, dry-run, exclude, split
-# - Detección inteligente de memoria RAM disponible
+#
+# Versión:  2.1
+#
+# Uso:
+#   compresor -c <formato> [opciones] <archivos/carpetas...>   Comprimir
+#   compresor -d [opciones] <archivos...>                       Descomprimir
+#   compresor -t [opciones] <archivos...>                       Verificar
+#
+# Formatos soportados (todos multiproceso):
+#   gz, xz, bz2, bz3, zst, lz, lrz, zip, 7z, tar
+#
+# Características:
+#   - Multiproceso automático en todos los formatos
+#   - Instalación batch de dependencias multi-distro
+#   - Logging a /var/log/compresor/ con rotación
+#   - Modo test (-t), dry-run (--dry-run), exclude (--exclude), split (--split)
+#   - Compresión individual (-i) o agrupada (default)
+#   - Detección de memoria RAM y espacio en disco
+#   - Verificación de integridad en 2 capas (compresión + tar)
+#
+# Dependencias comunes: pigz, xz, lbzip2/pbzip2, bzip3, zstd, plzip, lrzip,
+#                       zip, unzip, p7zip, tar, pv (opcional)
 # ==============================================================================
 
-# --- Configuración ---
+# --- NCPU: Núcleos de CPU disponibles (cgroup-aware) ---
+# 1. getconf: número de CPUs online
+# 2. cgroup v2: /sys/fs/cgroup/cpu.max
+# 3. cgroup v1: /sys/fs/cgroup/cpu/cpu.cfs_{quota,period}_us
+# 4. fallback: 1
 LOG_DIR="/var/log/compresor"
 MAX_LOGS=10
 if ! NCPU=$(getconf _NPROCESSORS_ONLN 2>/dev/null) || [[ "$NCPU" -lt 1 ]]; then
@@ -31,14 +52,26 @@ fi
 readonly GREEN='\033[0;32m' RED='\033[0;31m' YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m' BOLD='\033[1m' NC='\033[0m'
 
-# --- Helper: convertir a minúsculas ---
+# --- _lower: convertir string a minúsculas ---
+# $1: string → stdout: en minúsculas
 _lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 
-# --- Helper: pv si disponible, sino cat ---
+# --- _pv_pipe: barra de progreso vía pv, o cat si no está disponible ---
+# $1: bytes totales para la barra de progreso
+# stdin → stdout: data, con barra de progreso en stderr si pv existe
 _pv_pipe() { if command -v pv &>/dev/null; then pv -f -s "$1"; else cat; fi; }
 
-# --- Info de formato: herramienta y flags ---
-# Salida: tool|pipe_flags|direct_flags|is_tar|test_flag
+# --- _get_format_info: mapping central de extensión → tool, flags, tipo ---
+# $1: nombre de archivo
+# stdout: tool|pipe_flags|direct_flags|is_tar|test_flag
+#   tool        : binario a usar (ej: pigz, xz, lbzip2)
+#   pipe_flags  : flags para descompresión a stdout (pipe a tar)
+#   direct_flags: flags para descompresión directa a archivo
+#   is_tar      : 1 si requiere pipe a tar -xvf / tar -t, 0 si no
+#   test_flag   : flags para test de integridad (-t, t, -tf, etc.)
+# Retorna 0 si reconoce el formato, 1 si no
+# NOTA: Esta función es la ÚNICA fuente de verdad para mapear formato→herramienta.
+#       Cualquier nuevo formato debe agregarse aquí y en _ext_for_format.
 _get_format_info() {
     local file=$1 ext
     ext=$(_lower "$file")
@@ -65,6 +98,23 @@ _get_format_info() {
 }
 
 # --- Variables globales ---
+# MISSING_DEPS[]   : dependencias acumuladas para instalar
+# EXCLUDE_PATTERNS[]: patrones --exclude para tar
+# INPUTS[]         : archivos/ carpetas a procesar
+# MODE             : compress | decompress | test
+# FORMAT           : formato de compresión (gz, xz, ...)
+# CUSTOM_NAME      : nombre personalizado para archivo de salida (-n)
+# DELETE_ORIG      : 1 = borrar original al terminar (-r)
+# DRY_RUN          : 1 = solo mostrar comandos (--dry-run)
+# SPLIT_SIZE       : tamaño para split (--split=100M)
+# INDIVIDUAL       : 1 = comprimir cada archivo por separado (-i)
+# LOG_FILE         : ruta del archivo de log
+# PKG_MANAGER      : apt | dnf | yum | pacman | zypper | apk
+# PKG_UPDATE       : comando de actualización de repos
+# PKG_INSTALL      : comando de instalación de paquetes
+# SEVENZ_BIN       : binario 7z disponible (7zz | 7z | 7za)
+# BZIP2_BIN        : binario bzip2 disponible (lbzip2 | pbzip2)
+# CLEANUP_FILE     : archivo temporal a limpiar en caso de interrupción
 MISSING_DEPS=()
 EXCLUDE_PATTERNS=()
 INPUTS=()
@@ -74,7 +124,7 @@ CUSTOM_NAME=""
 DELETE_ORIG=0
 DRY_RUN=0
 SPLIT_SIZE=""
-INDIVIDUAL=""
+INDIVIDUAL=0
 LOG_FILE=""
 PKG_MANAGER=""
 PKG_UPDATE=""
@@ -84,10 +134,12 @@ BZIP2_BIN=""
 CLEANUP_FILE=""
 
 # ==============================================================================
-# FUNCIONES AUXILIARES
+# FUNCIONES AUXILIARES — Dependencias, sistema, formateo
 # ==============================================================================
 
-# --- Detectar gestor de paquetes ---
+# --- detect_pkg_manager: detecta gestor de paquetes del sistema ---
+# Salida: setea PKG_MANAGER, PKG_UPDATE, PKG_INSTALL
+#         apt / dnf / yum / pacman / zypper / apk
 detect_pkg_manager() {
     if command -v apt &>/dev/null; then
         PKG_MANAGER="apt"
@@ -116,7 +168,9 @@ detect_pkg_manager() {
     fi
 }
 
-# --- Mapear herramienta a paquete según gestor ---
+# --- tool_to_package: mapea nombre de herramienta → paquete según gestor ---
+# $1: tool name (xz, 7z, ...)
+# stdout: nombre del paquete en el gestor actual
 tool_to_package() {
     local tool=$1
     # Default: mismo nombre del tool (funciona en pacman, apk, dnf, yum)
@@ -130,7 +184,8 @@ tool_to_package() {
     esac
 }
 
-# --- Verificar sudo ---
+# --- check_sudo: verifica si hay acceso sudo (o si ya es root) ---
+# Retorna 0 si hay sudo disponible (o es root), 1 si no
 check_sudo() {
     if [[ "$(id -u)" -eq 0 ]]; then
         return 0
@@ -147,7 +202,11 @@ check_sudo() {
     return 0
 }
 
-# --- Acumular dependencia faltante ---
+# --- ensure_tool: verifica herramienta y acumula en MISSING_DEPS si falta ---
+# $1: tool name (para tool_to_package)
+# $2: binario a buscar (default: $1)
+# $@: nombres alternativos del binario
+# Retorna 0 si ya está instalado, 1 si se agregó a MISSING_DEPS
 ensure_tool() {
     local tool=$1
     local bin="${2:-$1}"
@@ -172,7 +231,9 @@ ensure_tool() {
     printf "${YELLOW}[Sistema] Dependencia faltante: %s${NC}\n" "$pkg"
 }
 
-# --- Instalar todas las dependencias acumuladas en un solo comando ---
+# --- install_missing_deps: instala todas las dependencias acumuladas ---
+# Usa sudo si es necesario. Llama update + install en un solo comando batch.
+# Exit 1 si no hay sudo disponible.
 install_missing_deps() {
     [[ ${#MISSING_DEPS[@]} -eq 0 ]] && return 0
 
@@ -204,7 +265,8 @@ install_missing_deps() {
     printf "${GREEN}[Sistema] Dependencias instaladas correctamente.${NC}\n"
 }
 
-# --- Registrar herramientas según formato de compresión ---
+# --- register_compress_tools: acumula dependencias para comprimir según FORMAT ---
+# Según FORMAT actual, llama a ensure_tool con los binarios correctos.
 register_compress_tools() {
     case "$FORMAT" in
         gz)   ensure_tool pigz ;;
@@ -220,7 +282,9 @@ register_compress_tools() {
     esac
 }
 
-# --- Registrar herramientas según extensión de archivo ---
+# --- register_decompress_tool: acumula dependencias para descomprimir según extensión ---
+# $1: nombre de archivo
+# Usa _get_format_info para determinar qué tool necesita.
 register_decompress_tool() {
     local file=$1 info
     info=$(_get_format_info "$file") || return 0
@@ -228,7 +292,10 @@ register_decompress_tool() {
     ensure_tool "$tool"
 }
 
-# --- Obtener límite de memoria (70% de RAM disponible) ---
+# --- get_mem_limit: obtiene 70% de RAM disponible en MiB ---
+# Fuentes: /proc/meminfo MemAvailable → free -k → MemFree+Cached
+# Fallback: 1024 MiB si no se puede detectar
+# stdout: MiB disponibles para el compresor (xz --memory=)
 get_mem_limit() {
     local mem_kb
 
@@ -252,7 +319,10 @@ get_mem_limit() {
     echo $((mem_kb * 70 / 100 / 1024))
 }
 
-# --- Formatear tamaño (fallback si no hay numfmt) ---
+# --- format_size: muestra bytes en formato legible ---
+# $1: bytes
+# Usa numfmt si disponible; fallback manual B/KiB/MiB/GiB/TiB
+# stdout: "42.00 MiB" (ejemplo)
 format_size() {
     local bytes=$1
     if command -v numfmt &>/dev/null; then
@@ -269,7 +339,11 @@ format_size() {
     fi
 }
 
-# --- Calcular porcentaje de ahorro ---
+# --- _calc_pct: calcula (orig - final) / orig * 100 ---
+# $1: bytes originales
+# $2: bytes finales
+# stdout: "45.32" (porcentaje con 2 decimales)
+# Retorna "0.00" si orig ≤ 0 o final ≤ 0
 _calc_pct() {
     local orig=$1 final=$2
     if [[ "$orig" -gt 0 && -n "$final" && "$final" -gt 0 ]]; then
@@ -279,7 +353,11 @@ _calc_pct() {
     fi
 }
 
-# --- Estimar tamaño descomprimido ---
+# --- estimate_uncompressed_size: estima tamaño descomprimido de un archivo ---
+# $1: archivo comprimido
+# Soporta: .gz, .xz, .zst, .bz2, .lz, .zip
+# Fallback: 0 si no se puede estimar
+# stdout: bytes (entero)
 estimate_uncompressed_size() {
     local file=$1
     local f_lower
@@ -325,7 +403,9 @@ estimate_uncompressed_size() {
     esac
 }
 
-# --- Obtener bytes disponibles en directorio ---
+# --- _get_avail_bytes: bytes disponibles en filesystem ---
+# $1: directorio (default .)
+# stdout: bytes disponibles (entero)
 _get_avail_bytes() {
     local dir=${1:-.} avail
     avail=$(df -B1 --output=avail "$dir" 2>/dev/null | awk 'NR==2 {print $1}' | tr -d ' ')
@@ -333,7 +413,10 @@ _get_avail_bytes() {
     echo "${avail:-0}"
 }
 
-# --- Verificar espacio disponible antes de descomprimir ---
+# --- check_decompress_space: verifica espacio antes de descomprimir ---
+# $1: archivo comprimido
+# Estima tamaño descomprimido + margen, lo compara con espacio disponible.
+# Retorna 0 si hay espacio suficiente, 1 si no.
 check_decompress_space() {
     local file=$1
     local compressed_size uncomp_size est_size avail_bytes
@@ -357,7 +440,10 @@ check_decompress_space() {
     return 0
 }
 
-# --- Test rápido de capa de compresión (interno, sin output) ---
+# --- _test_compression_layer: test rápido de integridad (interno, sin output) ---
+# $1: archivo
+# Usa el test_flag de _get_format_info para verificar.
+# Retorna 0 si íntegro, 1 si no.
 _test_compression_layer() {
     local file=$1 info
     info=$(_get_format_info "$file") || return 1
@@ -369,7 +455,10 @@ _test_compression_layer() {
     fi
 }
 
-# --- Test de compresión pre-descompresión (con output) ---
+# --- _test_compress_layer: test de compresión pre-descompresión (con output) ---
+# $1: archivo
+# Wrapper con mensaje coloreado alrededor de _test_compression_layer.
+# Retorna 0 si íntegro, 1 si no.
 _test_compress_layer() {
     local file=$1
     printf "${BLUE}[Verificando] %s...${NC} " "$file"
@@ -382,7 +471,11 @@ _test_compress_layer() {
     fi
 }
 
-# --- Generar nombre único de archivo ---
+# --- get_unique_name: genera nombre de archivo sin colisiones ---
+# $1: nombre base
+# $2: extensión
+# Si el archivo ya existe, añade _1, _2, ... hasta encontrar uno libre.
+# stdout: nombre único (ej: "backup.tar.gz" o "backup_1.tar.gz")
 get_unique_name() {
     local base_name=$1 ext=$2 counter=1 final_name
 
@@ -400,7 +493,10 @@ get_unique_name() {
     echo "$final_name"
 }
 
-# --- Verificar espacio en disco ---
+# --- check_disk_space: verifica espacio y aborta si insuficiente ---
+# $1: bytes necesarios
+# $2: directorio a verificar
+# Exit 1 si no hay espacio suficiente.
 check_disk_space() {
     local needed=$1 dir=$2 available
     available=$(_get_avail_bytes "$dir")
@@ -412,7 +508,9 @@ check_disk_space() {
     fi
 }
 
-# --- Configurar logging ---
+# --- setup_logging: configura log a /var/log/compresor/ y mantiene MAX_LOGS rotaciones ---
+# Redirige stdout+stderr a tee (pantalla + archivo de log).
+# Purgua logs antiguos cuando supera MAX_LOGS archivos.
 setup_logging() {
     local log_dir="$LOG_DIR"
     if ! mkdir -p "$log_dir" 2>/dev/null; then
@@ -429,7 +527,8 @@ setup_logging() {
     exec > >(tee -a "$LOG_FILE") 2>&1
 }
 
-# --- Limpieza por señal ---
+# --- cleanup: elimina archivo temporal al recibir señal (Ctrl+C, etc.) ---
+# Se ejecuta en exit, SIGINT, SIGTERM.
 cleanup() {
     if [[ -n "${CLEANUP_FILE:-}" && -f "${CLEANUP_FILE:-}" ]]; then
         printf "\n${YELLOW}[Sistema] Interrupción detectada. Limpiando archivo incompleto: %s${NC}\n" "$CLEANUP_FILE"
@@ -438,7 +537,8 @@ cleanup() {
     exit 1
 }
 
-# --- Listar compresores ---
+# --- list_compressors: muestra tabla comparativa de formatos ---
+# No recibe args. Imprime en pantalla y exit 0.
 list_compressors() {
     printf "${BLUE}=== Tabla de Eficiencia de Compresores (Todos Multiproceso) ===${NC}\n"
     printf "\n"
@@ -464,7 +564,8 @@ list_compressors() {
     exit 0
 }
 
-# --- Ayuda ---
+# --- usage: muestra ayuda detallada (--help) ---
+# Sin args. Imprime en pantalla y exit 0.
 usage() {
     printf "${BLUE}======================================================${NC}\n"
     printf "${GREEN}      COMPRESOR / DESCOMPRESOR UNIVERSAL (BASH)      ${NC}\n"
@@ -501,27 +602,57 @@ usage() {
 }
 
 # ==============================================================================
-# LÓGICA DE COMPRESIÓN — Núcleo (comprime un conjunto de archivos en UN archive)
+# LÓGICA DE COMPRESIÓN — Empaquetado y compresión de archivos
 # ==============================================================================
+
+# --- _ext_for_format: mapea FORMAT → extensión de archivo ---
+# $FORMAT (global) → stdout: extensión (gz → "tar.gz", zip → "zip")
+_ext_for_format() {
+    case $FORMAT in
+        zip|7z|tar) echo "$FORMAT" ;;
+        *)          echo "tar.$FORMAT" ;;
+    esac
+}
+
+# --- _print_compress_report: imprime tabla resumen de compresión ---
+# $1: nombre archivo final
+# $2: tamaño original (humano)
+# $3: tamaño final (humano)
+# $4: porcentaje de ahorro
+# $5: número de hilos
+_print_compress_report() {
+    local file=$1 orig=$2 final=$3 pct=$4 ncpu=$5
+    printf "\n${GREEN}=== Reporte de Compresión ===${NC}\n"
+    printf "${BLUE}Archivo Salida:${NC}    ${YELLOW}%s${NC}\n" "$file"
+    printf "${BLUE}Tamaño Original:${NC}   ${RED}%s${NC}\n" "$orig"
+    printf "${BLUE}Tamaño Final:${NC}      ${GREEN}%s${NC}\n" "$final"
+    printf "${BLUE}Ahorro de espacio:${NC} ${GREEN}%s%%${NC}\n" "$pct"
+    printf "${BLUE}Hilos utilizados:${NC}  ${GREEN}%s${NC}\n" "$ncpu"
+    printf "${GREEN}===========================${NC}\n"
+}
+
+# --- _delete_originals: elimina archivos originales (usado con -r) ---
+# $@: paths a eliminar (recursivo, forzado)
+_delete_originals() {
+    local items=("$@")
+    for item in "${items[@]}"; do
+        rm -rf -- "$item"
+        printf "${YELLOW}[Info] Original eliminado: %s${NC}\n" "$item"
+    done
+}
+
+# --- _compress_items: comprime un lote de archivos en un solo archivo ---
+# $@: rutas a comprimir
+# Usa FORMAT global para elegir tool, EXTRA_FLAGS para personalizar.
+# Maneja dry-run, exclude, split, verificación post-compresión.
+# Retorna 0 si éxito, 1 si fallo.
 _compress_items() {
     local -a items=("$@")
     [[ ${#items[@]} -eq 0 ]] && return 1
 
     local ext mem_mb FINAL_FILE TOTAL_ORIG_BYTES=0 ORIG_HUMAN
     mem_mb=$(get_mem_limit)
-
-    case $FORMAT in
-        gz)   ext="tar.gz"   ;;
-        xz)   ext="tar.xz"   ;;
-        bz2)  ext="tar.bz2"  ;;
-        bz3)  ext="tar.bz3"  ;;
-        zst)  ext="tar.zst"  ;;
-        lz)   ext="tar.lz"   ;;
-        lrz)  ext="tar.lrz"  ;;
-        zip)  ext="zip"      ;;
-        7z)   ext="7z"       ;;
-        tar)  ext="tar"      ;;
-    esac
+    ext=$(_ext_for_format)
 
     local base_name
     if [[ "$INDIVIDUAL" == 1 || -z "$CUSTOM_NAME" ]]; then
@@ -622,20 +753,10 @@ _compress_items() {
         FINAL_SIZE=$(du -sh -- "$FINAL_FILE" 2>/dev/null | cut -f1)
         FINAL_BYTES=$(du -sb -- "$FINAL_FILE" 2>/dev/null | cut -f1)
         PERCENTAGE=$(_calc_pct "$TOTAL_ORIG_BYTES" "$FINAL_BYTES")
-
-        printf "\n${GREEN}=== Reporte de Compresión ===${NC}\n"
-        printf "${BLUE}Archivo Salida:${NC}    ${YELLOW}%s${NC}\n" "$FINAL_FILE"
-        printf "${BLUE}Tamaño Original:${NC}   ${RED}%s${NC}\n" "$ORIG_HUMAN"
-        printf "${BLUE}Tamaño Final:${NC}      ${GREEN}%s${NC}\n" "$FINAL_SIZE"
-        printf "${BLUE}Ahorro de espacio:${NC} ${GREEN}%s%%${NC}\n" "$PERCENTAGE"
-        printf "${BLUE}Hilos utilizados:${NC}  ${GREEN}%s${NC}\n" "$NCPU"
-        printf "${GREEN}===========================${NC}\n"
+        _print_compress_report "$FINAL_FILE" "$ORIG_HUMAN" "$FINAL_SIZE" "$PERCENTAGE" "$NCPU"
 
         if [[ "$DELETE_ORIG" == 1 ]]; then
-            for item in "${items[@]}"; do
-                rm -rf -- "$item"
-                printf "${YELLOW}[Info] Original eliminado: %s${NC}\n" "$item"
-            done
+            _delete_originals "${items[@]}"
         fi
         return 0
     else
@@ -648,6 +769,10 @@ _compress_items() {
 # ==============================================================================
 # LÓGICA DE COMPRESIÓN — Dispatcher (individual o bundle)
 # ==============================================================================
+
+# --- do_compress: entry point de compresión ---
+# Decide si comprimir individualmente (-i) o en bundle.
+# Itera INPUTS[] y llama a _compress_items por cada uno.
 do_compress() {
     if [[ "$INDIVIDUAL" == 1 && ${#INPUTS[@]} -gt 1 ]]; then
         local has_error=0
@@ -664,8 +789,13 @@ do_compress() {
 }
 
 # ==============================================================================
-# LÓGICA DE DESCOMPRESIÓN
+# LÓGICA DE DESCOMPRESIÓN — Detección y extracción multi-formato
 # ==============================================================================
+
+# --- do_decompress: entry point de descompresión ---
+# 1. Verifica espacio total disponible
+# 2. Por cada archivo: test de integridad → verifica espacio → descomprime
+# Soporta detección automática de formato por extensión.
 do_decompress() {
     # Verificación de espacio TOTAL antes de empezar
     local total_compressed=0 total_needed=0 avail_bytes
@@ -748,8 +878,14 @@ do_decompress() {
 }
 
 # ==============================================================================
-# LÓGICA DE TEST DE INTEGRIDAD
+# LÓGICA DE TEST DE INTEGRIDAD — Verifica archivos sin extraer
 # ==============================================================================
+
+# --- do_test_file: test de integridad de un solo archivo ---
+# $1: archivo
+# 1. Test de capa de compresión (test_flag de _get_format_info)
+# 2. Para .tar.*: test extra de tar -t
+# Retorna 0 si íntegro, 1 si no.
 do_test_file() {
     local file=$1 info
     printf "${BLUE}[Test] Verificando integridad: ${YELLOW}%s${NC}... " "$file"
@@ -773,6 +909,8 @@ do_test_file() {
     return 0
 }
 
+# --- do_test: entry point de test (-t) — verifica toda la lista INPUTS[] ---
+# Itera INPUTS[], llama a do_test_file. Exit 1 si algún archivo está corrupto.
 do_test() {
     local has_errors=0
     for file in "${INPUTS[@]}"; do
@@ -787,9 +925,12 @@ do_test() {
 }
 
 # ==============================================================================
-# PROCESAMIENTO DE ARGUMENTOS
+# PROCESAMIENTO DE ARGUMENTOS — Parseo y validación de opciones
 # ==============================================================================
-# Detectar binarios antes de parsear argumentos
+
+# --- Detección de binarios del sistema antes de procesar args ---
+# 7zz/7z/7za: búsqueda en orden de preferencia
+# lbzip2/pbzip2: búsqueda en orden de preferencia
 if command -v 7zz &>/dev/null; then SEVENZ_BIN="7zz"
 elif command -v 7z &>/dev/null; then SEVENZ_BIN="7z"
 elif command -v 7za &>/dev/null; then SEVENZ_BIN="7za"
@@ -887,14 +1028,14 @@ done
 
 INPUTS=("$@")
 
-# Normalizar inputs que empiezan con - para que no se interpreten como opciones
+# --- Normalizar inputs que empiezan con - para evitar que se interpreten como opciones ---
 for i in "${!INPUTS[@]}"; do
     if [[ "${INPUTS[$i]}" == -* ]]; then
         INPUTS[$i]="./${INPUTS[$i]}"
     fi
 done
 
-# --- Validaciones ---
+# --- Validaciones de modo y argumentos ---
 if [[ -z "$MODE" ]]; then
     printf "${RED}[Error] Debes especificar un modo de operación (-c, -d, -t).${NC}\n" >&2
     usage; exit 1
@@ -916,7 +1057,7 @@ if [[ "$MODE" != "compress" && ${#INPUTS[@]} -eq 0 ]]; then
     usage; exit 1
 fi
 
-# --- Registrar y instalar dependencias ---
+# --- if compress: registrar tools por FORMAT; else por extensión de cada input ---
 if [[ "$MODE" == "compress" ]]; then
     register_compress_tools
 else
@@ -927,11 +1068,13 @@ fi
 
 install_missing_deps
 
-# --- Configurar logging ---
+# --- Configurar logging y trap de interrupción ---
 setup_logging
 trap cleanup INT TERM
 
-# --- Ejecución principal ---
+# ==============================================================================
+# DESPACHO PRINCIPAL — Ejecuta según el modo seleccionado
+# ==============================================================================
 case "$MODE" in
     compress)
         do_compress
