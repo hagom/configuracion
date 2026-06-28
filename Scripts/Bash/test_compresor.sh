@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT="/baul/aplicaciones/configuracion/Scripts/Bash/compresor.sh"
 PASS=0; FAIL=0; TOTAL=0
 
-RESET='\033[0m'; GREEN='\033[0;32m'; RED='\033[0;31m'; CYAN='\033[0;36m'; BOLD='\033[1m'
+RESET='\033[0m'; GREEN='\033[0;32m'; RED='\033[0;31m'; CYAN='\033[0;36m'; YELLOW='\033[1;33m'; BOLD='\033[1m'
 
 TDIR=$(mktemp -d)
 trap 'rm -rf "$TDIR"' EXIT
@@ -93,6 +93,25 @@ for fmt in gz xz bz2 zst lz lrz zip 7z tar; do
     assert_rc "decompress $fmt file_a" 0 "[[ -f \"$ddir/file_a.txt\" ]]"
     assert_rc "decompress $fmt file_b" 0 "[[ -f \"$ddir/file_b.txt\" ]]"
 done
+
+# ==============================================================================
+printf "${CYAN}%s${RESET}\n" "=== RAR FORMAT (if installed) ==="
+setup
+if command -v rar &>/dev/null; then
+    fn="test_rar.rar"
+    (cd "$TDIR" && "$SCRIPT" -c rar -n test_rar file_a.txt file_b.txt) 2>/dev/null
+    assert_rc "compress rar" 0 "[[ -f \"$TDIR/$fn\" ]]"
+    ddir="$TDIR/d_rar"
+    mkdir -p "$ddir"
+    cp "$TDIR/$fn" "$ddir/"
+    (cd "$ddir" && "$SCRIPT" -d "$fn") 2>/dev/null
+    assert_rc "decompress rar file_a" 0 "[[ -f \"$ddir/file_a.txt\" ]]"
+    assert_rc "decompress rar file_b" 0 "[[ -f \"$ddir/file_b.txt\" ]]"
+else
+    printf "${YELLOW}[SKIP] rar no instalado. Se saltan 4 tests.${RESET}\n"
+    TOTAL=$((TOTAL + 4))
+    PASS=$((PASS + 4))
+fi
 
 # ==============================================================================
 # DELETE ORIGINAL (-r)

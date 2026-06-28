@@ -92,6 +92,7 @@ _get_format_info() {
         *.lz)                 echo "plzip|-dc --threads=$NCPU|-dk --threads=$NCPU|0|-t" ;;
         *.zip)                echo "unzip|-o|-o|0|-t" ;;
         *.7z)                 echo "$SEVENZ_BIN|x|x|0|t" ;;
+        *.rar)                echo "$RAR_BIN|x|x|0|t" ;;
         *.tar)                echo "tar|-xf|-xf|0|-tf" ;;
         *)                    return 1 ;;
     esac
@@ -114,6 +115,7 @@ _get_format_info() {
 # PKG_INSTALL      : comando de instalación de paquetes
 # SEVENZ_BIN       : binario 7z disponible (7zz | 7z | 7za)
 # BZIP2_BIN        : binario bzip2 disponible (lbzip2 | pbzip2)
+# RAR_BIN          : binario rar disponible (rar | unrar)
 # CLEANUP_FILE     : archivo temporal a limpiar en caso de interrupción
 MISSING_DEPS=()
 EXCLUDE_PATTERNS=()
@@ -131,6 +133,7 @@ PKG_UPDATE=""
 PKG_INSTALL=""
 SEVENZ_BIN=""
 BZIP2_BIN=""
+RAR_BIN=""
 CLEANUP_FILE=""
 
 # ==============================================================================
@@ -178,8 +181,10 @@ tool_to_package() {
     case "${PKG_MANAGER}:${tool}" in
         apt:xz)     echo "xz-utils"   ;;
         apt:7z)     echo "p7zip-full" ;;
+        apt:rar)    echo "rar"         ;;
         dnf:7z|yum:7z|zypper:7z|apk:7z) echo "p7zip" ;;
         pacman:7z)  echo "7zip"       ;;
+        pacman:rar) echo "rar"        ;;
         *)          echo "$tool"      ;;
     esac
 }
@@ -281,6 +286,7 @@ register_compress_tools() {
         lrz)  ensure_tool lrzip ;;
         zip)  ensure_tool zip ; ensure_tool 7z "$SEVENZ_BIN" ;;
         7z)   ensure_tool 7z "$SEVENZ_BIN" ;;
+        rar)  ensure_tool rar ;;
         tar)  ensure_tool tar ;;
     esac
 }
@@ -558,10 +564,11 @@ list_compressors() {
     printf "\n"
     printf "${YELLOW}--- Alta Velocidad ---${NC}\n"
     printf "8. ${GREEN}gz${NC}  : ${YELLOW}Rápido${NC} (pigz). El más compatible y rápido.\n"
-    printf "9. ${GREEN}zip${NC} : ${YELLOW}Básico${NC}. Compatibilidad universal (Windows/Mac/Linux).\n"
+    printf "9. ${GREEN}rar${NC} : ${YELLOW}Alta${NC} (RAR). Propietario, amplia compatibilidad.\n"
+    printf "10. ${GREEN}zip${NC} : ${YELLOW}Básico${NC}. Compatibilidad universal (Windows/Mac/Linux).\n"
     printf "\n"
     printf "${YELLOW}--- Sin compresión ---${NC}\n"
-    printf "10. ${GREEN}tar${NC} : Solo empaquetado sin compresión.\n"
+    printf "11. ${GREEN}tar${NC} : Solo empaquetado sin compresión.\n"
     printf "\n"
     printf "${BLUE}Nota:${NC} Todos los formatos usan multiprocesamiento automático.\n"
     exit 0
@@ -588,7 +595,7 @@ usage() {
     printf "  ${BLUE}Ejemplo:${NC} %s -t archivo.tar.zst archivo.zip\n" "$0"
     printf "\n"
     printf "${YELLOW}OPCIONES:${NC}\n"
-    printf "  ${GREEN}-c <fmt>${NC}    : Comprimir (formatos: gz, xz, bz2, bz3, zst, lz, lrz, zip, 7z, tar)\n"
+    printf "  ${GREEN}-c <fmt>${NC}    : Comprimir (formatos: gz, xz, bz2, bz3, zst, lz, lrz, rar, zip, 7z, tar)\n"
     printf "  ${GREEN}-d${NC}          : Descomprimir (detecta formato automáticamente)\n"
     printf "  ${GREEN}-t${NC}          : Verificar integridad de archivos comprimidos\n"
     printf "  ${GREEN}-r${NC}          : ${RED}Borrar original${NC} al finalizar (solo si no hubo errores)\n"
@@ -612,7 +619,7 @@ usage() {
 # $FORMAT (global) → stdout: extensión (gz → "tar.gz", zip → "zip")
 _ext_for_format() {
     case $FORMAT in
-        zip|7z|tar) echo "$FORMAT" ;;
+        zip|7z|rar|tar) echo "$FORMAT" ;;
         *)          echo "tar.$FORMAT" ;;
     esac
 }
@@ -677,6 +684,7 @@ _compress_items() {
             lrz) printf "  tar -cvf - %s | lrzip -L 9 -z -p %s -o %s\n" "${items[*]}" "$NCPU" "$FINAL_FILE" ;;
             zip) printf "  %s a -tzip -mx=9 -mmt=on %s %s\n" "$SEVENZ_BIN" "$FINAL_FILE" "${items[*]}" ;;
             7z)  printf "  %s a -mx=9 -md=128m -ms=on -mmt=on %s %s\n" "$SEVENZ_BIN" "$FINAL_FILE" "${items[*]}" ;;
+            rar) printf "  %s a -m5 -mt%s %s %s\n" "$RAR_BIN" "$NCPU" "$FINAL_FILE" "${items[*]}" ;;
             tar) printf "  tar -cvf %s %s\n" "$FINAL_FILE" "${items[*]}" ;;
         esac
         if [[ -n "$SPLIT_SIZE" ]]; then
@@ -742,6 +750,9 @@ _compress_items() {
             ;;
         7z)
             "$SEVENZ_BIN" a -mx=9 -md=128m -ms=on -mmt=on "$FINAL_FILE" -- "${items[@]}" || CMD_EXIT=$?
+            ;;
+        rar)
+            "$RAR_BIN" a -m5 -mt"$NCPU" "$FINAL_FILE" -- "${items[@]}" || CMD_EXIT=$?
             ;;
         tar)
             tar "${tar_exclude[@]}" -cvf "$FINAL_FILE" -- "${items[@]}" || CMD_EXIT=$?
@@ -956,6 +967,10 @@ else SEVENZ_BIN="7z"; fi
 if command -v lbzip2 &>/dev/null; then BZIP2_BIN="lbzip2"
 elif command -v pbzip2 &>/dev/null; then BZIP2_BIN="pbzip2"
 else BZIP2_BIN="lbzip2"; fi
+
+if command -v rar &>/dev/null; then RAR_BIN="rar"
+elif command -v unrar &>/dev/null; then RAR_BIN="unrar"
+else RAR_BIN="rar"; fi
 
 detect_pkg_manager
 
