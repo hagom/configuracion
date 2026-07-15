@@ -14,9 +14,23 @@ heimdall/config/
 # Datos de Portainer
 portainer/portainer_data/
 
+# Configuraciones de apps (solo docker-compose se trackea)
+prowlarr/config.xml
+prowlarr/Definitions/
+radarr/config.xml
+sonarr/config.xml
+
 # Reglas generales para carpetas de datos comunes
 */data/
 */config/
 *.db
+*.db-shm
+*.db-wal
 *.log
+*.pid
+*.txt
+*.debug*
+*/logs/
+*/Backups/
+*/asp/
 /jellyfin
